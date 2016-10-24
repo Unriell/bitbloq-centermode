@@ -12,6 +12,7 @@ router.get('/center/:id', auth.isAuthenticated(), controller.getCenter);
 
 // POST
 router.post('/center', auth.isAuthenticated(), controller.createCenter);
+router.post('/center/:centerId/teacher', auth.isAuthenticated(), controller.addTeacher);
 
 // PUT
 router.put('/center/:id', auth.isAuthenticated(), controller.updateCenter);
