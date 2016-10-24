@@ -1,0 +1,19 @@
+{
+    "env": "local",
+
+    "port": 8000,
+
+    "mongo": {
+        "uri": "mongodb://127.0.0.1:27018/bitbloq",
+        "options": {
+            "db": {
+                "safe": true
+            }
+        }
+    },
+
+    "myNumber": 2
+
+}
+
+

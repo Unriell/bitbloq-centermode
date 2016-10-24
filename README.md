@@ -1,2 +1,2 @@
 # centermode
-Scholl management on Bitbloq
+School management on Bitbloq
