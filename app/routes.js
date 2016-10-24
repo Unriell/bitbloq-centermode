@@ -11,7 +11,6 @@ var router = express.Router();
 module.exports = function(app) {
 
     // Insert routes below
-    router.use('/example', require('./api/example/index'));
     router.use('/center', require('./api/center/index'));
     router.use('/exercise', require('./api/exercise/index'));
     router.use('/task', require('./api/task/index'));
