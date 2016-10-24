@@ -8,16 +8,17 @@ var router = express.Router();
 
 
 // GET
-router.get('/center/:id', auth.isAuthenticated(), controller.getCenter);
+router.get('/:id', auth.isAuthenticated(), controller.getCenter);
+router.get('/:centerId/teacher', auth.isAuthenticated(), controller.getTeachers);
 
 // POST
-router.post('/center', auth.isAuthenticated(), controller.createCenter);
-router.post('/center/:centerId/teacher', auth.isAuthenticated(), controller.addTeacher);
+router.post('/', auth.isAuthenticated(), controller.createCenter);
+router.post('/:centerId/teacher', auth.isAuthenticated(), controller.addTeacher);
 
 // PUT
-router.put('/center/:id', auth.isAuthenticated(), controller.updateCenter);
+router.put('/:id', auth.isAuthenticated(), controller.updateCenter);
 
 // DELETE
-router.delete('/center/:id', auth.isAuthenticated(), controller.anonCenter);
+router.delete('/:id', auth.isAuthenticated(), controller.anonCenter);
 
 module.exports = router;
