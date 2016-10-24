@@ -15,6 +15,7 @@ module.exports = function(app) {
     router.use('/center', require('./api/center/index'));
     router.use('/exercise', require('./api/exercise/index'));
     router.use('/task', require('./api/task/index'));
+    router.use('/group', require('./api/group/index'));
 
     // Set a prefix for all calls
     app.use('/centermode/v1', router);
