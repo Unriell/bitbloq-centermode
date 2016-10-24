@@ -1,7 +1,7 @@
 {
-    "name": "Botbloq-Server",
+    "name": "Bitbloq-centermode",
     "version": "v1.0.0",
-    "description": "Backend for botbloq ITS (Sistema Tutor Inteligente)",
+    "description": "School management on Bitbloq",
     "main": "index.js",
     "scripts": {
         "start": "supervisor index.js",
@@ -12,21 +12,17 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/bq/botbloq-backend"
+        "url": "https://github.com/bq/bitbloq-centermode"
     },
     "keywords": [
         "Backend",
         "Server",
-        "Botbloq"
+        "Center"
     ],
     "contributors": [
         {
             "name": "Laura del Río",
             "email": "laura.delrio@bq.com"
-        },
-        {
-            "name": "Tomás Calvo",
-            "email": "tomas.calvo@bq.com"
         }
     ],
     "license": "GPL-3.0",
@@ -47,7 +43,10 @@
         "morgan": "^1.7.0",
         "path": "^0.12.7",
         "request": "^2.72.0",
-        "supervisor": "^0.10.0"
+        "supervisor": "^0.10.0",
+        "jsonwebtoken": "^5.7.0",
+        "express-jwt": "^3.3.0",
+        "composable-middleware": "^0.3.0"
     },
     "devDependencies": {
         "jshint": "^2.9.1",
