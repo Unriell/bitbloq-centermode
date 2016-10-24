@@ -7,6 +7,9 @@ var express = require('express'),
 var router = express.Router();
 
 
+//HEAD
+router.head('/:type', auth.isAuthenticated(), controller.isHeadMaster);
+
 // GET
 router.get('/:id', auth.isAuthenticated(), controller.getCenter);
 router.get('/:centerId/teacher', auth.isAuthenticated(), controller.getTeachers);
