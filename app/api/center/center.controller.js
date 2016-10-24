@@ -44,6 +44,32 @@ exports.createCenter = function(req, res) {
 
 };
 
+/**
+ * Delete a teacher in a center
+ * @param req
+ * @param res
+ */
+exports.deleteTeacher = function(req, res) {
+    var userId = req.user._id,
+        centerId = req.params.centerId,
+        teacherId = req.params.teacherId;
+    async.waterfall([
+        UserFunctions.getCenterWithUserAdmin.bind(UserFunctions, userId, centerId),
+        function(centerId, next) {
+            UserFunctions.deleteTeacher(teacherId, centerId, next);
+        }
+    ], function(err, result) {
+        if (err) {
+            console.log(err);
+            res.sendStatus(401);
+        } else if (!result) {
+            res.sendStatus(304);
+        } else {
+            res.sendStatus(200);
+        }
+    });
+};
+
 
 /**
  * Get teachers in a center
