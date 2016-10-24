@@ -8,6 +8,10 @@ var morgan = require('morgan');
 var bodyParser = require('body-parser');
 var errorHandler = require('errorhandler');
 
+var cookieParser = require('cookie-parser');
+var passport = require('passport');
+
+
 module.exports = function(app) {
     var env = app.get('env');
 
@@ -17,6 +21,8 @@ module.exports = function(app) {
     app.use(bodyParser.json({
         limit: '1mb'
     }));
+    app.use(cookieParser());
+    app.use(passport.initialize());
 
     // Allow CORS
     app.use(function(req, res, next) {

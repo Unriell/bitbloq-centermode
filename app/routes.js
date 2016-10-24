@@ -12,6 +12,7 @@ module.exports = function(app) {
 
     // Insert routes below
     router.use('/example', require('./api/example/index'));
+    router.use('/center', require('./api/center/index'));
 
     // Set a prefix for all calls
     app.use('/centermode/v1', router);
