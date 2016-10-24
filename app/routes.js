@@ -17,7 +17,7 @@ module.exports = function(app) {
     router.use('/group', require('./api/group/index'));
 
     // Set a prefix for all calls
-    app.use('/centermode/v1', router);
+    app.use('/centerMode/v1', router);
 
     // All undefined asset or api routes should return a 404
     app.route('/:url(api|auth|components|app|bower_components|assets)/*').get(errors[404]);

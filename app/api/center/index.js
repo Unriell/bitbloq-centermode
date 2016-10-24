@@ -11,12 +11,12 @@ var router = express.Router();
 router.head('/:type', auth.isAuthenticated(), controller.isHeadMaster);
 
 // GET
-router.get('/:id', auth.isAuthenticated(), controller.getCenter);
 router.get('/:centerId/teacher', auth.isAuthenticated(), controller.getTeachers);
+router.get('/:id', auth.isAuthenticated(), controller.getCenter);
 
 // POST
-router.post('/', auth.isAuthenticated(), controller.createCenter);
 router.post('/:centerId/teacher', auth.isAuthenticated(), controller.addTeacher);
+router.post('/', auth.isAuthenticated(), controller.createCenter);
 
 // PUT
 router.put('/:id', auth.isAuthenticated(), controller.updateCenter);

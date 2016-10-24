@@ -8,7 +8,6 @@ var morgan = require('morgan');
 var bodyParser = require('body-parser');
 var errorHandler = require('errorhandler');
 
-
 module.exports = function(app) {
     var env = app.get('env');
 

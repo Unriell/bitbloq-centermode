@@ -1,7 +1,8 @@
 /* global Buffer */
 'use strict';
 
-var mongoose = require('mongoose');
+var mongoose = require('mongoose'),
+    ProjectFunctions = require('../project/project.functions.js');
 
 var UserSchema = new mongoose.Schema({
     firstName: {
@@ -330,4 +331,76 @@ UserSchema
         next();
     });
 
+/**
+ * Methods
+ */
+UserSchema.methods = {
+
+    /**
+     * check if user is validated
+     *
+     * @param {Object} user
+     * @return {Boolean}
+     * @api public
+     */
+    isValidated: function() {
+        if (this.anonymous) {
+            return false;
+        } else {
+            if (this.needValidation) {
+                var createdDay = new Date(this.createdAt);
+                createdDay.setDate(createdDay.getDate() + 15);
+                if (createdDay.getTime() < Date.now()) {
+                    this.anonymize('rejectInValidation', function() {
+                        return false
+                    });
+                } else {
+                    return true;
+                }
+            } else {
+                return true;
+            }
+        }
+    },
+
+    anonymize: function(anonText, next) {
+        this.firstName = 'anon';
+        this.lastName = 'anon';
+        this.email = 'anon@anon.com' + Date.now();
+        this.username = 'anon' + Date.now();
+        this.password = Date.now() * Math.random();
+        this.bannedInForum = true;
+        this.needValidation = false;
+        this.tutor = {
+            dni: '',
+            firstName: '',
+            lastName: '',
+            email: '',
+            validation: {
+                result: false,
+                date: Date.now()
+            }
+        };
+        this.social = {
+            google: {
+                id: ''
+            },
+            facebook: {
+                id: ''
+            }
+        };
+        this.anonymous = anonText;
+
+        var that = this;
+        ProjectFunctions.deleteAllByUser(this._id, function(err) {
+            if (err) {
+                next(500);
+            } else {
+                that.save(next);
+            }
+        });
+    }
+};
+
 module.exports = mongoose.model('User', UserSchema);
+
