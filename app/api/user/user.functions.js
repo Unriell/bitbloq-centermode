@@ -158,3 +158,23 @@ exports.getCenterIdbyHeadMaster = function(userId, next) {
         }
     });
 };
+
+
+/**
+ * Get a single profile teacher
+ * @param {String} userId
+ * @param {String} centerId
+ * @param {Function} next
+ * @return {Object} user.profile
+ */
+exports.getTeacher = function(teacherId, centerId, next) {
+    User.findById(teacherId, function(err, user) {
+        if (err) {
+            next(err);
+        } else if (user && user.centers && user.centers[centerId] && user.centers[centerId].role === 'teacher') {
+            next(err, user.teacherProfile);
+        } else {
+            next(204);
+        }
+    });
+};

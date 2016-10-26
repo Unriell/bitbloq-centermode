@@ -153,6 +153,22 @@ UserSchema
         };
     });
 
+// Information for the owner
+UserSchema
+    .virtual('teacherProfile')
+    .get(function() {
+        return {
+            '_id': this._id,
+            'firstName': this.firstName,
+            'lastName': this.lastName,
+            'username': this.username,
+            'email': this.email,
+            'role': this.role,
+            'centers': this.centers
+        };
+    });
+
+
 // Non-sensitive info we'll be putting in the token
 UserSchema
     .virtual('token')

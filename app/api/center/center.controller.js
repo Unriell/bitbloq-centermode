@@ -97,6 +97,32 @@ exports.getMyCenter = function(req, res) {
 };
 
 /**
+ * Get a teacher
+ * @param req
+ * @param res
+ */
+exports.getTeacher = function(req, res) {
+    var userId = req.user._id,
+        centerId = req.params.centerId,
+        teacherId = req.params.teacherId;
+    async.waterfall([
+        UserFunctions.userIsHeadMaster.bind(UserFunctions, userId, centerId),
+        function(centerId, next) {
+            UserFunctions.getTeacher(teacherId, centerId, next);
+        }
+    ], function(err, result) {
+        if (err) {
+            console.log(err);
+            res.sendStatus(401);
+        } else if (!result) {
+            res.sendStatus(304);
+        } else {
+            res.send(result);
+        }
+    });
+};
+
+/**
  * Get teachers in a center
  * @param req
  * @param res
