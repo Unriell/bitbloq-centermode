@@ -6,6 +6,39 @@ var User = require('./user.model.js'),
 
 
 
+/**
+ * Get an user
+ * @param {String} email
+ * @param {Function} next
+ * @return {Object} user.owner
+ */
+exports.getUserByEmail = function(email, next) {
+    User.findOne({
+        email: email
+    }, function(err, user) {
+        if (err) {
+            next(err);
+        } else if (user) {
+            next(err, user.owner);
+        } else {
+            next();
+        }
+    });
+};
+
+/**
+ * Get users
+ * @param {String} emails
+ * @param {Function} next
+ * @return {Array} userIds
+ */
+exports.getAllUsersByEmails = function(emails, next) {
+    async.map(emails, exports.getUserByEmail, function(err, userIds) {
+        next(err, userIds);
+    });
+};
+
+
 /**********************************
  *** Center functions with users
  **********************************/

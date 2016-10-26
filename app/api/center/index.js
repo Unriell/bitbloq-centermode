@@ -11,6 +11,7 @@ var router = express.Router();
 router.head('/:type', auth.isAuthenticated(), controller.isHeadMaster);
 
 // GET
+router.get('/me', auth.isAuthenticated(), controller.getMyCenter);
 router.get('/:centerId/teacher', auth.isAuthenticated(), controller.getTeachers);
 router.get('/:id', auth.isAuthenticated(), controller.getCenter);
 

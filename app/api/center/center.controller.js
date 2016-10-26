@@ -1,6 +1,7 @@
 'use strict';
 
-var UserFunctions = require('../user/user.functions.js'),
+var Center = require('./center.model.js'),
+    UserFunctions = require('../user/user.functions.js'),
     async = require('async');
 
 /**
@@ -72,6 +73,30 @@ exports.deleteTeacher = function(req, res) {
 
 
 /**
+ * Get my center, if user is head master
+ * @param req
+ * @param res
+ */
+exports.getMyCenter = function(req, res){
+    var userId = req.user._id;
+    async.waterfall([
+        UserFunctions.getCenterIdbyHeadMaster.bind(UserFunctions, userId),
+        function(centerId, next){
+            Center.findById(centerId, next);
+        }
+    ], function(err, center){
+        if(err){
+            console.log(err);
+            res.status(err.code).send(err);
+        } else if(center) {
+            res.send(center);
+        } else {
+            res.sendStatus(204);
+        }
+    });
+};
+
+/**
  * Get teachers in a center
  * @param req
  * @param res
@@ -115,9 +140,12 @@ exports.isHeadMaster = function(req, res){
     var userId = req.user._id;
     UserFunctions.getCenterIdbyHeadMaster(userId, function(err, result){
         if(err){
+            console.log(err);
             res.status(err.code).send(err);
+        } else if(result) {
+            res.sendStatus(200);
         } else {
-            res.send(!!result);
+            res.sendStatus(204);
         }
     });
 };
