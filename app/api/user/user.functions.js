@@ -5,7 +5,6 @@ var User = require('./user.model.js'),
     mongoose = require('mongoose');
 
 
-
 /**
  * Get an user
  * @param {String} email
@@ -50,16 +49,16 @@ exports.getAllUsersByEmails = function(emails, next) {
  * @return {Function} next
  */
 exports.addTeacher = function(user, centerId, next) {
-    user.centers = user.centers || [];
+    user.centers = user.centers || {};
     var centerExist = _.find(user.centers, function(center) {
         return String(center._id) === String(centerId);
     });
     if (!centerExist) {
         var newCenter = {
-            _id: centerId,
-            role: 'teacher'
+            role: 'teacher',
+            date: Date.now()
         };
-        user.centers.push(newCenter);
+        user.centers[centerId] = newCenter;
         User.update({
             _id: user._id
         }, {
@@ -96,16 +95,13 @@ exports.deleteTeacher = function(userId, centerId, next) {
     async.waterfall([
         User.findById.bind(User, userId),
         function(user, next) {
-            var indexArray;
-            user.centers.forEach(function(center, index) {
-                if (String(center._id) === String(centerId) && center.role === 'teacher') {
-                    indexArray = index;
-                }
-            });
-            if (indexArray > -1) {
-                user.centers.splice(indexArray, 1);
+            if (user.centers[centerId].role === 'teacher') {
+                var userObject = user.toObject();
+                delete userObject.centers[centerId];
+                user.update(userObject, next);
+            } else {
+                next();
             }
-            user.update(user, next);
         }
     ], next);
 };
@@ -119,37 +115,28 @@ exports.deleteTeacher = function(userId, centerId, next) {
  */
 exports.getAllTeachers = function(centerId, next) {
     User.find({})
-        .elemMatch("centers", {
-            _id: centerId,
-            role: 'teacher'
-        }).exec(next);
+        .where('centers.' + centerId + '.role').equals('teacher')
+        .exec(next);
 };
 
 
 /**
  * if user is center admin, get the center information.
- * if centerId isn't an attribute, it returns first center that user is admin
  * @param {String} userId
  * @param {String} centerId
  * @return {Function} next
  */
-exports.getCenterWithUserAdmin = function(userId, centerId, next) {
-    async.waterfall([
-        User.findById.bind(User, userId),
-        function(user, next) {
-            var myCenterId;
-            _.forEach(user.centers, function(center) {
-                if ((centerId && String(center._id) === String(centerId) && center.role === 'headMaster') || (!centerId && center.role === 'headMaster')) {
-                    myCenterId = center._id;
-                    next(null, myCenterId);
-                }
-            });
-            if (!myCenterId) {
+exports.userIsHeadMaster = function(userId, centerId, next) {
+    User.findById(userId, function(err, user) {
+        if (err) {
+            next(err)
+        } else {
+            if (user.isHeadMaster(centerId)) {
+                next(null, centerId);
+            } else {
                 next(401);
             }
         }
-    ], function(err, result) {
-        next(err, result);
     });
 };
 
@@ -163,12 +150,8 @@ exports.getCenterIdbyHeadMaster = function(userId, next) {
             res.status(err.code).send(err);
         } else {
             var centerId;
-            if (user && user.centers) {
-                user.centers.forEach(function(center) {
-                    if (center.role === 'headMaster') {
-                        centerId = center._id;
-                    }
-                });
+            if (user) {
+                centerId = user.getHeadMasterCenter();
             }
             next(null, centerId);
         }

@@ -14,7 +14,7 @@ exports.addTeacher = function(req, res) {
         newTeacherEmails = req.body,
         centerId = req.params.centerId;
     async.parallel([
-        UserFunctions.getCenterWithUserAdmin.bind(UserFunctions, userId, centerId),
+        UserFunctions.userIsHeadMaster.bind(UserFunctions, userId, centerId),
         UserFunctions.getAllUsersByEmails.bind(UserFunctions, newTeacherEmails)
     ], function(err, result) {
         if (err) {
@@ -55,7 +55,7 @@ exports.deleteTeacher = function(req, res) {
         centerId = req.params.centerId,
         teacherId = req.params.teacherId;
     async.waterfall([
-        UserFunctions.getCenterWithUserAdmin.bind(UserFunctions, userId, centerId),
+        UserFunctions.userIsHeadMaster.bind(UserFunctions, userId, centerId),
         function(centerId, next) {
             UserFunctions.deleteTeacher(teacherId, centerId, next);
         }
@@ -77,18 +77,18 @@ exports.deleteTeacher = function(req, res) {
  * @param req
  * @param res
  */
-exports.getMyCenter = function(req, res){
+exports.getMyCenter = function(req, res) {
     var userId = req.user._id;
     async.waterfall([
         UserFunctions.getCenterIdbyHeadMaster.bind(UserFunctions, userId),
-        function(centerId, next){
+        function(centerId, next) {
             Center.findById(centerId, next);
         }
-    ], function(err, center){
-        if(err){
+    ], function(err, center) {
+        if (err) {
             console.log(err);
             res.status(err.code).send(err);
-        } else if(center) {
+        } else if (center) {
             res.send(center);
         } else {
             res.sendStatus(204);
@@ -105,7 +105,7 @@ exports.getTeachers = function(req, res) {
     var userId = req.user._id,
         centerId = req.params.centerId;
     async.waterfall([
-        UserFunctions.getCenterWithUserAdmin.bind(UserFunctions, userId, centerId),
+        UserFunctions.userIsHeadMaster.bind(UserFunctions, userId, centerId),
         function(centerId, next) {
             UserFunctions.getAllTeachers(centerId, next);
         }
@@ -136,13 +136,13 @@ exports.getCenter = function(req, res) {
  * @param req
  * @param res
  */
-exports.isHeadMaster = function(req, res){
+exports.isHeadMaster = function(req, res) {
     var userId = req.user._id;
-    UserFunctions.getCenterIdbyHeadMaster(userId, function(err, result){
-        if(err){
+    UserFunctions.getCenterIdbyHeadMaster(userId, function(err, result) {
+        if (err) {
             console.log(err);
             res.status(err.code).send(err);
-        } else if(result) {
+        } else if (result) {
             res.sendStatus(200);
         } else {
             res.sendStatus(204);

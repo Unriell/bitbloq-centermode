@@ -2,7 +2,8 @@
 'use strict';
 
 var mongoose = require('mongoose'),
-    ProjectFunctions = require('../project/project.functions.js');
+    ProjectFunctions = require('../project/project.functions.js'),
+    _ = require('lodash');
 
 var UserSchema = new mongoose.Schema({
     firstName: {
@@ -97,14 +98,7 @@ var UserSchema = new mongoose.Schema({
         }
     },
     anonymous: String,
-    centers: [{
-        _id: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Center',
-            trim: false
-        },
-        role: String // headMaster | teacher | student
-    }]
+    centers: {} // CenterId : {date, role: headMaster | teacher | student}
 }, {
     timestamps: true
 });
@@ -399,6 +393,26 @@ UserSchema.methods = {
                 that.save(next);
             }
         });
+    },
+
+    isHeadMaster: function(centerId) {
+        if (this.centers && this.centers[centerId] && this.centers[centerId].role === 'headMaster') {
+            return true;
+        } else {
+            return false;
+        }
+    },
+
+    getHeadMasterCenter: function() {
+        var centerId;
+        if (this.centers) {
+            _.forEach(this.centers, function(center, key) {
+                if (center.role === 'headMaster') {
+                    centerId = key;
+                }
+            });
+        }
+        return centerId;
     }
 };
 
