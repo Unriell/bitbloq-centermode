@@ -115,6 +115,7 @@ exports.deleteTeacher = function(userId, centerId, next) {
  */
 exports.getAllTeachers = function(centerId, next) {
     User.find({})
+        .select('_id username firstName lastName email')
         .where('centers.' + centerId + '.role').equals('teacher')
         .exec(next);
 };
