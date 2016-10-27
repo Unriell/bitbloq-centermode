@@ -1,8 +1,7 @@
 'use strict';
 var User = require('./user.model.js'),
     async = require('async'),
-    _ = require('lodash'),
-    mongoose = require('mongoose');
+    _ = require('lodash');
 
 
 /**

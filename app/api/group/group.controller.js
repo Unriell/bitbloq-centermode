@@ -2,7 +2,8 @@
 
 var Group = require('./group.model.js'),
     UserFunctions = require('../user/user.functions.js'),
-    async = require('async');
+    async = require('async'),
+    mongoose = require('mongoose');
 
 /**
  * Create group
@@ -35,12 +36,46 @@ exports.getGroup = function(req, res) {
 };
 
 /**
+ * Get student group
+ * @param req
+ * @param res
+ */
+exports.getGroups = function(req, res) {
+    var userId = req.user._id;
+    Group.find({
+        teacher: userId
+    }, function(err, groups) {
+        if (err) {
+            res.status(err.code).send(err);
+        } else {
+            res.status(200).send(groups);
+        }
+    });
+};
+
+/**
  * Get student group by its teacher
  * @param req
  * @param res
  */
 exports.getGroupByTeacher = function(req, res) {
-
+    var userId = req.user._id,
+        teacherId = req.params.teacherId;
+    async.waterfall([
+        UserFunctions.getCenterIdbyHeadMaster.bind(UserFunctions, userId),
+        function(centerId, next) {
+            Group.find({
+                teacher: teacherId,
+                center: centerId
+            }, next);
+        }
+    ], function(err, groups) {
+        if (err) {
+            res.status(err.code).send(err);
+        } else {
+            res.status(200).send(groups);
+        }
+    });
 };
 
 /**

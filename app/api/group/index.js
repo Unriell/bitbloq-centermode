@@ -8,7 +8,8 @@ var router = express.Router();
 
 // GET
 router.get('/:id', auth.isAuthenticated(), controller.getGroup);
-router.get('/teacher/:id', auth.isAuthenticated(), controller.getGroupByTeacher);
+router.get('/teacher/:teacherId', auth.isAuthenticated(), controller.getGroupByTeacher);
+router.get('/', auth.isAuthenticated(), controller.getGroups);
 
 // POST
 router.post('/', auth.isAuthenticated(), controller.createGroup);
