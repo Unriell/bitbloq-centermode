@@ -158,26 +158,6 @@ exports.getCenter = function(req, res) {
 
 
 /**
- * Returns if a user is head master
- * @param req
- * @param res
- */
-exports.isHeadMaster = function(req, res) {
-    var userId = req.user._id;
-    UserFunctions.getCenterIdbyHeadMaster(userId, function(err, result) {
-        if (err) {
-            console.log(err);
-            res.status(err.code).send(err);
-        } else if (result) {
-            res.sendStatus(200);
-        } else {
-            res.sendStatus(204);
-        }
-    });
-};
-
-
-/**
  * Update center information
  * @param req
  * @param res

@@ -6,10 +6,6 @@ var express = require('express'),
 
 var router = express.Router();
 
-
-//HEAD
-router.head('/:type', auth.isAuthenticated(), controller.isHeadMaster);
-
 // GET
 router.get('/:centerId/teacher/:teacherId', auth.isAuthenticated(), controller.getTeacher);
 router.get('/me', auth.isAuthenticated(), controller.getMyCenter);
