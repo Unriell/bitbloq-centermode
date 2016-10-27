@@ -7,16 +7,16 @@ var express = require('express'),
 var router = express.Router();
 
 // GET
-router.get('/group/:id', auth.isAuthenticated(), controller.getGroup);
-router.get('/group/teacher/:id', auth.isAuthenticated(), controller.getGroupByTeacher);
+router.get('/:id', auth.isAuthenticated(), controller.getGroup);
+router.get('/teacher/:id', auth.isAuthenticated(), controller.getGroupByTeacher);
 
 // POST
-router.post('/group', auth.isAuthenticated(), controller.createGroup);
+router.post('/', auth.isAuthenticated(), controller.createGroup);
 
 // PUT
-router.put('/group/:id', auth.isAuthenticated(), controller.updateGroup);
+router.put('/:id', auth.isAuthenticated(), controller.updateGroup);
 
 // DELETE
-router.delete('/group/:id', auth.isAuthenticated(), controller.deleteGroup);
+router.delete('/:id', auth.isAuthenticated(), controller.deleteGroup);
 
 module.exports = router;

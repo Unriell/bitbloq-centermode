@@ -12,6 +12,10 @@ var GroupSchema = new mongoose.Schema({
         type: String,
         default: 'progress' //open | inProgress | closed
     },
+    accessId : {
+        type: String,
+        required: true
+    },
     creator: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -21,6 +25,12 @@ var GroupSchema = new mongoose.Schema({
     teacher: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
+        trim: false,
+        required: true
+    },
+    center: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Center',
         trim: false,
         required: true
     },

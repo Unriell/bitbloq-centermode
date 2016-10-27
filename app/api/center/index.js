@@ -24,7 +24,7 @@ router.post('/', auth.isAuthenticated(), controller.createCenter);
 router.put('/:id', auth.isAuthenticated(), controller.updateCenter);
 
 // DELETE
-router.delete('/:id', auth.isAuthenticated(), controller.anonCenter);
 router.delete('/:centerId/teacher/:teacherId', auth.isAuthenticated(), controller.deleteTeacher);
+router.delete('/:id', auth.isAuthenticated(), controller.anonCenter);
 
 module.exports = router;
