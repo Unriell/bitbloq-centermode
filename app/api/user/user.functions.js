@@ -94,7 +94,7 @@ exports.deleteTeacher = function(userId, centerId, next) {
     async.waterfall([
         User.findById.bind(User, userId),
         function(user, next) {
-            if (user.centers[centerId].role === 'teacher') {
+            if (user && user.centers[centerId].role === 'teacher') {
                 var userObject = user.toObject();
                 delete userObject.centers[centerId];
                 user.update(userObject, next);
@@ -119,6 +119,55 @@ exports.getAllTeachers = function(centerId, next) {
         .exec(next);
 };
 
+/**
+ * Returns if a user is head master
+ * @param {String} user Id
+ * @param {Function} next
+ */
+exports.getCenterIdbyHeadMaster = function(userId, next) {
+    User.findById(userId, function(err, user) {
+        var centerId;
+        if (user) {
+            centerId = user.getHeadMasterCenter();
+        }
+        next(err, centerId);
+    });
+};
+
+/**
+ * Ger user role in center
+ *
+ * @param {String} userId
+ * @param {Function} next
+ */
+exports.getMyRoleInCenter = function(userId, centerId, next) {
+    User.findById(userId, function(err, user) {
+        var role;
+        if (user && user.centers && user.centers && user.centers[centerId]) {
+            role = user.centers[centerId].role;
+        }
+        next(err, role);
+    });
+};
+
+
+/**
+ * Get a single profile teacher
+ * @param {String} userId
+ * @param {String} centerId
+ * @param {Function} next
+ * @return {Object} user.profile
+ */
+exports.getTeacher = function(teacherId, centerId, next) {
+    User.findById(teacherId, function(err, user) {
+        var response;
+        if (user && user.centers && user.centers[centerId] && user.centers[centerId].role === 'teacher') {
+            response = user.teacherProfile;
+        }
+        next(err, response);
+    });
+};
+
 
 /**
  * if user is center admin, get the center information.
@@ -136,44 +185,6 @@ exports.userIsHeadMaster = function(userId, centerId, next) {
             } else {
                 next(401);
             }
-        }
-    });
-};
-
-/**
- * Returns if a user is head master
- * @param user Id
- */
-exports.getCenterIdbyHeadMaster = function(userId, next) {
-    User.findById(userId, function(err, user) {
-        if (err) {
-            res.status(err.code).send(err);
-        } else {
-            var centerId;
-            if (user) {
-                centerId = user.getHeadMasterCenter();
-            }
-            next(null, centerId);
-        }
-    });
-};
-
-
-/**
- * Get a single profile teacher
- * @param {String} userId
- * @param {String} centerId
- * @param {Function} next
- * @return {Object} user.profile
- */
-exports.getTeacher = function(teacherId, centerId, next) {
-    User.findById(teacherId, function(err, user) {
-        if (err) {
-            next(err);
-        } else if (user && user.centers && user.centers[centerId] && user.centers[centerId].role === 'teacher') {
-            next(err, user.teacherProfile);
-        } else {
-            next(204);
         }
     });
 };

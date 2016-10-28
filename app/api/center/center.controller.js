@@ -2,6 +2,7 @@
 
 var Center = require('./center.model.js'),
     UserFunctions = require('../user/user.functions.js'),
+    GroupFunctions = require('../group/group.functions.js'),
     async = require('async');
 
 /**
@@ -57,6 +58,9 @@ exports.deleteTeacher = function(req, res) {
     async.waterfall([
         UserFunctions.userIsHeadMaster.bind(UserFunctions, userId, centerId),
         function(centerId, next) {
+            GroupFunctions.deleteGroups(teacherId, centerId, next);
+        },
+        function(updated, next) {
             UserFunctions.deleteTeacher(teacherId, centerId, next);
         }
     ], function(err, result) {

@@ -12,7 +12,7 @@ var GroupSchema = new mongoose.Schema({
         type: String,
         default: 'progress' //open | inProgress | closed
     },
-    accessId : {
+    accessId: {
         type: String,
         required: true
     },
