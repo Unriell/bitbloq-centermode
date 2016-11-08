@@ -15,6 +15,12 @@ var CenterSchema = new mongoose.Schema({
         type: Number,
         trim: true,
         required: true
+    },
+    creator: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        trim: false,
+        required: true
     }
 }, {
     timestamps: true

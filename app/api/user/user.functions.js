@@ -42,6 +42,38 @@ exports.getAllUsersByEmails = function(emails, next) {
  **********************************/
 
 /**
+ * Add an user in a center like head master
+ * @param {String} usersId
+ * @param {String} centerId
+ * @return {Function} next
+ */
+exports.addHeadMaster = function(userId, centerId, next) {
+    User.findById(userId, function(err, user) {
+        if (err) {
+            console.log(err);
+            next(err);
+        } else {
+            user.centers = user.centers || {};
+            if (!user.centers[centerId] || (user.centers[centerId].role !== 'headMaster')) {
+                var newCenter = {
+                    role: 'headMaster',
+                    date: Date.now()
+                };
+                user.centers[centerId] = newCenter;
+                User.update({
+                    _id: user._id
+                }, {
+                    centers: user.centers
+                }, next);
+            } else {
+                next(null, user);
+            }
+        }
+    });
+};
+
+
+/**
  * Add an user in a center like teacher
  * @param {String} users
  * @param {String} centerId

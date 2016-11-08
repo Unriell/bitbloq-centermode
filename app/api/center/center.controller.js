@@ -43,7 +43,27 @@ exports.addTeacher = function(req, res) {
  * @param res
  */
 exports.createCenter = function(req, res) {
-
+    var userId = req.user._id,
+        center = req.body;
+    center.creator = userId;
+    var newCenter = new Center(center);
+    async.waterfall([
+        function(next) {
+            newCenter.save(center, next);
+        },
+        function(savedCenter, updated, next) {
+            UserFunctions.addHeadMaster(userId, savedCenter._id, next);
+        }
+    ], function(err, result) {
+        if (err) {
+            console.log(err);
+            res.status(err.code).send(err);
+        } else if (result) {
+            res.sendStatus(200);
+        } else {
+            res.sendStatus(204);
+        }
+    });
 };
 
 /**
