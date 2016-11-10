@@ -17,6 +17,7 @@ exports.createGroup = function(req, res) {
     var newGroup = new Group(group);
     newGroup.save(group, function(err, result) {
         if (err) {
+            console.log(err);
             res.status(err.code).send(err);
         } else if (result) {
             res.sendStatus(200);
@@ -32,7 +33,27 @@ exports.createGroup = function(req, res) {
  * @param res
  */
 exports.getGroup = function(req, res) {
-
+    var userId = req.user._id,
+        groupId = req.params.id;
+    async.waterfall([
+        Group.findById.bind(Group, groupId),
+        function(group, next) {
+            if (group.creator == userId) {
+                next(null, group)
+            } else {
+                UserFunctions.userIsHeadMaster(userId, group.center, function(err) {
+                    next(err, group);
+                });
+            }
+        }
+    ], function(err, group) {
+        if (err) {
+            console.log(err);
+            res.status(err.code).send(err);
+        } else {
+            res.status(200).send(group);
+        }
+    });
 };
 
 /**
@@ -46,6 +67,7 @@ exports.getGroups = function(req, res) {
         teacher: userId
     }, function(err, groups) {
         if (err) {
+            console.log(err);
             res.status(err.code).send(err);
         } else {
             res.status(200).send(groups);
@@ -71,6 +93,7 @@ exports.getGroupByTeacher = function(req, res) {
         }
     ], function(err, groups) {
         if (err) {
+            console.log(err);
             res.status(err.code).send(err);
         } else {
             res.status(200).send(groups);
