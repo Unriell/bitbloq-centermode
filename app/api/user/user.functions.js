@@ -147,7 +147,7 @@ exports.deleteTeacher = function(userId, centerId, next) {
 exports.getAllTeachers = function(centerId, next) {
     User.find({})
         .select('_id username firstName lastName email')
-        .where('centers.' + centerId + '.role').equals('teacher')
+        .where('centers.' + centerId + '.role').in(['teacher', 'headMaster'])
         .exec(next);
 };
 
@@ -193,7 +193,7 @@ exports.getMyRoleInCenter = function(userId, centerId, next) {
 exports.getTeacher = function(teacherId, centerId, next) {
     User.findById(teacherId, function(err, user) {
         var response;
-        if (user && user.centers && user.centers[centerId] && user.centers[centerId].role === 'teacher') {
+        if (user && user.centers && user.centers[centerId] && (user.centers[centerId].role === 'teacher' || user.centers[centerId].role === 'headMaster')) {
             response = user.teacherProfile;
         }
         next(err, response);
