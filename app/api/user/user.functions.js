@@ -45,7 +45,7 @@ exports.getAllUsersByEmails = function(emails, next) {
  * Add an user in a center like head master
  * @param {String} usersId
  * @param {String} centerId
- * @return {Function} next
+ * @param {Function} next
  */
 exports.addHeadMaster = function(userId, centerId, next) {
     User.findById(userId, function(err, user) {
@@ -77,7 +77,7 @@ exports.addHeadMaster = function(userId, centerId, next) {
  * Add an user in a center like teacher
  * @param {String} users
  * @param {String} centerId
- * @return {Function} next
+ * @param {Function} next
  */
 exports.addTeacher = function(user, centerId, next) {
     user.centers = user.centers || {};
@@ -105,7 +105,7 @@ exports.addTeacher = function(user, centerId, next) {
  * Add users in a center like teachers
  * @param {String} users
  * @param {String} centerId
- * @return {Function} next
+ * @param {Function} next
  */
 exports.addAllTeachers = function(users, centerId, next) {
     async.map(users, function(user, next) {
@@ -120,7 +120,7 @@ exports.addAllTeachers = function(users, centerId, next) {
  * Add users in a center like teachers
  * @param {String} users
  * @param {String} centerId
- * @return {Function} next
+ * @param {Function} next
  */
 exports.deleteTeacher = function(userId, centerId, next) {
     async.waterfall([
@@ -188,7 +188,7 @@ exports.getMyRoleInCenter = function(userId, centerId, next) {
  * @param {String} userId
  * @param {String} centerId
  * @param {Function} next
- * @return {Object} user.profile
+ * @param {Object} user.profile
  */
 exports.getTeacher = function(teacherId, centerId, next) {
     User.findById(teacherId, function(err, user) {
@@ -205,7 +205,7 @@ exports.getTeacher = function(teacherId, centerId, next) {
  * if user is center admin, get the center information.
  * @param {String} userId
  * @param {String} centerId
- * @return {Function} next
+ * @param {Function} next
  */
 exports.userIsHeadMaster = function(userId, centerId, next) {
     User.findById(userId, function(err, user) {

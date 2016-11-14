@@ -1,6 +1,7 @@
 'use strict';
 
-var mongoose = require('mongoose');
+var mongoose = require('mongoose'),
+    UserFunctions = require('../user/user.functions.js');
 
 var GroupSchema = new mongoose.Schema({
     name: {
@@ -10,7 +11,7 @@ var GroupSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        default: 'progress' //open | inProgress | closed
+        default: 'open' //open | inProgress | closed
     },
     accessId: {
         type: String,
@@ -42,4 +43,31 @@ var GroupSchema = new mongoose.Schema({
     timestamps: true
 });
 
+/**
+* Methods
+*/
+
+GroupSchema.methods = {
+
+    /**
+     * userCanUpdate - check if an user can update this object
+     * @param {String} userId
+     * @param {Function} next
+     * @api public
+     */
+    userCanUpdate: function(userId, next) {
+        if (userId == this.creator) {
+            next(null, true);
+        } else {
+            this.timesViewed++;
+            UserFunctions.userIsHeadMaster(userId, this.center, function(err, centerId){
+                if (centerId){
+                    next(null, true);
+                } else {
+                    next(err, false);
+                }
+            });
+        }
+    }
+};
 module.exports = mongoose.model('Group', GroupSchema);
