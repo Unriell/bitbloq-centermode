@@ -112,10 +112,10 @@ exports.updateGroup = function(req, res) {
     async.waterfall([
         Group.findById.bind(Group, groupId),
         function(group, next) {
-            group.userCanUpdate(userId, function(err, canUpdate){
-                if(err){
+            group.userCanUpdate(userId, function(err, canUpdate) {
+                if (err) {
                     next(err);
-                } else if(!canUpdate){
+                } else if (!canUpdate) {
                     next(401);
                 } else {
                     group.update(req.body, next);
@@ -138,5 +138,27 @@ exports.updateGroup = function(req, res) {
  * @param res
  */
 exports.deleteGroup = function(req, res) {
-
+    var userId = req.user._id,
+        groupId = req.params.id;
+    async.waterfall([
+        Group.findById.bind(Group, groupId),
+        function(group, next) {
+            group.userCanUpdate(userId, function(err, canUpdate) {
+                if (err) {
+                    next(err);
+                } else if (!canUpdate) {
+                    next(401);
+                } else {
+                    group.remove(next);
+                }
+            });
+        }
+    ], function(err) {
+        if (err) {
+            console.log(err);
+            res.status(err.code).send(err);
+        } else {
+            res.sendStatus(200);
+        }
+    });
 };
