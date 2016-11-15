@@ -162,3 +162,13 @@ exports.deleteGroup = function(req, res) {
         }
     });
 };
+
+
+/**
+ * Register a student in a group
+ * @param req
+ * @param res
+ */
+exports.registerInGroup = function(req, res) {
+
+};
