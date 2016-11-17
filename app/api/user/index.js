@@ -12,4 +12,5 @@ router.head('/headMaster', auth.isAuthenticated(), controller.isHeadMaster);
 // GET
 router.get('/role', auth.isAuthenticated(), controller.getMyRole);
 
+
 module.exports = router;

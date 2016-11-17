@@ -98,6 +98,10 @@ var UserSchema = new mongoose.Schema({
         }
     },
     anonymous: String,
+    studentMode: {
+        type: Boolean,
+        default: false
+    },
     centers: {} // CenterId : {date, role: headMaster | teacher | student}
 }, {
     timestamps: true
