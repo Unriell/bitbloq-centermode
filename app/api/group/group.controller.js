@@ -59,15 +59,26 @@ exports.getGroup = function(req, res) {
 };
 
 /**
- * Get student group
+ * Get group as student or as teacher
  * @param req
  * @param res
  */
 exports.getGroups = function(req, res) {
     var userId = req.user._id;
-    Group.find({
-        teacher: userId
-    }, function(err, groups) {
+    async.waterfall([
+        UserFunctions.userIsStudent.bind(UserFunctions, userId),
+        function(isStudent, next) {
+            if (isStudent) {
+                Group.find({
+                    students: {$in: [userId]}
+                }, next);
+            } else {
+                Group.find({
+                    teacher: userId
+                }, next);
+            }
+        }
+    ], function(err, groups) {
         if (err) {
             console.log(err);
             err.code = parseInt(err.code) || 500;

@@ -416,11 +416,11 @@ UserSchema.methods = {
     },
 
     isHeadMaster: function(centerId) {
-        if (this.centers && this.centers[centerId] && this.centers[centerId].role === 'headMaster') {
-            return true;
-        } else {
-            return false;
-        }
+        return (this.centers && this.centers[centerId] && this.centers[centerId].role === 'headMaster');
+    },
+
+    isStudent: function() {
+        return this.studentMode;
     },
 
     getHeadMasterCenter: function() {

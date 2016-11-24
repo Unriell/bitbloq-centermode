@@ -202,7 +202,7 @@ exports.getTeacher = function(teacherId, centerId, next) {
 
 
 /**
- * if user is center admin, get the center information.
+ * if user is head master in a center, get the center information.
  * @param {String} userId
  * @param {String} centerId
  * @param {Function} next
@@ -210,12 +210,32 @@ exports.getTeacher = function(teacherId, centerId, next) {
 exports.userIsHeadMaster = function(userId, centerId, next) {
     User.findById(userId, function(err, user) {
         if (err) {
-            next(err)
+            next(err);
         } else {
             if (user.isHeadMaster(centerId)) {
                 next(null, centerId);
             } else {
                 next(401);
+            }
+        }
+    });
+};
+
+
+/**
+ * if user is student
+ * @param {String} userId
+ * @param {Function} next
+ */
+exports.userIsStudent = function(userId, next) {
+    User.findById(userId, function(err, user) {
+        if (err) {
+            next(err, false);
+        } else {
+            if (user.isStudent()) {
+                next(null, true);
+            } else {
+                next(401, false);
             }
         }
     });
