@@ -18,6 +18,7 @@ exports.createGroup = function(req, res) {
     newGroup.save(group, function(err, result) {
         if (err) {
             console.log(err);
+            err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else if (result) {
             res.sendStatus(200);
@@ -49,6 +50,7 @@ exports.getGroup = function(req, res) {
     ], function(err, group) {
         if (err) {
             console.log(err);
+            err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).send(group);
@@ -68,6 +70,7 @@ exports.getGroups = function(req, res) {
     }, function(err, groups) {
         if (err) {
             console.log(err);
+            err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).send(groups);
@@ -94,6 +97,7 @@ exports.getGroupByTeacher = function(req, res) {
     ], function(err, groups) {
         if (err) {
             console.log(err);
+            err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).send(groups);
@@ -125,6 +129,7 @@ exports.updateGroup = function(req, res) {
     ], function(err) {
         if (err) {
             console.log(err);
+            err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else {
             res.sendStatus(200);
@@ -156,6 +161,7 @@ exports.deleteGroup = function(req, res) {
     ], function(err) {
         if (err) {
             console.log(err);
+            err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else {
             res.sendStatus(200);
@@ -170,5 +176,37 @@ exports.deleteGroup = function(req, res) {
  * @param res
  */
 exports.registerInGroup = function(req, res) {
+    var userId = req.user._id,
+        groupId = req.params.id;
+
+    Group.findOne({
+        accessId: groupId,
+        status: 'open'
+    }, function(err, group) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else if (group) {
+            group.students = group.students || [];
+            if (group.students.indexOf(userId) === -1) {
+                group.students.push(userId);
+                group.update(group, function(err, response) {
+                    if (err) {
+                        console.log(err);
+                        err.code = parseInt(err.code) || 500;
+                        res.status(err.code).send(err);
+                    } else {
+                        res.sendStatus(200);
+                    }
+                });
+            } else {
+                res.sendStatus(200);
+            }
+        } else {
+            res.sendStatus(401);
+        }
+    });
+
 
 };

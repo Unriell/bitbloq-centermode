@@ -26,4 +26,4 @@ var CenterSchema = new mongoose.Schema({
     timestamps: true
 });
 
-module.exports = mongoose.model('Center', CenterSchema);
+module.exports = mongoose.model('CenterMode-Center', CenterSchema);

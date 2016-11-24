@@ -44,8 +44,8 @@ var GroupSchema = new mongoose.Schema({
 });
 
 /**
-* Methods
-*/
+ * Methods
+ */
 
 GroupSchema.methods = {
 
@@ -60,8 +60,8 @@ GroupSchema.methods = {
             next(null, true);
         } else {
             this.timesViewed++;
-            UserFunctions.userIsHeadMaster(userId, this.center, function(err, centerId){
-                if (centerId){
+            UserFunctions.userIsHeadMaster(userId, this.center, function(err, centerId) {
+                if (centerId) {
                     next(null, true);
                 } else {
                     next(err, false);
@@ -70,4 +70,4 @@ GroupSchema.methods = {
         }
     }
 };
-module.exports = mongoose.model('Group', GroupSchema);
+module.exports = mongoose.model('CenterMode-Group', GroupSchema);

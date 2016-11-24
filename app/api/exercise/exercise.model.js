@@ -30,4 +30,4 @@ var ExerciseSchema = new mongoose.Schema({
     timestamps: true
 });
 
-module.exports = mongoose.model('Exercise', ExerciseSchema);
+module.exports = mongoose.model('CenterMode-Exercise', ExerciseSchema);

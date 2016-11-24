@@ -10,11 +10,12 @@ var User = require('./user.model.js'),
  * @param req
  * @param res
  */
-exports.isHeadMaster = function (req, res) {
+exports.isHeadMaster = function(req, res) {
     var userId = req.user._id;
-    UserFunctions.getCenterIdbyHeadMaster(userId, function (err, result) {
+    UserFunctions.getCenterIdbyHeadMaster(userId, function(err, result) {
         if (err) {
             console.log(err);
+            err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else if (result) {
             res.sendStatus(200);
@@ -30,16 +31,17 @@ exports.isHeadMaster = function (req, res) {
  * @param req
  * @param res
  */
-exports.getMyRole = function (req, res) {
+exports.getMyRole = function(req, res) {
     var userId = req.user._id;
-    User.findById(userId, function (err, user) {
+    User.findById(userId, function(err, user) {
         if (err) {
             console.log(err);
+            err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else if (user) {
             if (user.centers) {
                 var role = 'student';
-                _.forEach(user.centers, function (center) {
+                _.forEach(user.centers, function(center) {
                     switch (center.role) {
                         case 'headMaster':
                             role = center.role;

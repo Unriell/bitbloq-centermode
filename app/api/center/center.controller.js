@@ -27,6 +27,7 @@ exports.addTeacher = function(req, res) {
             UserFunctions.addAllTeachers(result[1], result[0], function(err, newuser) {
                 if (err) {
                     console.log(err);
+                    err.code = parseInt(err.code) || 500;
                     res.status(err.code).send(err);
                 } else {
                     res.sendStatus(200);
@@ -57,6 +58,7 @@ exports.createCenter = function(req, res) {
     ], function(err, result) {
         if (err) {
             console.log(err);
+            err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else if (result) {
             res.sendStatus(200);
@@ -111,6 +113,7 @@ exports.getMyCenter = function(req, res) {
     ], function(err, center) {
         if (err) {
             console.log(err);
+            err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else if (center) {
             res.send(center);
