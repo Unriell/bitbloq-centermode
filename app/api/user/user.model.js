@@ -309,7 +309,7 @@ UserSchema
         if (this.isValidated()) {
             next();
         } else {
-            next(404);
+            next({code:401, message:'Unauthorized'});
         }
     });
 
@@ -318,7 +318,7 @@ UserSchema
         // Handle new/update role
         if (this.role !== 'user' && this.isModified('role')) {
             this.invalidate('role');
-            next(401);
+            next({code:401, message:'Unauthorized'});
         } else {
             next();
         }
@@ -329,7 +329,7 @@ UserSchema
         // Handle new/update passwords
         if (this.isModified('bannedInForum')) {
             this.invalidate('bannedInForum');
-            next(401);
+            next({code:401, message:'Unauthorized'});
         } else {
             next();
         }
@@ -408,7 +408,7 @@ UserSchema.methods = {
         var that = this;
         ProjectFunctions.deleteAllByUser(this._id, function(err) {
             if (err) {
-                next(500);
+                next(err);
             } else {
                 that.save(next);
             }

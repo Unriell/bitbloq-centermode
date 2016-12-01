@@ -220,7 +220,7 @@ exports.userIsHeadMaster = function(userId, centerId, next) {
             if (user.isHeadMaster(centerId)) {
                 next(null, centerId);
             } else {
-                next(401);
+                next({code:401, message:'Unauthorized'});
             }
         }
     });
@@ -240,7 +240,7 @@ exports.userIsStudent = function(userId, next) {
             if (user.isStudent()) {
                 next(null, true);
             } else {
-                next(401, false);
+                next({code:401, message:'Unauthorized'}, false);
             }
         }
     });

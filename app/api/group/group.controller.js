@@ -131,7 +131,7 @@ exports.updateGroup = function(req, res) {
                 if (err) {
                     next(err);
                 } else if (!canUpdate) {
-                    next(401);
+                    next({code:401, message:'Unauthorized'});
                 } else {
                     group.update(req.body, next);
                 }
@@ -163,7 +163,7 @@ exports.deleteGroup = function(req, res) {
                 if (err) {
                     next(err);
                 } else if (!canUpdate) {
-                    next(401);
+                    next({code:401, message:'Unauthorized'});
                 } else {
                     group.remove(next);
                 }
