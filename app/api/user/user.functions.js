@@ -19,6 +19,7 @@ exports.getUserByEmail = function(email, next) {
         } else if (user) {
             next(err, user.owner);
         } else {
+            console.log(email + ' no está como user');
             next();
         }
     });
@@ -80,23 +81,27 @@ exports.addHeadMaster = function(userId, centerId, next) {
  * @param {Function} next
  */
 exports.addTeacher = function(user, centerId, next) {
-    user.centers = user.centers || {};
-    var centerExist = _.find(user.centers, function(center) {
-        return String(center._id) === String(centerId);
-    });
-    if (!centerExist) {
-        var newCenter = {
-            role: 'teacher',
-            date: Date.now()
-        };
-        user.centers[centerId] = newCenter;
-        User.update({
-            _id: user._id
-        }, {
-            centers: user.centers
-        }, next);
+    if(user) {
+        user.centers = user.centers || {};
+        var centerExist = _.find(user.centers, function(center) {
+            return String(center._id) === String(centerId);
+        });
+        if (!centerExist) {
+            var newCenter = {
+                role: 'teacher',
+                date: Date.now()
+            };
+            user.centers[centerId] = newCenter;
+            User.update({
+                _id: user._id
+            }, {
+                centers: user.centers
+            }, next);
+        } else {
+            next(null, user);
+        }
     } else {
-        next(null, user);
+        next();
     }
 };
 
