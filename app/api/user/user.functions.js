@@ -240,7 +240,7 @@ exports.userIsStudent = function(userId, next) {
             if (user.isStudent()) {
                 next(null, true);
             } else {
-                next({code:401, message:'Unauthorized'}, false);
+                next(null, false);
             }
         }
     });

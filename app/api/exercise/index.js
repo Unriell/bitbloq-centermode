@@ -7,17 +7,17 @@ var express = require('express'),
 var router = express.Router();
 
 // GET
-router.get('/exercise/:id', auth.isAuthenticated(), controller.getExercise);
-router.get('/exercise/:task', auth.isAuthenticated(), controller.getExerciseByTask);
+router.get('/:id', auth.isAuthenticated(), controller.get);
+router.get('/:task', auth.isAuthenticated(), controller.getByTask);
 
 // POST
-router.post('/exercise', auth.isAuthenticated(), controller.createExercise);
+router.post('/', auth.isAuthenticated(), controller.create);
 
 // PUT
-router.put('/exercise/:id', auth.isAuthenticated(), controller.updateExercise);
+router.put('/:id', auth.isAuthenticated(), controller.update);
 
 // DELETE
-router.delete('/exercise/:id', auth.isAuthenticated(), controller.deleteExercise);
+router.delete('/:id', auth.isAuthenticated(), controller.delete);
 
 
 module.exports = router;

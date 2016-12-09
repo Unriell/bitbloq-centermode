@@ -1,12 +1,34 @@
 'use strict';
 
+var Exercise = require('./exercise.model.js');
+
+function clearExercise(exercise) {
+    delete exercise._id;
+    delete exercise.timesViewed;
+    delete exercise.timesAdded;
+    delete exercise._acl;
+    delete exercise.__v;
+    return exercise;
+}
 /**
  * Create an exercise
  * @param req
  * @param res
  */
-exports.createExercise = function(req, res) {
-
+exports.create = function(req, res) {
+    console.log('En create ejercicio');
+    var exerciseObject = clearExercise(req.body);
+    exerciseObject.creator = req.user._id;
+    var newExercise = new Exercise(exerciseObject);
+    newExercise.save(function(err, exercise) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else {
+            res.status(200).json(exercise._id);
+        }
+    });
 };
 
 /**
@@ -14,7 +36,7 @@ exports.createExercise = function(req, res) {
  * @param req
  * @param res
  */
-exports.getExercise = function(req, res) {
+exports.get = function(req, res) {
 
 };
 
@@ -23,7 +45,7 @@ exports.getExercise = function(req, res) {
  * @param req
  * @param res
  */
-exports.getExerciseByTask = function(req, res) {
+exports.getByTask = function(req, res) {
 
 };
 
@@ -32,7 +54,7 @@ exports.getExerciseByTask = function(req, res) {
  * @param req
  * @param res
  */
-exports.updateExercise = function(req, res) {
+exports.update = function(req, res) {
 
 };
 
@@ -42,6 +64,6 @@ exports.updateExercise = function(req, res) {
  * @param req
  * @param res
  */
-exports.deleteExercise = function(req, res) {
+exports.delete = function(req, res) {
 
 };
