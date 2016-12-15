@@ -20,7 +20,8 @@ exports.addTeacher = function(req, res) {
     ], function(err, result) {
         if (err) {
             console.log(err);
-            res.sendStatus(401);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
         } else if (!result) {
             res.sendStatus(304);
         } else {
@@ -88,7 +89,8 @@ exports.deleteTeacher = function(req, res) {
     ], function(err, result) {
         if (err) {
             console.log(err);
-            res.sendStatus(401);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
         } else if (!result) {
             res.sendStatus(304);
         } else {
@@ -140,7 +142,8 @@ exports.getTeacher = function(req, res) {
     ], function(err, result) {
         if (err) {
             console.log(err);
-            res.sendStatus(401);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
         } else if (!result) {
             res.sendStatus(304);
         } else {
@@ -165,7 +168,8 @@ exports.getTeachers = function(req, res) {
     ], function(err, result) {
         if (err) {
             console.log(err);
-            res.sendStatus(401);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
         } else if (!result) {
             res.sendStatus(304);
         } else {
