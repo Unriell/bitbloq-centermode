@@ -9,10 +9,9 @@ var ExerciseSchema = new mongoose.Schema({
         trim: true,
         required: true
     },
-    content: {
+    description: {
         type: String,
-        trim: true,
-        required: true
+        trim: true
     },
     creator: {
         type: mongoose.Schema.Types.ObjectId,
@@ -25,7 +24,24 @@ var ExerciseSchema = new mongoose.Schema({
         ref: 'User',
         trim: false,
         required: true
-    }
+    },
+    defaultTheme: {
+        type: String,
+        default: 'infotab_option_colorTheme'
+    },
+    hardware: {
+        board: String,
+        components: [],
+        connections: [],
+        robot: String
+    },
+    software: {
+        vars: {},
+        setup: {},
+        loop: {}
+    },
+    hardwareTags: [String],
+    selectedBloqs: {}
 }, {
     timestamps: true
 });

@@ -16,9 +16,9 @@ function clearExercise(exercise) {
  * @param res
  */
 exports.create = function(req, res) {
-    console.log('En create ejercicio');
     var exerciseObject = clearExercise(req.body);
     exerciseObject.creator = req.user._id;
+    exerciseObject.teacher = exerciseObject.teacher || req.user._id;
     var newExercise = new Exercise(exerciseObject);
     newExercise.save(function(err, exercise) {
         if (err) {
