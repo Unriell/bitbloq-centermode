@@ -105,5 +105,34 @@ exports.update = function(req, res) {
  * @param res
  */
 exports.delete = function(req, res) {
+    var userId = req.user._id,
+        exerciseId = req.params.id;
+    async.waterfall([
+        Exercise.findById.bind(Exercise, exerciseId),
+        function(exercise, next) {
+            if (exercise) {
+                if (exercise.isOwner(userId)) {
+                    Exercise.findByIdAndRemove(exerciseId, next);
+                } else {
+                    res.sendStatus(401);
+                }
+            } else {
+                res.sendStatus(404);
+            }
+        },
+        function(exercise, next) {
+            ImageFunctions.delete('exercise', exerciseId, function() {
+                next();
+            });
+        }
 
+    ], function(err) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else {
+            res.status(204).end();
+        }
+    });
 };
