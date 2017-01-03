@@ -46,4 +46,27 @@ var ExerciseSchema = new mongoose.Schema({
     timestamps: true
 });
 
+
+/**
+ * Methods
+ */
+
+ExerciseSchema.methods = {
+
+    /**
+     * share - project is shared with users
+     *
+     * @param {String} userId
+     * @return {Boolean}
+     * @api public
+     */
+    isOwner: function(userId) {
+        var owner = false;
+        if (String(this.teacher) === String(userId) || String(this.creator) === String(userId)) {
+            owner = true;
+        }
+        return owner;
+    }
+};
+
 module.exports = mongoose.model('CenterMode-Exercise', ExerciseSchema);

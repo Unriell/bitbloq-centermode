@@ -1,6 +1,7 @@
 'use strict';
 
-var Exercise = require('./exercise.model.js');
+var Exercise = require('./exercise.model.js'),
+    _ = require('lodash');
 
 function clearExercise(exercise) {
     delete exercise._id;
@@ -72,7 +73,29 @@ exports.getByTask = function(req, res) {
  * @param res
  */
 exports.update = function(req, res) {
-
+    Exercise.findById(req.params.id, function(err, exercise) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else {
+            if (exercise.isOwner(req.user._id)) {
+                var exerciseBody = clearExercise(req.body);
+                exercise = _.extend(exercise, exerciseBody);
+                exercise.save(function(err, exercise) {
+                    if (err) {
+                        console.log(err);
+                        err.code = parseInt(err.code) || 500;
+                        res.status(err.code).send(err);
+                    } else {
+                        res.sendStatus(200);
+                    }
+                });
+            } else {
+                res.sendStatus(401);
+            }
+        }
+    });
 };
 
 
