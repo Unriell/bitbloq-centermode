@@ -7,8 +7,9 @@ var express = require('express'),
 var router = express.Router();
 
 // GET
+router.get('/teacher/:teacherId', auth.isAuthenticated(), controller.getByTeacher);
 router.get('/:id', auth.isAuthenticated(), controller.get);
-router.get('/:task', auth.isAuthenticated(), controller.getByTask);
+router.get('/', auth.isAuthenticated(), controller.getAll);
 
 // POST
 router.post('/', auth.isAuthenticated(), controller.create);

@@ -1,7 +1,9 @@
 'use strict';
 
 var Exercise = require('./exercise.model.js'),
-    _ = require('lodash');
+    UserFunctions = require('../user/user.functions.js'),
+    _ = require('lodash'),
+    async = require('async');
 
 function clearExercise(exercise) {
     delete exercise._id;
@@ -59,12 +61,51 @@ exports.get = function(req, res) {
 };
 
 /**
- * Get a exercise by its task
+ * Get my exercises
  * @param req
  * @param res
  */
-exports.getByTask = function(req, res) {
+exports.getAll = function(req, res) {
+    Exercise.find({
+        teacher: req.user._id
+    }, function(err, exercises) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else {
+            res.status(200).send(exercises);
+        }
+    });
+};
 
+/**
+ * Get exercises of a determinate teacher
+ * @param req
+ * @param res
+ */
+exports.getByTeacher = function(req, res) {
+    var userId = req.user._id,
+        teacherId = req.params.teacherId;
+    async.waterfall([
+        UserFunctions.getCenterIdbyHeadMaster.bind(UserFunctions, userId),
+        function(centerId, next) {
+            UserFunctions.getTeacher(teacherId, centerId, next);
+        },
+        function(teacher, next) {
+            Exercise.find({
+                teacher: teacherId
+            }, next);
+        }
+    ], function(err, exercises) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else {
+            res.status(200).send(exercises);
+        }
+    });
 };
 
 /**
