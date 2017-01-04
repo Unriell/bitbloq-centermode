@@ -56,7 +56,7 @@ GroupSchema.methods = {
      * @api public
      */
     userCanUpdate: function(userId, next) {
-        if (userId == this.creator) {
+        if (String(userId) === String(this.creator) || String(userId) == String(this.teacher)) {
             next(null, true);
         } else {
             this.timesViewed++;

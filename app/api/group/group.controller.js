@@ -42,9 +42,13 @@ exports.getGroup = function(req, res) {
             if (group.creator == userId) {
                 next(null, group)
             } else {
-                UserFunctions.userIsHeadMaster(userId, group.center, function(err) {
-                    next(err, group);
-                });
+                if(String(group.teacher)===String(userId) || String(group.creator)===String(userId)){
+                    next(null,group);
+                } else {
+                    UserFunctions.userIsHeadMaster(userId, group.center, function(err) {
+                        next(err, group);
+                    });
+                }
             }
         }
     ], function(err, group) {
@@ -95,7 +99,7 @@ exports.getAllGroups = function(req, res) {
  * @param req
  * @param res
  */
-exports.getGroup = function(req, res) {
+exports.getGroups = function(req, res) {
     var userId = req.user._id,
         centerId = req.params.centerId;
     async.waterfall([
