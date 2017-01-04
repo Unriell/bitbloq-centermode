@@ -433,6 +433,18 @@ UserSchema.methods = {
             });
         }
         return centerId;
+    },
+
+    getLastCenterByTeacher: function(){
+        var centerId;
+        if (this.centers) {
+            _.forEach(this.centers, function(center, key) {
+                if (center.role === 'teacher') {
+                    centerId = key;
+                }
+            });
+        }
+        return centerId;
     }
 };
 

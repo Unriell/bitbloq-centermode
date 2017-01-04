@@ -11,8 +11,9 @@ router.head('/:id/register', auth.isAuthenticated(), controller.registerInGroup)
 
 // GET
 router.get('/:id', auth.isAuthenticated(), controller.getGroup);
-router.get('/teacher/:teacherId', auth.isAuthenticated(), controller.getGroupByTeacher);
-router.get('/', auth.isAuthenticated(), controller.getGroups);
+router.get('/teacher/:teacherId', auth.isAuthenticated(), controller.getGroupByHeadMaster);
+router.get('/center/:centerId', auth.isAuthenticated(), controller.getGroup);
+router.get('/', auth.isAuthenticated(), controller.getAllGroups);
 
 // POST
 router.post('/', auth.isAuthenticated(), controller.createGroup);

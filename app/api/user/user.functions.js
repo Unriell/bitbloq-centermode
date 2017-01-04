@@ -172,6 +172,21 @@ exports.getCenterIdbyHeadMaster = function(userId, next) {
 };
 
 /**
+ * Returns if a user is head master
+ * @param {String} user Id
+ * @param {Function} next
+ */
+exports.getCenterIdbyTeacher = function(userId, next) {
+    User.findById(userId, function(err, user) {
+        var centerId;
+        if (user) {
+            centerId = user.getLastCenterByTeacher();
+        }
+        next(err, centerId);
+    });
+};
+
+/**
  * Ger user role in center
  *
  * @param {String} userId

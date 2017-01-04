@@ -63,7 +63,7 @@ exports.getGroup = function(req, res) {
  * @param req
  * @param res
  */
-exports.getGroups = function(req, res) {
+exports.getAllGroups = function(req, res) {
     var userId = req.user._id;
     async.waterfall([
         UserFunctions.userIsStudent.bind(UserFunctions, userId),
@@ -89,12 +89,47 @@ exports.getGroups = function(req, res) {
     });
 };
 
+
 /**
- * Get student group by its teacher
+ * Get student group in a center
  * @param req
  * @param res
  */
-exports.getGroupByTeacher = function(req, res) {
+exports.getGroup = function(req, res) {
+    var userId = req.user._id,
+        centerId = req.params.centerId;
+    async.waterfall([
+        UserFunctions.userIsStudent.bind(UserFunctions, userId),
+        function(isStudent, next) {
+            if (isStudent) {
+                Group.find({
+                    students: {$in: [userId]},
+                    center: centerId
+                }, next);
+            } else {
+                Group.find({
+                    teacher: userId,
+                    center: centerId
+                }, next);
+            }
+        }
+    ], function(err, groups) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else {
+            res.status(200).send(groups);
+        }
+    });
+};
+
+/**
+ * Get student group by its teacher if user role is head master
+ * @param req
+ * @param res
+ */
+exports.getGroupByHeadMaster = function(req, res) {
     var userId = req.user._id,
         teacherId = req.params.teacherId;
     async.waterfall([
@@ -131,7 +166,10 @@ exports.updateGroup = function(req, res) {
                 if (err) {
                     next(err);
                 } else if (!canUpdate) {
-                    next({code:401, message:'Unauthorized'});
+                    next({
+                        code: 401,
+                        message: 'Unauthorized'
+                    });
                 } else {
                     group.update(req.body, next);
                 }
@@ -163,7 +201,10 @@ exports.deleteGroup = function(req, res) {
                 if (err) {
                     next(err);
                 } else if (!canUpdate) {
-                    next({code:401, message:'Unauthorized'});
+                    next({
+                        code: 401,
+                        message: 'Unauthorized'
+                    });
                 } else {
                     group.remove(next);
                 }

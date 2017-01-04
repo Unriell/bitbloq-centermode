@@ -107,22 +107,44 @@ exports.deleteTeacher = function(req, res) {
  */
 exports.getMyCenter = function(req, res) {
     var userId = req.user._id;
-    async.waterfall([
-        UserFunctions.getCenterIdbyHeadMaster.bind(UserFunctions, userId),
-        function(centerId, next) {
-            Center.findById(centerId, next);
-        }
-    ], function(err, center) {
-        if (err) {
+    UserFunctions.getCenterIdbyHeadMaster(userId, function(err, centerId){
+        if(err){
             console.log(err);
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
-        } else if (center) {
-            res.send(center);
         } else {
-            res.sendStatus(204);
+            if(centerId){
+                Center.findById(centerId, function(err, center){
+                    if (err) {
+                        console.log(err);
+                        err.code = parseInt(err.code) || 500;
+                        res.status(err.code).send(err);
+                    } else if (center) {
+                        res.send(center);
+                    } else {
+                        res.sendStatus(204);
+                    }
+                });
+            } else {
+                async.waterfall([
+                    UserFunctions.getCenterIdbyTeacher.bind(UserFunctions, userId),
+                    function(centerId, next) {
+                        Center.findById(centerId, next);
+                    }
+                ], function(err, center) {
+                    if (err) {
+                        console.log(err);
+                        err.code = parseInt(err.code) || 500;
+                        res.status(err.code).send(err);
+                    } else if (center) {
+                        res.send(center);
+                    } else {
+                        res.sendStatus(204);
+                    }
+                });
+            }
         }
-    });
+    })
 };
 
 /**
