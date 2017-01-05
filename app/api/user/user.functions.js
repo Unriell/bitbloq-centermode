@@ -3,7 +3,6 @@ var User = require('./user.model.js'),
     async = require('async'),
     _ = require('lodash');
 
-
 /**
  * Get an user
  * @param {String} email
@@ -20,7 +19,9 @@ exports.getUserByEmail = function(email, next) {
             next(err, user.owner);
         } else {
             console.log(email + ' no está como user');
-            next();
+            next(err, {
+                'email': email
+            });
         }
     });
 };
@@ -36,7 +37,6 @@ exports.getAllUsersByEmails = function(emails, next) {
         next(err, userIds);
     });
 };
-
 
 /**********************************
  *** Center functions with users
@@ -73,7 +73,6 @@ exports.addHeadMaster = function(userId, centerId, next) {
     });
 };
 
-
 /**
  * Add an user in a center like teacher
  * @param {String} users
@@ -81,7 +80,7 @@ exports.addHeadMaster = function(userId, centerId, next) {
  * @param {Function} next
  */
 exports.addTeacher = function(user, centerId, next) {
-    if(user) {
+    if (user) {
         user.centers = user.centers || {};
         var centerExist = _.find(user.centers, function(center) {
             return String(center._id) === String(centerId);
@@ -96,7 +95,9 @@ exports.addTeacher = function(user, centerId, next) {
                 _id: user._id
             }, {
                 centers: user.centers
-            }, next);
+            }, function(err) {
+                next(err, (new User(user)).teacherProfile);
+            });
         } else {
             next(null, user);
         }
@@ -105,7 +106,6 @@ exports.addTeacher = function(user, centerId, next) {
     }
 };
 
-
 /**
  * Add users in a center like teachers
  * @param {String} users
@@ -113,13 +113,21 @@ exports.addTeacher = function(user, centerId, next) {
  * @param {Function} next
  */
 exports.addAllTeachers = function(users, centerId, next) {
+    var usersResult = {};
+    var userDontExist = [];
     async.map(users, function(user, next) {
-        exports.addTeacher(user, centerId, next);
+        if (user._id) {
+            exports.addTeacher(user, centerId, next);
+        } else {
+            userDontExist.push(user.email);
+            usersResult.teachersNotAdded = userDontExist;
+            next();
+        }
     }, function(err, completedUsers) {
-        next(err, completedUsers);
+        usersResult.teachersAdded = _.pull(completedUsers, undefined);
+        next(err, usersResult);
     });
 };
-
 
 /**
  * Add users in a center like teachers
@@ -142,7 +150,6 @@ exports.deleteTeacher = function(userId, centerId, next) {
     ], next);
 };
 
-
 /**
  * Get all teachers in a center
  * @param {String} centerId
@@ -153,6 +160,7 @@ exports.getAllTeachers = function(centerId, next) {
     User.find({})
         .select('_id username firstName lastName email')
         .where('centers.' + centerId + '.role').in(['teacher', 'headMaster'])
+        .sort('centers.' + centerId + '.role')
         .exec(next);
 };
 
@@ -202,7 +210,6 @@ exports.getMyRoleInCenter = function(userId, centerId, next) {
     });
 };
 
-
 /**
  * Get a single profile teacher
  * @param {String} userId
@@ -220,7 +227,6 @@ exports.getTeacher = function(teacherId, centerId, next) {
     });
 };
 
-
 /**
  * if user is head master in a center, get the center information.
  * @param {String} userId
@@ -235,12 +241,14 @@ exports.userIsHeadMaster = function(userId, centerId, next) {
             if (user.isHeadMaster(centerId)) {
                 next(null, centerId);
             } else {
-                next({code:401, message:'Unauthorized'});
+                next({
+                    code: 401,
+                    message: 'Unauthorized'
+                });
             }
         }
     });
 };
-
 
 /**
  * if user is student

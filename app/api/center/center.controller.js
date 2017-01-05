@@ -25,13 +25,14 @@ exports.addTeacher = function(req, res) {
         } else if (!result) {
             res.sendStatus(304);
         } else {
-            UserFunctions.addAllTeachers(result[1], result[0], function(err, newuser) {
+            //results es un array
+            UserFunctions.addAllTeachers(result[1], result[0], function(err, teachers) {
                 if (err) {
                     console.log(err);
                     err.code = parseInt(err.code) || 500;
                     res.status(err.code).send(err);
                 } else {
-                    res.sendStatus(200);
+                    res.status(200).send(teachers);
                 }
             });
         }
@@ -46,26 +47,43 @@ exports.addTeacher = function(req, res) {
 exports.createCenter = function(req, res) {
     var userId = req.user._id,
         center = req.body;
-    center.creator = userId;
-    var newCenter = new Center(center);
-    async.waterfall([
-        function(next) {
-            newCenter.save(center, next);
-        },
-        function(savedCenter, updated, next) {
-            UserFunctions.addHeadMaster(userId, savedCenter._id, next);
-        }
-    ], function(err, result) {
-        if (err) {
-            console.log(err);
-            err.code = parseInt(err.code) || 500;
-            res.status(err.code).send(err);
-        } else if (result) {
-            res.sendStatus(200);
+    if (center && center.name && center.location && center.telephone) {
+        center.creator = userId;
+        var newCenter = new Center(center);
+        async.waterfall([
+            function(next) {
+                newCenter.save(center, next);
+            },
+            function(savedCenter, updated, next) {
+                UserFunctions.addHeadMaster(userId, savedCenter._id, next);
+            }
+        ], function(err, result) {
+            if (err) {
+                console.log(err);
+                err.code = parseInt(err.code) || 500;
+                res.status(err.code).send(err);
+            } else if (result) {
+                res.sendStatus(200);
+            } else {
+                res.sendStatus(204);
+            }
+        });
+    } else {
+        var centerError = '';
+        if (!center) {
+            centerError = 'No center data provided';
         } else {
-            res.sendStatus(204);
+            if (!center.name) {
+                centerError = 'No center name provided';
+            } else if (!center.location) {
+                centerError = 'No center location provided';
+            } else if (!center.telephone) {
+                centerError = 'No center telephone provided';
+            }
         }
-    });
+        res.status(400).send(centerError);
+    }
+
 };
 
 /**
@@ -171,7 +189,7 @@ exports.getTeacher = function(req, res) {
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else if (!result) {
-            res.sendStatus(304);
+            res.sendStatus(404);
         } else {
             res.send(result);
         }
