@@ -38,7 +38,6 @@ exports.addTeacher = function(req, res) {
     });
 };
 
-
 /**
  * Create center
  * @param req
@@ -78,27 +77,32 @@ exports.deleteTeacher = function(req, res) {
     var userId = req.user._id,
         centerId = req.params.centerId,
         teacherId = req.params.teacherId;
-    async.waterfall([
-        UserFunctions.userIsHeadMaster.bind(UserFunctions, userId, centerId),
-        function(centerId, next) {
-            GroupFunctions.deleteGroups(teacherId, centerId, next);
-        },
-        function(updated, next) {
-            UserFunctions.deleteTeacher(teacherId, centerId, next);
-        }
-    ], function(err, result) {
-        if (err) {
-            console.log(err);
-            err.code = parseInt(err.code) || 500;
-            res.status(err.code).send(err);
-        } else if (!result) {
-            res.sendStatus(304);
-        } else {
-            res.sendStatus(200);
-        }
-    });
-};
+    if (userId.toString() !== teacherId.toString()) {
+        async.waterfall([
+            UserFunctions.userIsHeadMaster.bind(UserFunctions, userId, centerId),
+            function(centerId, next) {
+                GroupFunctions.deleteGroups(teacherId, centerId, next);
+            },
+            function(updated, next) {
+                UserFunctions.deleteTeacher(teacherId, centerId, next);
+            }
+        ], function(err, result) {
+            if (err) {
+                console.log(err);
+                err.code = parseInt(err.code) || 500;
+                res.status(err.code).send(err);
+            } else if (!result) {
+                res.sendStatus(304);
+            } else {
+                res.sendStatus(200);
+            }
+        });
+    } else {
+        res.sendStatus(409);
 
+    }
+
+};
 
 /**
  * Get my center, if user is head master
@@ -107,14 +111,14 @@ exports.deleteTeacher = function(req, res) {
  */
 exports.getMyCenter = function(req, res) {
     var userId = req.user._id;
-    UserFunctions.getCenterIdbyHeadMaster(userId, function(err, centerId){
-        if(err){
+    UserFunctions.getCenterIdbyHeadMaster(userId, function(err, centerId) {
+        if (err) {
             console.log(err);
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else {
-            if(centerId){
-                Center.findById(centerId, function(err, center){
+            if (centerId) {
+                Center.findById(centerId, function(err, center) {
                     if (err) {
                         console.log(err);
                         err.code = parseInt(err.code) || 500;
@@ -208,7 +212,6 @@ exports.getTeachers = function(req, res) {
 exports.getCenter = function(req, res) {
 
 };
-
 
 /**
  * Update center information
