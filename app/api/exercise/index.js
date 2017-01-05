@@ -6,6 +6,9 @@ var express = require('express'),
 
 var router = express.Router();
 
+//HEAD
+router.head('/:exerciseId/owner', auth.isAuthenticated(), controller.userIsOwner);
+
 // GET
 router.get('/teacher/:teacherId', auth.isAuthenticated(), controller.getByTeacher);
 router.get('/:id', auth.isAuthenticated(), controller.get);

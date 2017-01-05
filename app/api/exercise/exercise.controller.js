@@ -13,6 +13,39 @@ function clearExercise(exercise) {
     delete exercise.__v;
     return exercise;
 }
+
+/**
+ * Check if user can update the exercise because user is owner
+ * @param req
+ * @param res
+ */
+exports.userIsOwner = function(req, res) {
+    var userId = req.user._id,
+        exerciseId = req.params.exerciseId;
+    Exercise.findById(exerciseId, function(err, exercise) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else {
+            if (exercise) {
+                if (exercise.isOwner(userId)) {
+                    res.status(200).set({
+                        'owner': true
+                    }).send();
+                } else {
+                    res.status(204).set({
+                        'owner': false
+                    }).send();
+                }
+            } else {
+                res.sendStatus(404);
+            }
+        }
+    });
+
+};
+
 /**
  * Create an exercise
  * @param req

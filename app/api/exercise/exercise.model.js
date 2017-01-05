@@ -67,6 +67,7 @@ ExerciseSchema.methods = {
         }
         return owner;
     }
+
 };
 
 module.exports = mongoose.model('CenterMode-Exercise', ExerciseSchema);
