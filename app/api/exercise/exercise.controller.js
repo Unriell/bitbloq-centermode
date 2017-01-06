@@ -2,6 +2,7 @@
 
 var Exercise = require('./exercise.model.js'),
     UserFunctions = require('../user/user.functions.js'),
+    ImageFunctions = require('../image/image.functions.js'),
     _ = require('lodash'),
     async = require('async');
 

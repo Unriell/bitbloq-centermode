@@ -25,7 +25,6 @@ exports.addTeacher = function(req, res) {
         } else if (!result) {
             res.sendStatus(304);
         } else {
-            //results es un array
             UserFunctions.addAllTeachers(result[1], result[0], function(err, teachers) {
                 if (err) {
                     console.log(err);
@@ -183,15 +182,15 @@ exports.getTeacher = function(req, res) {
         function(centerId, next) {
             UserFunctions.getTeacher(teacherId, centerId, next);
         }
-    ], function(err, result) {
+    ], function(err, teacher) {
         if (err) {
             console.log(err);
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
-        } else if (!result) {
+        } else if (!teacher) {
             res.sendStatus(404);
         } else {
-            res.send(result);
+            res.send(teacher);
         }
     });
 };
@@ -207,17 +206,26 @@ exports.getTeachers = function(req, res) {
     async.waterfall([
         UserFunctions.userIsHeadMaster.bind(UserFunctions, userId, centerId),
         function(centerId, next) {
-            UserFunctions.getAllTeachers(centerId, next);
+            UserFunctions.getAllTeachers(centerId, function(err, teachers) {
+                next(err, teachers, centerId);
+            });
+        },
+        function(teachers, centerId, next) {
+            async.map(teachers, function(teacher, next) {
+                centerFunctions.getStats(teacher, centerId, next);
+            }, function(err, completedTeachers) {
+                next(err, completedTeachers);
+            })
         }
-    ], function(err, result) {
+    ], function(err, teachers) {
         if (err) {
             console.log(err);
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
-        } else if (!result) {
+        } else if (!teachers) {
             res.sendStatus(304);
         } else {
-            res.send(result);
+            res.send(teachers);
         }
     });
 };

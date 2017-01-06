@@ -28,3 +28,17 @@ exports.deleteGroups = function(teacherId, centerId, next) {
         }
     ], next);
 };
+
+/**
+ * DelGet all groups of teacher in a center
+ * @param {String} teacherId
+ * @param {String} centerId
+ * @param {Function} next
+ * @return {Object} user.owner
+ */
+exports.getGroups = function(teacherId, centerId, next) {
+    Group.find({
+        teacher: teacherId,
+        center: centerId
+    }, next);
+};
