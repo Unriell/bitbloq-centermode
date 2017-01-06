@@ -3,6 +3,7 @@
 var Center = require('./center.model.js'),
     UserFunctions = require('../user/user.functions.js'),
     GroupFunctions = require('../group/group.functions.js'),
+    centerFunctions = require('./center.functions.js'),
     async = require('async');
 
 /**
