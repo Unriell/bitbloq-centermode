@@ -18,6 +18,7 @@ router.get('/', auth.isAuthenticated(), controller.getAll);
 router.post('/', auth.isAuthenticated(), controller.create);
 
 // PUT
+router.put('/:id/clone', auth.isAuthenticated(), controller.clone);
 router.put('/:id', auth.isAuthenticated(), controller.update);
 
 // DELETE

@@ -48,6 +48,42 @@ exports.userIsOwner = function(req, res) {
 };
 
 /**
+ * Clone an exercise
+ * @param req
+ * @param res
+ */
+exports.clone = function(req, res) {
+    var exerciseId = req.params.id,
+        userId = req.user._id,
+        newName = req.body.name;
+    async.waterfall([
+        Exercise.findById.bind(Exercise, exerciseId),
+        function(exercise, next) {
+            if (exercise.isOwner(userId)) {
+                var exerciseObject = exercise.toObject();
+                delete exerciseObject._id;
+                exerciseObject.name = newName;
+                exerciseObject.creator = userId;
+                exerciseObject.teacher = userId;
+                exerciseObject.groups = [];
+                var newExercise = new Exercise(exerciseObject);
+                newExercise.save(next);
+            } else {
+                next(401);
+            }
+        }
+    ], function(err, newExercise) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else {
+            res.status(200).send(newExercise._id);
+        }
+    });
+};
+
+/**
  * Create an exercise
  * @param req
  * @param res
