@@ -47,7 +47,7 @@ exports.getMyRole = function(req, res) {
                             role = center.role;
                             break;
                         case 'teacher':
-                            if (role != 'headMaster') {
+                            if (role !== 'headMaster') {
                                 role = center.role;
                             }
                             break;

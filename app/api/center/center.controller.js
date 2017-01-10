@@ -212,7 +212,7 @@ exports.getTeachers = function(req, res) {
             });
         },
         function(teachers, centerId, next) {
-            async.map(teachers, function(teacher, next) {
+            async.map(centerFunctions.teacherGetDateByCenterId(teachers, centerId), function(teacher, next) {
                 centerFunctions.getStats(teacher, centerId, next);
             }, function(err, completedTeachers) {
                 next(err, completedTeachers);

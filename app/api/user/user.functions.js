@@ -157,10 +157,13 @@ exports.deleteTeacher = function(userId, centerId, next) {
  * @return {Array} teachers
  */
 exports.getAllTeachers = function(centerId, next) {
+    var sortFilters = {};
+    sortFilters['centers.' + centerId + '.date'] = 'desc';
+
     User.find({})
-        .select('_id username firstName lastName email')
+        .select('_id username firstName lastName email centers')
         .where('centers.' + centerId + '.role').in(['teacher', 'headMaster'])
-        .sort('centers.' + centerId + '.role')
+        .sort(sortFilters)
         .exec(next);
 };
 
@@ -221,6 +224,7 @@ exports.getTeacher = function(teacherId, centerId, next) {
     User.findById(teacherId, function(err, user) {
         var response;
         if (user && user.centers && user.centers[centerId] && (user.centers[centerId].role === 'teacher' || user.centers[centerId].role === 'headMaster')) {
+            user.dateAdded = user.centers[centerId].date;
             response = user.teacherProfile;
         }
         next(err, response);
