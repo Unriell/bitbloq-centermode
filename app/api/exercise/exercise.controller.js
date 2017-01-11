@@ -4,6 +4,7 @@ var Exercise = require('./exercise.model.js'),
     UserFunctions = require('../user/user.functions.js'),
     ImageFunctions = require('../image/image.functions.js'),
     _ = require('lodash'),
+    mongoose = require('mongoose'),
     async = require('async');
 
 function clearExercise(exercise) {
@@ -15,6 +16,7 @@ function clearExercise(exercise) {
     return exercise;
 }
 
+var maxPerPage = 10;
 /**
  * Check if user can update the exercise because user is owner
  * @param req
@@ -136,17 +138,80 @@ exports.get = function(req, res) {
  * @param res
  */
 exports.getAll = function(req, res) {
+    var page = req.query.page - 1 || 0,
+        perPage = (req.query.pageSize && (req.query.pageSize <= maxPerPage)) ? req.query.pageSize : maxPerPage
+
     Exercise.find({
+            teacher: req.user._id
+        })
+        .limit(parseInt(perPage))
+        .skip(parseInt(perPage * page))
+        .exec(function(err, exercises) {
+            if (err) {
+                console.log(err);
+                err.code = parseInt(err.code) || 500;
+                res.status(err.code).send(err);
+            } else {
+                res.status(200).send(exercises);
+            }
+        });
+};
+
+/**
+ * Get count of my exercises
+ * @param req
+ * @param res
+ */
+
+exports.getAllCount = function(req, res) {
+    Exercise.count({
         teacher: req.user._id
-    }, function(err, exercises) {
+    }, function(err, counter) {
         if (err) {
             console.log(err);
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else {
-            res.status(200).send(exercises);
+            console.log(counter),
+                res.status(200).json({
+                    'count': counter
+                });
         }
     });
+};
+
+/**
+ * Get count of exercises of a determinate teacher
+ * @param req
+ * @param res
+ */
+exports.getCountByTeacher = function(req, res) {
+    var userId = req.user._id,
+        teacherId = req.params.teacherId;
+
+    async.waterfall([
+        UserFunctions.getCenterIdbyHeadMaster.bind(UserFunctions, userId),
+        function(centerId, next) {
+            UserFunctions.getTeacher(teacherId, centerId, next);
+        },
+        function(teacher, next) {
+            Exercise.count({
+                    teacher: teacherId
+                })
+                .exec(next)
+        }
+    ], function(err, counter) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else {
+            res.status(200).json({
+                'count': counter
+            });
+        }
+    });
+
 };
 
 /**
@@ -155,8 +220,14 @@ exports.getAll = function(req, res) {
  * @param res
  */
 exports.getByTeacher = function(req, res) {
-    var userId = req.user._id,
+
+    var page = req.query.page - 1 || 0,
+        perPage = (req.query.pageSize && (req.query.pageSize <= maxPerPage)) ? req.query.pageSize : maxPerPage,
+        userId = req.user._id,
         teacherId = req.params.teacherId;
+
+    console.log('page getByTeacher');
+    console.log(page);
     async.waterfall([
         UserFunctions.getCenterIdbyHeadMaster.bind(UserFunctions, userId),
         function(centerId, next) {
@@ -164,8 +235,11 @@ exports.getByTeacher = function(req, res) {
         },
         function(teacher, next) {
             Exercise.find({
-                teacher: teacherId
-            }, next);
+                    teacher: teacherId
+                })
+                .limit(parseInt(perPage))
+                .skip(parseInt(perPage * page))
+                .exec(next);
         }
     ], function(err, exercises) {
         if (err) {
@@ -208,7 +282,6 @@ exports.update = function(req, res) {
         }
     });
 };
-
 
 /**
  * Delete an exercise if user is owner

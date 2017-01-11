@@ -11,8 +11,11 @@ router.head('/:exerciseId/owner', auth.isAuthenticated(), controller.userIsOwner
 
 // GET
 router.get('/teacher/:teacherId', auth.isAuthenticated(), controller.getByTeacher);
+router.get('/teacher/:teacherId/count', auth.isAuthenticated(), controller.getCountByTeacher);
+router.get('/count', auth.isAuthenticated(), controller.getAllCount);
 router.get('/:id', auth.isAuthenticated(), controller.get);
 router.get('/', auth.isAuthenticated(), controller.getAll);
+
 
 // POST
 router.post('/', auth.isAuthenticated(), controller.create);

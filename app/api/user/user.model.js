@@ -168,10 +168,8 @@ UserSchema
             'username': this.username,
             'email': this.email,
             'role': this.role,
-            'centers': this.centers
         };
     });
-
 
 // Non-sensitive info we'll be putting in the token
 UserSchema
@@ -192,7 +190,6 @@ UserSchema
             'tutor': this.tutor
         };
     });
-
 
 /**
  * Validations
@@ -309,7 +306,10 @@ UserSchema
         if (this.isValidated()) {
             next();
         } else {
-            next({code:401, message:'Unauthorized'});
+            next({
+                code: 401,
+                message: 'Unauthorized'
+            });
         }
     });
 
@@ -318,7 +318,10 @@ UserSchema
         // Handle new/update role
         if (this.role !== 'user' && this.isModified('role')) {
             this.invalidate('role');
-            next({code:401, message:'Unauthorized'});
+            next({
+                code: 401,
+                message: 'Unauthorized'
+            });
         } else {
             next();
         }
@@ -329,12 +332,14 @@ UserSchema
         // Handle new/update passwords
         if (this.isModified('bannedInForum')) {
             this.invalidate('bannedInForum');
-            next({code:401, message:'Unauthorized'});
+            next({
+                code: 401,
+                message: 'Unauthorized'
+            });
         } else {
             next();
         }
     });
-
 
 UserSchema
     .pre('validate', function(next) {
@@ -435,7 +440,7 @@ UserSchema.methods = {
         return centerId;
     },
 
-    getLastCenterByTeacher: function(){
+    getLastCenterByTeacher: function() {
         var centerId;
         if (this.centers) {
             _.forEach(this.centers, function(center, key) {
@@ -449,4 +454,3 @@ UserSchema.methods = {
 };
 
 module.exports = mongoose.model('User', UserSchema);
-
