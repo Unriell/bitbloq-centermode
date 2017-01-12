@@ -2,7 +2,7 @@
 var Task = require('./task.model.js');
 
 /**
- * Get student task
+ * Get my tasks
  * @param req
  * @param res
  */
@@ -25,12 +25,36 @@ exports.getMyTasks = function(req, res) {
 };
 
 /**
- * Get student task
+ * Get a student task
  * @param req
  * @param res
  */
 exports.getTask = function(req, res) {
 
+};
+
+/**
+ * Get a specific task
+ * @param req
+ * @param res
+ */
+exports.getTasksByGroup = function(req, res) {
+    var userId = req.user._id,
+        groupId = req.params.groupId;
+    Task.find({
+            group: groupId
+        })
+        .populate('exercise', 'name')
+        .exec(function(err, tasks) {
+                if (err) {
+                    console.log(err);
+                    err.code = parseInt(err.code) || 500;
+                    res.status(err.code).send(err);
+                } else {
+                    res.status(200).send(tasks);
+                }
+            }
+        );
 };
 
 /**

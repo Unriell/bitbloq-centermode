@@ -7,6 +7,7 @@ var express = require('express'),
 var router = express.Router();
 
 // GET
+router.get('/group/:groupId', auth.isAuthenticated(), controller.getTasksByGroup);
 router.get('/:id', auth.isAuthenticated(), controller.getTask);
 router.get('/', auth.isAuthenticated(), controller.getMyTasks);
 
