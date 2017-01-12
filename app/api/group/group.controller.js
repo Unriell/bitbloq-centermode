@@ -2,8 +2,8 @@
 
 var Group = require('./group.model.js'),
     UserFunctions = require('../user/user.functions.js'),
-    async = require('async'),
-    mongoose = require('mongoose');
+    TaskFunction = require('../task/task.functions.js'),
+    async = require('async');
 
 /**
  * Create group
@@ -37,7 +37,7 @@ exports.getGroup = function(req, res) {
     var userId = req.user._id,
         groupId = req.params.id;
     async.waterfall([
-        function(next){
+        function(next) {
             Group.findById(groupId)
                 .populate('students', 'firstName lastName username email')
                 .exec(next);
@@ -46,14 +46,23 @@ exports.getGroup = function(req, res) {
             if (group.creator == userId) {
                 next(null, group)
             } else {
-                if(String(group.teacher)===String(userId) || String(group.creator)===String(userId)){
-                    next(null,group);
+                if (String(group.teacher) === String(userId) || String(group.creator) === String(userId)) {
+                    next(null, group);
                 } else {
                     UserFunctions.userIsHeadMaster(userId, group.center, function(err) {
                         next(err, group);
                     });
                 }
             }
+        },
+        function(group, next) {
+            async.map(group.students, function(student, next) {
+                TaskFunction.getAverageMark(group._id, student, next);
+            }, function(err, students) {
+                var groupObject = group.toObject();
+                groupObject.students = students;
+                next(err, groupObject);
+            })
         }
     ], function(err, group) {
         if (err) {
