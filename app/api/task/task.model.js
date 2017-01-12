@@ -5,7 +5,7 @@ var mongoose = require('mongoose');
 var TaskSchema = new mongoose.Schema({
     exercise: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'CenterMode-Exercise',
         required: true
     },
     student: {

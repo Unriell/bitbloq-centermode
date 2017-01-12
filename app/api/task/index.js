@@ -1,18 +1,19 @@
 'use strict';
 
 var express = require('express'),
-    controller = require('./task.js'),
+    controller = require('./task.controller.js'),
     auth = require('../../components/auth/auth.service');
 
 var router = express.Router();
 
 // GET
-router.get('/task/:id', auth.isAuthenticated(), controller.getTask);
+router.get('/:id', auth.isAuthenticated(), controller.getTask);
+router.get('/', auth.isAuthenticated(), controller.getMyTasks);
 
 // PUT
-router.put('/task/:id', auth.isAuthenticated(), controller.updateTask);
+router.put('/:id', auth.isAuthenticated(), controller.updateTask);
 
 // DELETE
-router.delete('/task/:id', auth.isAuthenticated(), controller.deleteTask);
+router.delete('/:id', auth.isAuthenticated(), controller.deleteTask);
 
 module.exports = router;
