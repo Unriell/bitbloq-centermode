@@ -30,7 +30,7 @@ exports.deleteGroups = function(teacherId, centerId, next) {
 };
 
 /**
- * DelGet all groups of teacher in a center
+ * Get all groups of teacher in a center
  * @param {String} teacherId
  * @param {String} centerId
  * @param {Function} next
@@ -41,4 +41,36 @@ exports.getGroups = function(teacherId, centerId, next) {
         teacher: teacherId,
         center: centerId
     }, next);
+};
+
+/**
+ * Get user role all groups of teacher in a center
+ * @param {String} teacherId
+ * @param {String} centerId
+ * @param {Function} next
+ * @return {Object} user.owner
+ */
+exports.getStudents = function(groupId, userId, next) {
+    Group.findById(groupId, function(err, group) {
+        if (err) {
+            next(err);
+        } else if (group) {
+            if (String(group.teacher) === String(userId)) {
+                next(null, group.students);
+            } else {
+                UserFunctions.userIsHeadMaster(userId, group.center, function(err) {
+                    if (err) {
+                        next(err);
+                    } else {
+                        next(null, group.students);
+                    }
+                });
+            }
+        } else {
+            next({
+                code: 404,
+                message: 'Not Found'
+            });
+        }
+    });
 };

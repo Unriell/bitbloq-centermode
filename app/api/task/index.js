@@ -9,9 +9,6 @@ var router = express.Router();
 // GET
 router.get('/task/:id', auth.isAuthenticated(), controller.getTask);
 
-// POST
-router.post('/task', auth.isAuthenticated(), controller.createTask);
-
 // PUT
 router.put('/task/:id', auth.isAuthenticated(), controller.updateTask);
 

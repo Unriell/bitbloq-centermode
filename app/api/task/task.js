@@ -1,13 +1,5 @@
 'use strict';
 
-/**
- * Create task
- * @param req
- * @param res
- */
-exports.createTask = function(req, res) {
-
-};
 
 /**
  * Get student task

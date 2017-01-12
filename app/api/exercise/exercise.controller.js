@@ -2,10 +2,49 @@
 
 var Exercise = require('./exercise.model.js'),
     UserFunctions = require('../user/user.functions.js'),
+    GroupFunctions = require('../group/group.functions.js'),
+    TaskFunctions = require('../task/task.functions.js'),
     ImageFunctions = require('../image/image.functions.js'),
     _ = require('lodash'),
     mongoose = require('mongoose'),
     async = require('async');
+
+
+var maxPerPage = 10;
+
+/**
+ * An exercise is assigned to group
+ * @param {Object} group
+ * @param {String} userId
+ * @param {String} exerciseId
+ * @param {Function} next
+ */
+function assignGroup(group, userId, exerciseId, next) {
+    async.waterfall([
+        function(next) {
+            GroupFunctions.getStudents(group._id, userId, next);
+        },
+        function(students, next) {
+            Exercise.findById(exerciseId, function(err, exercise) {
+                next(err, exercise, students);
+            });
+        },
+        function(exercise, students, next) {
+            var task = {
+                exercise: exercise._id,
+                group: group._id,
+                creator: userId,
+                initDate: group.calendar.from,
+                endDate: group.calendar.to
+            };
+            async.map(students, function(student, next) {
+                TaskFunctions.createTask(task, student, next);
+            }, function(err, tasks) {
+                next(err, tasks);
+            });
+        }
+    ], next);
+}
 
 function clearExercise(exercise) {
     delete exercise._id;
@@ -16,37 +55,27 @@ function clearExercise(exercise) {
     return exercise;
 }
 
-var maxPerPage = 10;
+
 /**
- * Check if user can update the exercise because user is owner
+ * An exercise is assigned to group
  * @param req
  * @param res
  */
-exports.userIsOwner = function(req, res) {
-    var userId = req.user._id,
-        exerciseId = req.params.exerciseId;
-    Exercise.findById(exerciseId, function(err, exercise) {
+exports.assignGroups = function(req, res) {
+    var exerciseId = req.params.exerciseId,
+        userId = req.user._id,
+        groups = req.body;
+    async.map(groups, function(group, next) {
+        assignGroup(group, userId, exerciseId, next)
+    }, function(err, newGroups) {
         if (err) {
             console.log(err);
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else {
-            if (exercise) {
-                if (exercise.isOwner(userId)) {
-                    res.status(200).set({
-                        'owner': true
-                    }).send();
-                } else {
-                    res.status(204).set({
-                        'owner': false
-                    }).send();
-                }
-            } else {
-                res.sendStatus(404);
-            }
+            res.status(200).send(newGroups);
         }
     });
-
 };
 
 /**
@@ -282,6 +311,39 @@ exports.update = function(req, res) {
         }
     });
 };
+
+/**
+ * Check if user can update the exercise because user is owner
+ * @param req
+ * @param res
+ */
+exports.userIsOwner = function(req, res) {
+    var userId = req.user._id,
+        exerciseId = req.params.exerciseId;
+    Exercise.findById(exerciseId, function(err, exercise) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else {
+            if (exercise) {
+                if (exercise.isOwner(userId)) {
+                    res.status(200).set({
+                        'owner': true
+                    }).send();
+                } else {
+                    res.status(204).set({
+                        'owner': false
+                    }).send();
+                }
+            } else {
+                res.sendStatus(404);
+            }
+        }
+    });
+
+};
+
 
 /**
  * Delete an exercise if user is owner
