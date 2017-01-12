@@ -37,7 +37,11 @@ exports.getGroup = function(req, res) {
     var userId = req.user._id,
         groupId = req.params.id;
     async.waterfall([
-        Group.findById.bind(Group, groupId),
+        function(next){
+            Group.findById(groupId)
+                .populate('students', 'firstName lastName username email')
+                .exec(next);
+        },
         function(group, next) {
             if (group.creator == userId) {
                 next(null, group)
