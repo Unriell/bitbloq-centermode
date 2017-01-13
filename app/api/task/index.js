@@ -8,13 +8,13 @@ var router = express.Router();
 
 // GET
 router.get('/group/:groupId', auth.isAuthenticated(), controller.getTasksByGroup);
-router.get('/:id', auth.isAuthenticated(), controller.getTask);
+router.get('/:id', auth.isAuthenticated(), controller.get);
 router.get('/', auth.isAuthenticated(), controller.getMyTasks);
 
 // PUT
-router.put('/:id', auth.isAuthenticated(), controller.updateTask);
+router.put('/:id', auth.isAuthenticated(), controller.update);
 
 // DELETE
-router.delete('/:id', auth.isAuthenticated(), controller.deleteTask);
+router.delete('/:id', auth.isAuthenticated(), controller.delete);
 
 module.exports = router;

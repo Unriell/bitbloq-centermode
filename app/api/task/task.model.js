@@ -18,10 +18,7 @@ var TaskSchema = new mongoose.Schema({
         type: String,
         default: 'pending' //pending | completed | missed
     },
-    result: {
-        type: String,
-        data: {}
-    },
+    result: {},
     creator: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

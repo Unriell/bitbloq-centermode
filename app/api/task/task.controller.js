@@ -2,6 +2,47 @@
 var Task = require('./task.model.js'),
     _ = require('lodash');
 
+
+function getResultTask(exercise) {
+    var resultTask = {
+        hardwareTags: exercise.hardwareTags,
+        software: exercise.software,
+        hardware: exercise.hardware,
+        defaultTheme: exercise.defaultTheme
+    };
+    return resultTask;
+}
+
+/**
+ * Get a student task
+ * @param req
+ * @param res
+ */
+exports.get = function(req, res) {
+    Task.findById(req.params.id)
+        .populate('exercise', 'name description teacher selectedBloqs hardwareTags software hardware defaultTheme')
+        .exec(function(err, task) {
+            if (err) {
+                console.log(err);
+                err.code = parseInt(err.code) || 500;
+                res.status(err.code).send(err);
+            } else if (!task) {
+                res.sendStatus(404);
+            } else {
+                if (String(task.creator) === String(req.user._id) || String(task.student) === String(req.user._id) || String(task.teacher) === String(req.user._id)) {
+                    var taskId = task._id;
+                    _.extend(task, task.exercise);
+                    _.extend(task, task.result);
+                    task._id = taskId;
+                    res.status(200).json(task);
+                } else {
+                    res.sendStatus(401);
+                }
+            }
+        });
+};
+
+
 /**
  * Get my tasks
  * @param req
@@ -23,32 +64,6 @@ exports.getMyTasks = function(req, res) {
                 }
             }
         );
-};
-
-/**
- * Get a student task
- * @param req
- * @param res
- */
-exports.getTask = function(req, res) {
-    Task.findById(req.params.id)
-        .populate('exercise')
-        .exec(function(err, task) {
-            if (err) {
-                console.log(err);
-                err.code = parseInt(err.code) || 500;
-                res.status(err.code).send(err);
-            } else if (!task) {
-                res.sendStatus(404);
-            } else {
-                if (String(task.creator) === String(req.user._id) || String(task.student) === String(req.user._id) || String(task.teacher) === String(req.user._id)) {
-                    _.extend(task, task.exercise);
-                    res.status(200).json(task);
-                } else {
-                    res.sendStatus(401);
-                }
-            }
-        });
 };
 
 /**
@@ -86,8 +101,31 @@ exports.getTasksByGroup = function(req, res) {
  * @param req
  * @param res
  */
-exports.updateTask = function(req, res) {
-
+exports.update = function(req, res) {
+    Task.findById(req.params.id, function(err, task) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else if (task) {
+            if (String(task.student) === String(req.user._id)) {
+                task.result = getResultTask(req.body);
+                task.save(function(err) {
+                    if (err) {
+                        console.log(err);
+                        err.code = parseInt(err.code) || 500;
+                        res.status(err.code).send(err);
+                    } else {
+                        res.sendStatus(200);
+                    }
+                });
+            } else {
+                res.sendStatus(401);
+            }
+        } else {
+            res.sendStatus(404);
+        }
+    });
 };
 
 /**
@@ -95,6 +133,6 @@ exports.updateTask = function(req, res) {
  * @param req
  * @param res
  */
-exports.deleteTask = function(req, res) {
+exports.delete = function(req, res) {
 
 };

@@ -295,7 +295,7 @@ exports.update = function(req, res) {
             if (exercise.isOwner(req.user._id)) {
                 var exerciseBody = clearExercise(req.body);
                 exercise = _.extend(exercise, exerciseBody);
-                exercise.save(function(err, exercise) {
+                exercise.save(function(err) {
                     if (err) {
                         console.log(err);
                         err.code = parseInt(err.code) || 500;
