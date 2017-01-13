@@ -6,7 +6,6 @@ var Exercise = require('./exercise.model.js'),
     TaskFunctions = require('../task/task.functions.js'),
     ImageFunctions = require('../image/image.functions.js'),
     _ = require('lodash'),
-    mongoose = require('mongoose'),
     async = require('async');
 
 

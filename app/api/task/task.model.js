@@ -28,6 +28,12 @@ var TaskSchema = new mongoose.Schema({
         trim: false,
         required: true
     },
+    teacher: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        trim: false,
+        required: true
+    },
     group: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Group',
