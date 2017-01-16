@@ -30,11 +30,12 @@ exports.get = function(req, res) {
                 res.sendStatus(404);
             } else {
                 if (String(task.creator) === String(req.user._id) || String(task.student) === String(req.user._id) || String(task.teacher) === String(req.user._id)) {
-                    var taskId = task._id;
-                    _.extend(task, task.exercise);
-                    _.extend(task, task.result);
-                    task._id = taskId;
-                    res.status(200).json(task);
+                    var taskId = task._id,
+                        taskObject = task.toObject();
+                    _.extend(taskObject, taskObject.exercise);
+                    _.extend(taskObject, taskObject.result);
+                    taskObject._id = taskId;
+                    res.status(200).json(taskObject);
                 } else {
                     res.sendStatus(401);
                 }
