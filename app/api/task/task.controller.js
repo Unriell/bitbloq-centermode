@@ -68,7 +68,40 @@ exports.getMyTasks = function(req, res) {
 };
 
 /**
- * Get a specific task
+ * Get completed task by exercise
+ * @param req
+ * @param res
+ */
+exports.getTasksByExercise = function(req, res) {
+    var userId = req.user._id,
+        exerciseId = req.params.exerciseId;
+    Task.find({
+            exercise: exerciseId,
+            $or: [{
+                creator: userId
+            },
+                {
+                    teacher: userId
+                }]
+        })
+        .select('exercise, student group mark status initDate endDate')
+        .populate('exercise', 'name createdAt')
+        .populate('student', 'firstName lastName username')
+        .populate('group', 'name')
+        .exec(function(err, tasks) {
+            if (err) {
+                console.log(err);
+                err.code = parseInt(err.code) || 500;
+                res.status(err.code).send(err);
+            } else {
+                res.status(200).send(tasks);
+            }
+        });
+};
+
+
+/**
+ * Get tasks by group
  * @param req
  * @param res
  */

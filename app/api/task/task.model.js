@@ -16,7 +16,7 @@ var TaskSchema = new mongoose.Schema({
     mark: Number,
     status: {
         type: String,
-        default: 'pending' //pending | completed | missed
+        default: 'pending' //pending | delivered | corrected
     },
     result: {},
     creator: {
@@ -33,7 +33,7 @@ var TaskSchema = new mongoose.Schema({
     },
     group: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Group',
+        ref: 'CenterMode-Group',
         trim: false,
         required: true
     },

@@ -8,6 +8,7 @@ var router = express.Router();
 
 // GET
 router.get('/group/:groupId', auth.isAuthenticated(), controller.getTasksByGroup);
+router.get('/exercise/:exerciseId', auth.isAuthenticated(), controller.getTasksByExercise);
 router.get('/:id', auth.isAuthenticated(), controller.get);
 router.get('/', auth.isAuthenticated(), controller.getMyTasks);
 
