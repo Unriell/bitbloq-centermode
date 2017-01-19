@@ -23,7 +23,10 @@ exports.deleteGroups = function(teacherId, centerId, next) {
                     center: centerId
                 }, callBack);
             } else {
-                callBack(401);
+                callBack({
+                    code: 401,
+                    message: 'Unauthorized'
+                });
             }
         }
     ], next);

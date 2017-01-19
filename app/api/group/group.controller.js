@@ -2,8 +2,10 @@
 
 var Group = require('./group.model.js'),
     UserFunctions = require('../user/user.functions.js'),
+    ExerciseFunction = require('../exercise/exercise.functions.js'),
     TaskFunction = require('../task/task.functions.js'),
-    async = require('async');
+    async = require('async'),
+    _ = require('lodash');
 
 /**
  * Create group
@@ -142,6 +144,63 @@ exports.getGroups = function(req, res) {
 };
 
 /**
+ * Get groups by an exercise
+ * @param req
+ * @param res
+ */
+exports.getGroupsByExercise = function(req, res) {
+    var userId = req.user._id,
+        exerciseId = req.params.exerciseId;
+    async.waterfall([
+        ExerciseFunction.getInfo.bind(ExerciseFunction, exerciseId),
+        function(exercise, next) {
+            if (String(exercise.teacher) == userId) {
+                next(null, {exercise: exercise});
+            } else {
+                //check if user is headMaster
+                UserFunctions.getCenterIdbyHeadMaster(userId, function(err, centerId) {
+                    if (!centerId) {
+                        next({
+                            code: 401,
+                            message: 'Unauthorized'
+                        });
+                    } else {
+                        next(err, {
+                            exercise: exercise,
+                            centerId: centerId
+                        });
+                    }
+                });
+            }
+        },
+        function(result, next) {
+            TaskFunction.getGroups(result.exercise._id, result.exercise.teacher, function(err, groups) {
+                next(err, groups, result.centerId);
+            });
+        },
+        function(groups, centerId, next) {
+            if (!centerId) {
+                next(null, groups);
+            } else {
+                //get only groups of my center
+                var myCenterGroups = _.filter(groups, function(group) {
+                    return group.center == centerId;
+                });
+                next(null, myCenterGroups);
+            }
+        }
+    ], function(err, myGroups) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else {
+            res.status(200).send(myGroups);
+        }
+    });
+};
+
+/**
  * Get student group by its teacher if user role is head master
  * @param req
  * @param res
@@ -260,7 +319,7 @@ exports.registerInGroup = function(req, res) {
             group.students = group.students || [];
             if (group.students.indexOf(userId) === -1) {
                 group.students.push(userId);
-                group.update(group, function(err, response) {
+                group.update(group, function(err) {
                     if (err) {
                         console.log(err);
                         err.code = parseInt(err.code) || 500;

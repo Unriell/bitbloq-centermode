@@ -1,5 +1,6 @@
 'use strict';
-var Task = require('./task.model.js');
+var Task = require('./task.model.js'),
+    _ = require('lodash');
 
 
 /**
@@ -42,5 +43,33 @@ exports.getAverageMark = function(groupId, student, next) {
                 studentObject.averageMark = sum / counter;
                 next(null, studentObject);
             }
+        });
+};
+
+
+/**
+ * Get task groups
+ * @param {String} exerciseId
+ * @param {String} teacherId
+ * @param {Function} next
+ * @return {Array} groups
+ */
+exports.getGroups = function(exerciseId, teacherId, next) {
+    Task.find({
+            exercise: exerciseId,
+            teacher: teacherId
+        })
+        .select('group initDate endDate')
+        .populate('group', 'name center')
+        .exec(function(err, tasks) {
+            var groups = [];
+            tasks.forEach(function(task) {
+                var taskObject = task.toObject();
+                _.extend(taskObject, taskObject.group);
+                delete taskObject.group;
+                groups.push(taskObject);
+            });
+            groups = _.uniqWith(groups, _.isEqual);
+            next(err, groups);
         });
 };

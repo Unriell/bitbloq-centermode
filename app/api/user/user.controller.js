@@ -39,8 +39,9 @@ exports.getMyRole = function(req, res) {
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else if (user) {
+            var role = user.role;
             if (user.centers) {
-                var role = 'student';
+                role = 'student';
                 _.forEach(user.centers, function(center) {
                     switch (center.role) {
                         case 'headMaster':
@@ -53,10 +54,10 @@ exports.getMyRole = function(req, res) {
                             break;
                     }
                 });
-                res.status(200).send(role);
-            } else {
-                res.sendStatus(204);
+            } else if (role.studentMode) {
+                role = 'student';
             }
+            res.status(200).send(role);
         } else {
             res.sendStatus(204);
         }
