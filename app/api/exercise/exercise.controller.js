@@ -257,15 +257,12 @@ exports.getByTeacher = function(req, res) {
     async.waterfall([
         UserFunctions.getCenterIdbyHeadMaster.bind(UserFunctions, userId),
         function(centerId, next) {
-            UserFunctions.getTeacher(teacherId, centerId, next);
+            UserFunctions.getTeacher(teacherId, centerId, function(err, teacher) {
+                next(err, teacher, centerId);
+            });
         },
-        function(teacher, next) {
-            Exercise.find({
-                    teacher: teacherId
-                })
-                .limit(parseInt(perPage))
-                .skip(parseInt(perPage * page))
-                .exec(next);
+        function(teacher, centerId, next) {
+            TaskFunctions.getExercises(centerId, teacher._id, page, perPage, next);
         }
     ], function(err, exercises) {
         if (err) {

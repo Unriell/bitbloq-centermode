@@ -1,7 +1,10 @@
 'use strict';
 var Task = require('./task.model.js'),
-    _ = require('lodash');
+    _ = require('lodash'),
+    mongoose = require('mongoose');
 
+
+var maxPerPage = 10;
 
 /**
  * Create task
@@ -71,5 +74,38 @@ exports.getGroups = function(exerciseId, teacherId, next) {
             });
             groups = _.uniqWith(groups, _.isEqual);
             next(err, groups);
+        });
+};
+
+
+/**
+ * Get exercises with specific center and teacher
+ * @param {String} centerId
+ * @param {String} teacherId
+ * @param {Function} next
+ * @return {Array} exercises
+ */
+exports.getExercises = function(centerId, teacherId, page, perPage, next) {
+    page = page || 0;
+    perPage = perPage || maxPerPage;
+    Task.find({
+            teacher: teacherId
+        })
+        .select('exercise group')
+        .populate('exercise')
+        .populate('group', 'center')
+        .where('group.center').equals(mongoose.Schema.Types.ObjectId(centerId))
+        .limit(parseInt(perPage))
+        .skip(parseInt(perPage * page))
+        .exec(function(err, tasks) {
+            var exercises = [];
+            tasks.forEach(function(task) {
+                var taskObject = task.toObject();
+                _.extend(taskObject, taskObject.exercise);
+                delete taskObject.exercise;
+                delete taskObject.group;
+                exercises.push(taskObject);
+            });
+            next(err, exercises);
         });
 };
