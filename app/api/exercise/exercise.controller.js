@@ -33,6 +33,7 @@ function assignGroup(group, userId, exerciseId, next) {
                 exercise: exercise._id,
                 group: group._id,
                 creator: userId,
+                teacher: userId,
                 initDate: group.calendar.from,
                 endDate: group.calendar.to
             };
@@ -253,9 +254,6 @@ exports.getByTeacher = function(req, res) {
         perPage = (req.query.pageSize && (req.query.pageSize <= maxPerPage)) ? req.query.pageSize : maxPerPage,
         userId = req.user._id,
         teacherId = req.params.teacherId;
-
-    console.log('page getByTeacher');
-    console.log(page);
     async.waterfall([
         UserFunctions.getCenterIdbyHeadMaster.bind(UserFunctions, userId),
         function(centerId, next) {
