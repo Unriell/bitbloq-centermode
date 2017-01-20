@@ -23,7 +23,7 @@ exports.createGroup = function(req, res) {
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else if (result) {
-            res.sendStatus(200);
+            res.status(200).send(result);
         } else {
             res.sendStatus(204);
         }
