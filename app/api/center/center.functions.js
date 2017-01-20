@@ -1,5 +1,6 @@
 'use strict';
-var GroupFunctions = require('../group/group.functions.js');
+var GroupFunctions = require('../group/group.functions.js'),
+    Center = require('./center.model.js');
 
 /**
  * Get teacher  stats.
@@ -31,4 +32,17 @@ exports.teacherGetDateByCenterId = function(teachers, centerId) {
         teacherArray.push(teacherObject);
     });
     return teacherArray;
+};
+
+
+/**
+ * Get information center in array
+ * @param {Array} center ids
+ * @param {Function} next
+ * @return {Object} center
+ */
+exports.getCentersInArray = function(ids, next) {
+    Center.find()
+        .where('_id').in(ids)
+        .exec(next);
 };

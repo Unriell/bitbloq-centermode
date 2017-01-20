@@ -5,6 +5,18 @@ var User = require('./user.model.js'),
 
 /**
  * Get an user
+ * @param {String} userId
+ * @param {Function} next
+ * @return {Object} user.owner
+ */
+exports.getUserById = function(userId, next) {
+    User.findById(userId, function(err, user) {
+        next(err, user.owner);
+    });
+};
+
+/**
+ * Get an user
  * @param {String} email
  * @param {Function} next
  * @return {Object} user.owner

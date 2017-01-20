@@ -4,7 +4,8 @@ var Center = require('./center.model.js'),
     UserFunctions = require('../user/user.functions.js'),
     GroupFunctions = require('../group/group.functions.js'),
     centerFunctions = require('./center.functions.js'),
-    async = require('async');
+    async = require('async'),
+    _ = require('lodash');
 
 /**
  * Create center
@@ -166,7 +167,36 @@ exports.getMyCenter = function(req, res) {
                 });
             }
         }
-    })
+    });
+};
+
+/**
+ * Get my centers, if user is teacher
+ * @param req
+ * @param res
+ */
+exports.getMyCenters = function(req, res) {
+    var userId = req.user._id;
+    async.waterfall([
+        UserFunctions.getUserById.bind(UserFunctions, userId),
+        function(user, next) {
+            var mycenters = [];
+            _.forEach(user.centers, function(center, key) {
+                if (center.role === 'teacher' || center.role === 'headMaster') {
+                    mycenters.push(key);
+                }
+            });
+            centerFunctions.getCentersInArray(mycenters, next);
+        }
+    ], function(err, centers) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else {
+            res.status(200).send(centers);
+        }
+    });
 };
 
 /**

@@ -9,6 +9,7 @@ var router = express.Router();
 // GET
 router.get('/:centerId/teacher/:teacherId', auth.isAuthenticated(), controller.getTeacher);
 router.get('/me', auth.isAuthenticated(), controller.getMyCenter);
+router.get('/teacher/me', auth.isAuthenticated(), controller.getMyCenters);
 router.get('/:centerId/teacher', auth.isAuthenticated(), controller.getTeachers);
 router.get('/:id', auth.isAuthenticated(), controller.getCenter);
 
