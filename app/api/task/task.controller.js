@@ -138,18 +138,41 @@ exports.getTasksByGroup = function(req, res) {
 exports.sendTask = function(req, res) {
     var userId = req.user._id,
         taskId = req.params.taskId;
-    Task.update({
+    Task.findOne({
         _id: taskId,
         student: userId
-    }, {status: 'delivered'}, function(err, response) {
+    }, function(err, task) {
         if (err) {
             console.log(err);
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
-        } else if (response && response.nModified === 0) {
+        } else if (!task) {
             res.sendStatus(404);
         } else {
-            res.status(200);
+            //task exist
+            var now = new Date();
+            if (!task.initDate || now - task.initDate.getTime() > 0) {
+                if (!task.endDate || now - task.endDate.getTime() <= 0) {
+                    //can delivered
+                    task.update({
+                        status: 'delivered'
+                    }, function(err, response) {
+                        if (err) {
+                            console.log(err);
+                            err.code = parseInt(err.code) || 500;
+                            res.status(err.code).send(err);
+                        } else if (response && response.nModified === 0) {
+                            res.sendStatus(404);
+                        } else {
+                            res.sendStatus(200);
+                        }
+                    });
+                } else {
+                    res.sendStatus(409);
+                }
+            } else {
+                res.sendStatus(409);
+            }
         }
     });
 };
