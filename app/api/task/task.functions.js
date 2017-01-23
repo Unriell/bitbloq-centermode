@@ -7,15 +7,29 @@ var Task = require('./task.model.js'),
 var maxPerPage = 10;
 
 /**
- * Create task
+ * Create task if user doesn't have this task
  * @param {Object} task
  * @param {String} studentId
  * @param {Function} next
  */
-exports.createTask = function(task, studentId, next) {
-    task.student = studentId;
-    var newTask = new Task(task);
-    newTask.save(next);
+exports.checkAndCreateTask = function(taskData, studentId, next) {
+    Task.findOne({
+        exercise: taskData.exercise,
+        student: studentId
+    }, function(err, task) {
+        if (task) {
+            var taskObject = task.toObject();
+            taskObject.initDate = taskData.initDate;
+            taskObject.endDate = taskData.endDate;
+            task.update(taskObject, function(err) {
+                next(err, taskObject);
+            });
+        } else {
+            taskData.student = studentId;
+            var newTask = new Task(taskData);
+            newTask.save(next);
+        }
+    });
 };
 
 /**

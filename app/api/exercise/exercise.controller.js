@@ -38,7 +38,7 @@ function assignGroup(group, userId, exerciseId, next) {
                 endDate: group.calendar.to
             };
             async.map(students, function(student, next) {
-                TaskFunctions.createTask(task, student, next);
+                TaskFunctions.checkAndCreateTask(task, student, next);
             }, function(err, tasks) {
                 next(err, tasks);
             });
@@ -201,10 +201,9 @@ exports.getAllCount = function(req, res) {
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else {
-            console.log(counter),
-                res.status(200).json({
-                    'count': counter
-                });
+            res.status(200).json({
+                'count': counter
+            });
         }
     });
 };
