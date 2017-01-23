@@ -154,22 +154,29 @@ exports.getGroupsByExercise = function(req, res) {
     async.waterfall([
         ExerciseFunction.getInfo.bind(ExerciseFunction, exerciseId),
         function(exercise, next) {
-            if (String(exercise.teacher) == userId) {
-                next(null, {exercise: exercise});
+            if (exercise) {
+                if (String(exercise.teacher) == userId) {
+                    next(null, {exercise: exercise});
+                } else {
+                    //check if user is headMaster
+                    UserFunctions.getCenterIdbyHeadMaster(userId, function(err, centerId) {
+                        if (!centerId) {
+                            next({
+                                code: 401,
+                                message: 'Unauthorized'
+                            });
+                        } else {
+                            next(err, {
+                                exercise: exercise,
+                                centerId: centerId
+                            });
+                        }
+                    });
+                }
             } else {
-                //check if user is headMaster
-                UserFunctions.getCenterIdbyHeadMaster(userId, function(err, centerId) {
-                    if (!centerId) {
-                        next({
-                            code: 401,
-                            message: 'Unauthorized'
-                        });
-                    } else {
-                        next(err, {
-                            exercise: exercise,
-                            centerId: centerId
-                        });
-                    }
+                next({
+                    code: 404,
+                    message: 'Not Found'
                 });
             }
         },
