@@ -131,6 +131,30 @@ exports.getTasksByGroup = function(req, res) {
 };
 
 /**
+ * Send task to teacher
+ * @param req
+ * @param res
+ */
+exports.sendTask = function(req, res) {
+    var userId = req.user._id,
+        taskId = req.params.taskId;
+    Task.update({
+        _id: taskId,
+        student: userId
+    }, {status: 'delivered'}, function(err, response) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else if (response && response.nModified === 0) {
+            res.sendStatus(404);
+        } else {
+            res.status(200);
+        }
+    });
+};
+
+/**
  * Update a task if user is owner
  * @param req
  * @param res
