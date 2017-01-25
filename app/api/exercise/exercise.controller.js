@@ -37,11 +37,9 @@ function assignGroup(group, userId, exerciseId, next) {
                 initDate: group.calendar.from,
                 endDate: group.calendar.to
             };
-            async.map(students, function(student, next) {
-                TaskFunctions.checkAndCreateTask(task, student, next);
-            }, function(err, tasks) {
-                next(err, tasks);
-            });
+            async.map(students, function(studentId, next) {
+                TaskFunctions.checkAndCreateTask(task, studentId, next);
+            }, next);
         }
     ], next);
 }

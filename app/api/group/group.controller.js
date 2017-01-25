@@ -314,34 +314,41 @@ exports.registerInGroup = function(req, res) {
     var userId = req.user._id,
         groupId = req.params.id;
 
-    Group.findOne({
-        accessId: groupId,
-        status: 'open'
-    }, function(err, group) {
+    async.waterfall([
+        Group.findOne.bind(Group, {
+            accessId: groupId,
+            status: 'open'
+        }),
+        function(group, next) {
+            if (group) {
+                group.students = group.students || [];
+                if (group.students.indexOf(userId) === -1) {
+                    group.students.push(userId);
+                    group.update(group, function(err) {
+                        if (err) {
+                            next(err);
+                        } else {
+                            //Generate old tasks to student
+                            TaskFunction.cloneTaskByGroup(group._id, userId, next());
+                        }
+                    });
+                } else {
+                    next();
+                }
+            } else {
+                next({
+                    code: 401,
+                    message: 'Unauthorized'
+                });
+            }
+        }
+    ], function(err) {
         if (err) {
             console.log(err);
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
-        } else if (group) {
-            group.students = group.students || [];
-            if (group.students.indexOf(userId) === -1) {
-                group.students.push(userId);
-                group.update(group, function(err) {
-                    if (err) {
-                        console.log(err);
-                        err.code = parseInt(err.code) || 500;
-                        res.status(err.code).send(err);
-                    } else {
-                        res.sendStatus(200);
-                    }
-                });
-            } else {
-                res.sendStatus(200);
-            }
         } else {
-            res.sendStatus(401);
+            res.sendStatus(200);
         }
     });
-
-
 };

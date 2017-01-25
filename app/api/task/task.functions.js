@@ -1,7 +1,8 @@
 'use strict';
 var Task = require('./task.model.js'),
     _ = require('lodash'),
-    mongoose = require('mongoose');
+    mongoose = require('mongoose'),
+    async = require('async');
 
 
 var maxPerPage = 10;
@@ -122,4 +123,49 @@ exports.getExercises = function(centerId, teacherId, page, perPage, next) {
             });
             next(err, exercises);
         });
+};
+
+
+/**
+ * Get exercises with specific group
+ * @param {String} groupId
+ * @param {Function} next
+ * @return {Array} tasks
+ */
+exports.getExercisesByGroup = function(groupId, next) {
+    Task.find({
+            group: groupId
+        })
+        .select('exercise group creator teacher initDate endDate')
+        .exec(function(err, tasks) {
+            var taskList = [];
+            tasks.forEach(function(task) {
+                var taskObject = task.toObject();
+                delete taskObject._id;
+                if (!_.some(taskList, taskObject)) {
+                    taskList.push(taskObject);
+                }
+            });
+            next(err, taskList);
+        });
+};
+
+
+/**
+ * Clone tasks
+ * @param {String} groupId
+ * @param {String} studentId
+ * @param {Function} next
+ * @return {Array} tasks
+ */
+exports.cloneTaskByGroup = function(groupId, studentId, next) {
+    exports.getExercisesByGroup(groupId, function(err, tasks) {
+        if (tasks) {
+            async.map(tasks, function(task, next) {
+                exports.checkAndCreateTask(task, studentId, next);
+            }, next);
+        } else {
+            next(err);
+        }
+    });
 };

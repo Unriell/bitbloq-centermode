@@ -153,7 +153,7 @@ exports.sendTask = function(req, res) {
             var now = new Date();
             if (!task.initDate || now - task.initDate.getTime() > 0) {
                 if (!task.endDate || now - task.endDate.getTime() <= 0) {
-                    //can delivered
+                    //can deliver
                     task.update({
                         status: 'delivered'
                     }, function(err, response) {
