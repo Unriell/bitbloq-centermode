@@ -50,10 +50,13 @@ exports.get = function(req, res) {
  * @param res
  */
 exports.getMyTasks = function(req, res) {
-    var userId = req.user._id;
+    var userId = req.user._id,
+        now = Date.now();
     Task.find({
             student: userId
+
         })
+        .or([{initDate: {$lt: now}}, {initDate: now}, {initDate: null}])
         .populate('exercise', 'name')
         .exec(function(err, tasks) {
                 if (err) {
