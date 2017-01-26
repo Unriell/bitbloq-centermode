@@ -257,10 +257,7 @@ exports.userIsHeadMaster = function(userId, centerId, next) {
             if (user.isHeadMaster(centerId)) {
                 next(null, centerId);
             } else {
-                next({
-                    code: 401,
-                    message: 'Unauthorized'
-                });
+                next(null, false);
             }
         }
     });

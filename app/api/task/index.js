@@ -6,6 +6,10 @@ var express = require('express'),
 
 var router = express.Router();
 
+
+//HEAD
+router.head('/:taskId/head-master', auth.isAuthenticated(), controller.userIsHeadMasterByTask);
+
 // GET
 router.get('/group/:groupId', auth.isAuthenticated(), controller.getTasksByGroup);
 router.get('/exercise/:exerciseId', auth.isAuthenticated(), controller.getTasksByExercise);
@@ -15,8 +19,5 @@ router.get('/', auth.isAuthenticated(), controller.getMyTasks);
 // PUT
 router.put('/:id', auth.isAuthenticated(), controller.update);
 router.put('/:taskId/send', auth.isAuthenticated(), controller.sendTask);
-
-// DELETE
-router.delete('/:id', auth.isAuthenticated(), controller.delete);
 
 module.exports = router;

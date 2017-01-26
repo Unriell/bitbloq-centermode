@@ -1,5 +1,6 @@
 'use strict';
 var Task = require('./task.model.js'),
+    UserFunctions = require('../user/user.functions.js'),
     _ = require('lodash');
 
 
@@ -213,10 +214,37 @@ exports.update = function(req, res) {
 };
 
 /**
- * Delete a task if user is owner
+ * Check if user can update the exercise because user is the head master
  * @param req
  * @param res
  */
-exports.delete = function(req, res) {
+exports.userIsHeadMasterByTask = function(req, res) {
+    var userId = req.user._id,
+        taskId = req.params.taskId;
+    Task.findById(taskId)
+        .populate('group', 'center')
+        .exec(function(err, task) {
+            if (err) {
+                console.log(err);
+                err.code = parseInt(err.code) || 500;
+                res.status(err.code).send(err);
+            } else {
+                if (task && task.group && task.group.center) {
+                    UserFunctions.userIsHeadMaster(userId, task.group.center, function(err, centerId) {
+                        if (centerId) {
+                            res.status(204).set({
+                                'headMaster': true
+                            }).send();
+                        } else {
+                            res.status(204).set({
+                                'headMaster': false
+                            }).send();
+                        }
+                    });
+                } else {
+                    res.sendStatus(404);
+                }
+            }
+        });
 
 };

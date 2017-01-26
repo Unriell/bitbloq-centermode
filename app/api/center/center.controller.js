@@ -27,15 +27,19 @@ exports.addTeacher = function(req, res) {
         } else if (!result) {
             res.sendStatus(304);
         } else {
-            UserFunctions.addAllTeachers(result[1], result[0], function(err, teachers) {
-                if (err) {
-                    console.log(err);
-                    err.code = parseInt(err.code) || 500;
-                    res.status(err.code).send(err);
-                } else {
-                    res.status(200).send(teachers);
-                }
-            });
+            if (!result[0]) {
+                res.sendStatus(401);
+            } else {
+                UserFunctions.addAllTeachers(result[1], result[0], function(err, teachers) {
+                    if (err) {
+                        console.log(err);
+                        err.code = parseInt(err.code) || 500;
+                        res.status(err.code).send(err);
+                    } else {
+                        res.status(200).send(teachers);
+                    }
+                });
+            }
         }
     });
 };
@@ -100,7 +104,11 @@ exports.deleteTeacher = function(req, res) {
         async.waterfall([
             UserFunctions.userIsHeadMaster.bind(UserFunctions, userId, centerId),
             function(centerId, next) {
-                GroupFunctions.deleteGroups(teacherId, centerId, next);
+                if (!centerId) {
+                    next(401);
+                } else {
+                    GroupFunctions.deleteGroups(teacherId, centerId, next);
+                }
             },
             function(updated, next) {
                 UserFunctions.deleteTeacher(teacherId, centerId, next);
@@ -211,7 +219,11 @@ exports.getTeacher = function(req, res) {
     async.waterfall([
         UserFunctions.userIsHeadMaster.bind(UserFunctions, userId, centerId),
         function(centerId, next) {
-            UserFunctions.getTeacher(teacherId, centerId, next);
+            if (!centerId) {
+                next(401);
+            } else {
+                UserFunctions.getTeacher(teacherId, centerId, next);
+            }
         }
     ], function(err, teacher) {
         if (err) {
@@ -237,9 +249,13 @@ exports.getTeachers = function(req, res) {
     async.waterfall([
         UserFunctions.userIsHeadMaster.bind(UserFunctions, userId, centerId),
         function(centerId, next) {
-            UserFunctions.getAllTeachers(centerId, function(err, teachers) {
-                next(err, teachers, centerId);
-            });
+            if (!centerId) {
+                next(401);
+            } else {
+                UserFunctions.getAllTeachers(centerId, function(err, teachers) {
+                    next(err, teachers, centerId);
+                });
+            }
         },
         function(teachers, centerId, next) {
             async.map(centerFunctions.teacherGetDateByCenterId(teachers, centerId), function(teacher, next) {

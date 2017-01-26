@@ -61,11 +61,11 @@ exports.getStudents = function(groupId, userId, next) {
             if (String(group.teacher) === String(userId)) {
                 next(null, group.students);
             } else {
-                UserFunctions.userIsHeadMaster(userId, group.center, function(err) {
-                    if (err) {
-                        next(err);
+                UserFunctions.userIsHeadMaster(userId, group.center, function(err, centerId) {
+                    if (!centerId) {
+                        next(401);
                     } else {
-                        next(null, group.students);
+                        next(err, group.students);
                     }
                 });
             }

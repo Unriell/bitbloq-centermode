@@ -51,8 +51,12 @@ exports.getGroup = function(req, res) {
                 if (String(group.teacher) === String(userId) || String(group.creator) === String(userId)) {
                     next(null, group);
                 } else {
-                    UserFunctions.userIsHeadMaster(userId, group.center, function(err) {
-                        next(err, group);
+                    UserFunctions.userIsHeadMaster(userId, group.center, function(err, centerId) {
+                        if (!centerId) {
+                            next(401);
+                        } else {
+                            next(err, group);
+                        }
                     });
                 }
             }
