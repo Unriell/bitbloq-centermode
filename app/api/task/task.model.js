@@ -2,6 +2,7 @@
 
 var mongoose = require('mongoose');
 
+
 var TaskSchema = new mongoose.Schema({
     exercise: {
         type: mongoose.Schema.Types.ObjectId,
@@ -14,6 +15,7 @@ var TaskSchema = new mongoose.Schema({
         required: true
     },
     mark: Number,
+    remark: String,
     status: {
         type: String,
         default: 'pending' //pending | delivered | corrected

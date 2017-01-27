@@ -1,6 +1,7 @@
 'use strict';
 var Task = require('./task.model.js'),
     UserFunctions = require('../user/user.functions.js'),
+    async = require('async'),
     _ = require('lodash');
 
 
@@ -116,22 +117,68 @@ exports.getTasksByGroup = function(req, res) {
             group: groupId,
             $or: [{
                 creator: userId
-            },
-                {
-                    teacher: userId
-                }]
+            }, {
+                teacher: userId
+            }]
         })
         .populate('exercise', 'name')
         .exec(function(err, tasks) {
-                if (err) {
-                    console.log(err);
-                    err.code = parseInt(err.code) || 500;
-                    res.status(err.code).send(err);
-                } else {
-                    res.status(200).send(tasks);
-                }
+            if (err) {
+                console.log(err);
+                err.code = parseInt(err.code) || 500;
+                res.status(err.code).send(err);
+            } else {
+                res.status(200).send(tasks);
             }
-        );
+        });
+};
+
+
+/**
+ * Mark a task
+ * @param req
+ * @param res
+ */
+exports.mark = function(req, res) {
+    var userId = req.user._id,
+        taskId = req.params.taskId,
+        markData = req.body;
+    async.waterfall([
+        function(next) {
+            Task.findById(taskId)
+                .populate('group', 'center')
+                .exec(next);
+        }, function(task, next) {
+            if (String(task.owner) == userId || String(task.teacher) === userId) {
+                next(null, task);
+            } else {
+                UserFunctions.userIsHeadMaster(userId, task.group.center, function(err, centerId) {
+                    if (!centerId) {
+                        next({
+                            code: 401,
+                            message: 'Unauthorized'
+                        });
+                    } else {
+                        next(err, task);
+                    }
+                })
+            }
+        }, function(task, next) {
+            task.update({
+                mark: parseFloat(markData.mark),
+                remark: markData.remark
+            }, next);
+        }
+    ], function(err, result) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else {
+            console.log('result', result);
+            res.status(200).send(result);
+        }
+    });
 };
 
 /**

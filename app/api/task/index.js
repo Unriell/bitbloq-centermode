@@ -19,5 +19,6 @@ router.get('/', auth.isAuthenticated(), controller.getMyTasks);
 // PUT
 router.put('/:id', auth.isAuthenticated(), controller.update);
 router.put('/:taskId/send', auth.isAuthenticated(), controller.sendTask);
+router.put('/:taskId/mark', auth.isAuthenticated(), controller.mark);
 
 module.exports = router;
