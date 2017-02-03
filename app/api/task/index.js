@@ -8,13 +8,16 @@ var router = express.Router();
 
 
 //HEAD
-router.head('/:taskId/head-master', auth.isAuthenticated(), controller.userIsHeadMasterByTask);
+router.head('/:taskId/headmaster', auth.isAuthenticated(), controller.userIsHeadMasterByTask);
 
 // GET
 router.get('/group/:groupId', auth.isAuthenticated(), controller.getTasksByGroup);
 router.get('/exercise/:exerciseId', auth.isAuthenticated(), controller.getTasksByExercise);
 router.get('/:id', auth.isAuthenticated(), controller.get);
 router.get('/', auth.isAuthenticated(), controller.getMyTasks);
+
+//POST
+router.post('/cloneToProject', auth.isAuthenticated(), controller.cloneToProject);
 
 // PUT
 router.put('/:id', auth.isAuthenticated(), controller.update);

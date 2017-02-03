@@ -1,6 +1,7 @@
 'use strict';
 var Task = require('./task.model.js'),
     UserFunctions = require('../user/user.functions.js'),
+    ProjectFunction = require('../project/project.functions.js'),
     async = require('async'),
     _ = require('lodash');
 
@@ -15,6 +16,47 @@ function getResultTask(exercise) {
     return resultTask;
 }
 
+/**
+ * Clone task as project
+ * @param req
+ * @param res
+ */
+exports.cloneToProject = function(req, res) {
+    var taskId = req.body.taskId;
+    async.waterfall([
+        function(next) {
+            Task.findById(taskId)
+                .populate('exercise')
+                .exec(next);
+        },
+        function(task, next) {
+            if (task) {
+                var project = task.toObject();
+                _.extend(project, project.exercise);
+                _.extend(project, project.result);
+                delete project._id;
+                next(null, project);
+            } else {
+                next({
+                    code: 404,
+                    message: 'Not found'
+                });
+            }
+        },
+        function(project, next) {
+            project.creator = req.user._id;
+            ProjectFunction.create(project, next);
+        }
+    ], function(err, project) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else {
+            res.status(200).send(project._id);
+        }
+    });
+};
 /**
  * Get a student task
  * @param req

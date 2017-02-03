@@ -15,12 +15,14 @@ router.get('/', auth.isAuthenticated(), controller.getAll);
 
 
 // POST
+router.put('/:id/clone', auth.isAuthenticated(), controller.clone);
 router.post('/', auth.isAuthenticated(), controller.create);
+
 
 // PUT
 router.put('/:exerciseId/assign', auth.isAuthenticated(), controller.assignGroups);
-router.put('/:id/clone', auth.isAuthenticated(), controller.clone);
 router.put('/:id', auth.isAuthenticated(), controller.update);
+
 
 // DELETE
 router.delete('/:id', auth.isAuthenticated(), controller.delete);

@@ -169,6 +169,7 @@ UserSchema
             'username': this.username,
             'email': this.email,
             'role': this.role,
+            'centers': this.centers
         };
     });
 

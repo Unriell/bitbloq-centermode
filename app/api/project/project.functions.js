@@ -16,3 +16,8 @@ exports.deleteAllByUser = function(userId, next) {
         Project.remove.bind(Project, {creator: userId})
     ], next);
 };
+
+exports.create = function(project, next){
+    var project = new Project(project);
+    project.save(next);
+};
