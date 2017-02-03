@@ -82,8 +82,8 @@ exports.assignGroups = function(req, res) {
  * @param res
  */
 exports.clone = function(req, res) {
-    var exerciseId = req.params.id,
-        userId = req.user._id,
+    var userId = req.user._id,
+        exerciseId = req.body.exerciseId,
         newName = req.body.name;
     async.waterfall([
         Exercise.findById.bind(Exercise, exerciseId),
