@@ -11,6 +11,7 @@ var router = express.Router();
 router.head('/:taskId/headmaster', auth.isAuthenticated(), controller.userIsHeadMasterByTask);
 
 // GET
+router.get('/group/:groupId/student/:studentId', auth.isAuthenticated(), controller.getTasksByStudent);
 router.get('/group/:groupId', auth.isAuthenticated(), controller.getTasksByGroup);
 router.get('/exercise/:exerciseId', auth.isAuthenticated(), controller.getTasksByExercise);
 router.get('/:id', auth.isAuthenticated(), controller.get);
@@ -23,5 +24,8 @@ router.post('/cloneToProject', auth.isAuthenticated(), controller.cloneToProject
 router.put('/:id', auth.isAuthenticated(), controller.update);
 router.put('/:taskId/send', auth.isAuthenticated(), controller.sendTask);
 router.put('/:taskId/mark', auth.isAuthenticated(), controller.mark);
+
+// DELETE
+router.delete('/:id', auth.isAuthenticated(), controller.delete);
 
 module.exports = router;

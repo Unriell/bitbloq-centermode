@@ -2,6 +2,7 @@
 var Task = require('./task.model.js'),
     UserFunctions = require('../user/user.functions.js'),
     ProjectFunction = require('../project/project.functions.js'),
+    TaskFunction = require('./task.functions.js'),
     async = require('async'),
     _ = require('lodash');
 
@@ -57,6 +58,32 @@ exports.cloneToProject = function(req, res) {
         }
     });
 };
+
+/**
+ * Delete a student task
+ * @param req
+ * @param res
+ */
+exports.delete = function(req, res) {
+    Task.find({
+            _id: req.params.id,
+            teacher: req.user._id
+        })
+        .remove()
+        .exec(function(err, data) {
+            if (err) {
+                console.log(err);
+                err.code = parseInt(err.code) || 500;
+                res.status(err.code).send(err);
+            } else if (!data) {
+                res.sendStatus(404);
+            } else {
+                res.sendStatus(200);
+            }
+        });
+};
+
+
 /**
  * Get a student task
  * @param req
@@ -131,7 +158,7 @@ exports.getTasksByExercise = function(req, res) {
                     teacher: userId
                 }]
         })
-        .select('exercise, student group mark status initDate endDate')
+        .select('exercise student group mark status initDate endDate')
         .populate('exercise', 'name createdAt')
         .populate('student', 'firstName lastName username')
         .populate('group', 'name')
@@ -142,6 +169,50 @@ exports.getTasksByExercise = function(req, res) {
                 res.status(err.code).send(err);
             } else {
                 res.status(200).send(tasks);
+            }
+        });
+};
+
+/**
+ * Get completed task by student
+ * @param req
+ * @param res
+ */
+exports.getTasksByStudent = function(req, res) {
+    var userId = req.user._id;
+    Task.find({
+            student: req.params.studentId,
+            group: req.params.groupId
+        })
+        .select('exercise student group mark status initDate endDate')
+        .populate('exercise', 'name createdAt')
+        .populate('student', 'firstName lastName username')
+        .populate('group', 'name')
+        .exec(function(err, tasks) {
+            if (err) {
+                console.log(err);
+                err.code = parseInt(err.code) || 500;
+                res.status(err.code).send(err);
+            } else {
+                if (tasks) {
+                    var taskList = [],
+                        student = tasks[0].student.toObject();
+                    student.average = TaskFunction.calculateAverageMark(tasks);
+                    tasks.forEach(function(task) {
+                        var taskObject = task.toObject(),
+                            taskId = task._id;
+                        _.extend(taskObject, taskObject.exercise);
+                        taskObject._id = taskId;
+                        taskList.push(taskObject);
+                    });
+                    res.status(200).json({
+                        tasks: taskList,
+                        group: tasks[0].group,
+                        student: student
+                    });
+                } else {
+                    res.sendStatus(404);
+                }
             }
         });
 };

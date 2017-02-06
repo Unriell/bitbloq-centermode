@@ -34,7 +34,7 @@ exports.checkAndCreateTask = function(taskData, studentId, next) {
 };
 
 /**
- * Get user average mark in specific task
+ * Get user average mark in specific group
  * @param {String} groupId
  * @param {Object} student
  * @param {Function} next
@@ -49,19 +49,28 @@ exports.getAverageMark = function(groupId, student, next) {
             if (err) {
                 next(err);
             } else {
-                var sum = 0,
-                    counter = 0;
-                tasks.forEach(function(task) {
-                    if (task.mark) {
-                        sum += task.mark;
-                        counter++;
-                    }
-                });
                 var studentObject = student.toObject();
-                studentObject.averageMark = sum / counter;
+                studentObject.averageMark = exports.calculateAverageMark(tasks);
                 next(null, studentObject);
             }
         });
+};
+
+/**
+ * Calculate user average mark
+ * @param {String} tasks
+ * @return {number} average
+ */
+exports.calculateAverageMark = function(tasks) {
+    var sum = 0,
+        counter = 0;
+    tasks.forEach(function(task) {
+        if (task.mark) {
+            sum += task.mark;
+            counter++;
+        }
+    });
+    return (sum / counter);
 };
 
 
