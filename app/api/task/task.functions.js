@@ -34,6 +34,19 @@ exports.checkAndCreateTask = function(taskData, studentId, next) {
 };
 
 /**
+ * Delete tasks
+ * @param {String} studentId
+ * @param {Function} next
+ */
+exports.delete = function(groupId, studentId, teacherId, next) {
+    Task.find({
+        group: groupId,
+        student: studentId,
+        teacher: teacherId
+    }).remove(next);
+};
+
+/**
  * Get user average mark in specific group
  * @param {String} groupId
  * @param {Object} student
