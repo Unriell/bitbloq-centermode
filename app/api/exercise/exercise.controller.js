@@ -8,7 +8,6 @@ var Exercise = require('./exercise.model.js'),
     _ = require('lodash'),
     async = require('async');
 
-
 var maxPerPage = 10;
 
 /**
@@ -41,7 +40,12 @@ function assignGroup(group, userId, exerciseId, next) {
                 TaskFunctions.checkAndCreateTask(task, studentId, next);
             }, next);
         }
-    ], next);
+    ], function(err, newTask) {
+        if (newTask) {
+            newTask[0].name = newTask[0].group.name;
+        }
+        next(err, newTask[0]);
+    });
 }
 
 function clearExercise(exercise) {
@@ -52,7 +56,6 @@ function clearExercise(exercise) {
     delete exercise.__v;
     return exercise;
 }
-
 
 /**
  * An exercise is assigned to group
@@ -254,9 +257,23 @@ exports.getByTeacher = function(req, res) {
     async.waterfall([
         UserFunctions.getCenterIdbyHeadMaster.bind(UserFunctions, userId),
         function(centerId, next) {
-            UserFunctions.getTeacher(teacherId, centerId, function(err, teacher) {
-                next(err, teacher, centerId);
-            });
+            if (!centerId) {
+                next({
+                    code: 401,
+                    message: 'Unauthorized'
+                });
+            } else {
+                UserFunctions.getTeacher(teacherId, centerId, function(err, teacher) {
+                    if (!teacher) {
+                        next({
+                            code: 404,
+                            message: 'Teacher not found'
+                        });
+                    } else {
+                        next(err, teacher, centerId);
+                    }
+                });
+            }
         },
         function(teacher, centerId, next) {
             TaskFunctions.getExercises(centerId, teacher._id, page, perPage, next);
@@ -303,6 +320,37 @@ exports.update = function(req, res) {
     });
 };
 
+/**
+ * Check if user can update the exercise because user is owner
+ * @param req
+ * @param res
+ */
+exports.userIsOwner = function(req, res) {
+    var userId = req.user._id,
+        exerciseId = req.params.exerciseId;
+    Exercise.findById(exerciseId, function(err, exercise) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else {
+            if (exercise) {
+                if (exercise.isOwner(userId)) {
+                    res.status(200).set({
+                        'owner': true
+                    }).send();
+                } else {
+                    res.status(204).set({
+                        'owner': false
+                    }).send();
+                }
+            } else {
+                res.sendStatus(404);
+            }
+        }
+    });
+
+};
 
 /**
  * Delete an exercise if user is owner

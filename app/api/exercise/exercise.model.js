@@ -35,6 +35,7 @@ var ExerciseSchema = new mongoose.Schema({
         connections: [],
         robot: String
     },
+    code: String,
     software: {
         vars: {},
         setup: {},
@@ -45,7 +46,6 @@ var ExerciseSchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
-
 
 /**
  * Methods

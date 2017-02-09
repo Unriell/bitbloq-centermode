@@ -2,8 +2,8 @@
 var Task = require('./task.model.js'),
     _ = require('lodash'),
     mongoose = require('mongoose'),
+    Group = require('../group/group.model.js'),
     async = require('async');
-
 
 var maxPerPage = 10;
 
@@ -17,7 +17,7 @@ exports.checkAndCreateTask = function(taskData, studentId, next) {
     Task.findOne({
         exercise: taskData.exercise,
         student: studentId
-    }, function(err, task) {
+    }).populate('group', 'name').exec(function(err, task) {
         if (task) {
             var taskObject = task.toObject();
             taskObject.initDate = taskData.initDate;
@@ -28,7 +28,18 @@ exports.checkAndCreateTask = function(taskData, studentId, next) {
         } else {
             taskData.student = studentId;
             var newTask = new Task(taskData);
-            newTask.save(next);
+            newTask.save(function(err, taskSaved) {
+                if (taskSaved) {
+                    Group.findById(taskSaved.group, function(err, group) {
+                        var taskCreated = taskSaved.toObject();
+                        taskCreated.group = {
+                            'id': taskSaved.group,
+                            'name': group.name
+                        };
+                        next(err, taskCreated);
+                    })
+                }
+            });
         }
     });
 };
@@ -86,7 +97,6 @@ exports.calculateAverageMark = function(tasks) {
     return (sum / counter);
 };
 
-
 /**
  * Get task groups
  * @param {String} exerciseId
@@ -113,7 +123,6 @@ exports.getGroups = function(exerciseId, teacherId, next) {
             next(err, groups);
         });
 };
-
 
 /**
  * Get exercises with specific center and teacher
@@ -147,7 +156,6 @@ exports.getExercises = function(centerId, teacherId, page, perPage, next) {
         });
 };
 
-
 /**
  * Get exercises with specific group
  * @param {String} groupId
@@ -171,7 +179,6 @@ exports.getExercisesByGroup = function(groupId, next) {
             next(err, taskList);
         });
 };
-
 
 /**
  * Clone tasks

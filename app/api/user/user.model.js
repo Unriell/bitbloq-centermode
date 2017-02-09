@@ -70,6 +70,10 @@ var UserSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    isMobileConnected: {
+        type: Boolean,
+        default: false
+    },
     hasFirstComponent: {
         type: Boolean,
         default: false
