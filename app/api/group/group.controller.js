@@ -45,7 +45,7 @@ exports.getGroup = function(req, res) {
                 .exec(next);
         },
         function(group, next) {
-            if (group.creator == userId) {
+            if (group.creator === userId) {
                 next(null, group)
             } else {
                 if (String(group.teacher) === String(userId) || String(group.creator) === String(userId)) {

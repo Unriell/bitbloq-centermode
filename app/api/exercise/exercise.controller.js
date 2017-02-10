@@ -41,9 +41,6 @@ function assignGroup(group, userId, exerciseId, next) {
             }, next);
         }
     ], function(err, newTask) {
-        if (newTask) {
-            newTask[0].name = newTask[0].group.name;
-        }
         next(err, newTask[0]);
     });
 }
@@ -65,8 +62,12 @@ function clearExercise(exercise) {
 exports.assignGroups = function(req, res) {
     var exerciseId = req.params.exerciseId,
         userId = req.user._id,
-        groups = req.body;
-    async.map(groups, function(group, next) {
+        groupsToAssign = req.body.assign,
+        groupsToRemove = req.body.remove;
+    async.map(groupsToRemove, function(group, next) {
+        TaskFunctions.removeTasksByGroupAndEx(group._id, exerciseId, next);
+    });
+    async.map(groupsToAssign, function(group, next) {
         assignGroup(group, userId, exerciseId, next)
     }, function(err, newGroups) {
         if (err) {

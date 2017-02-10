@@ -19,11 +19,25 @@ exports.checkAndCreateTask = function(taskData, studentId, next) {
         student: studentId
     }).populate('group', 'name').exec(function(err, task) {
         if (task) {
+            //already a task
             var taskObject = task.toObject();
             taskObject.initDate = taskData.initDate;
             taskObject.endDate = taskData.endDate;
             task.update(taskObject, function(err) {
-                next(err, taskObject);
+                if (!err) {
+                    Group.findById(taskObject.group, function(err, group) {
+                        var groupTask = {
+                            '_id': group._id,
+                            'initDate': taskObject.initDate,
+                            'endDate': taskObject.endDate,
+                            'name': group.name,
+                            'centerId': group.centerId
+                        }
+                        next(err, groupTask);
+                    })
+                } else {
+                    next(err, {});
+                }
             });
         } else {
             taskData.student = studentId;
@@ -32,11 +46,14 @@ exports.checkAndCreateTask = function(taskData, studentId, next) {
                 if (taskSaved) {
                     Group.findById(taskSaved.group, function(err, group) {
                         var taskCreated = taskSaved.toObject();
-                        taskCreated.group = {
-                            'id': taskSaved.group,
-                            'name': group.name
-                        };
-                        next(err, taskCreated);
+                        var groupTask = {
+                            '_id': group._id,
+                            'initDate': taskCreated.initDate,
+                            'endDate': taskCreated.endDate,
+                            'name': group.name,
+                            'centerId': group.centerId
+                        }
+                        next(err, groupTask);
                     })
                 }
             });
@@ -178,6 +195,21 @@ exports.getExercisesByGroup = function(groupId, next) {
             });
             next(err, taskList);
         });
+};
+
+/**
+ * Remove task with specific exercise and group
+ * @param {String} groupId
+ * @param {String} exerciseId
+ * @param {Function} next
+ * @return {Array} tasks
+ */
+exports.removeTasksByGroupAndEx = function(groupId, exerciseId, next) {
+    Task.find({
+            group: groupId,
+            exercise: exerciseId
+        })
+        .remove(next);
 };
 
 /**
