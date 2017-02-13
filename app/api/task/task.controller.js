@@ -3,6 +3,7 @@ var Task = require('./task.model.js'),
     UserFunctions = require('../user/user.functions.js'),
     ProjectFunction = require('../project/project.functions.js'),
     TaskFunction = require('./task.functions.js'),
+    GroupFunction = require('../group/group.functions.js'),
     async = require('async'),
     _ = require('lodash');
 
@@ -179,10 +180,12 @@ exports.getTasksByExercise = function(req, res) {
  * @param res
  */
 exports.getTasksByStudent = function(req, res) {
-    var userId = req.user._id;
+    var userId = req.user._id,
+        groupId = req.params.groupId,
+        studentId = req.params.studentId;
     Task.find({
-            student: req.params.studentId,
-            group: req.params.groupId
+            student: studentId,
+            group: groupId
         })
         .select('exercise student group mark status initDate endDate')
         .populate('exercise', 'name createdAt')
@@ -194,7 +197,8 @@ exports.getTasksByStudent = function(req, res) {
                 err.code = parseInt(err.code) || 500;
                 res.status(err.code).send(err);
             } else {
-                if (tasks) {
+                if (tasks.length > 0) {
+                    console.log(tasks);
                     var taskList = [],
                         student = tasks[0].student.toObject();
                     student.average = TaskFunction.calculateAverageMark(tasks);
@@ -211,7 +215,22 @@ exports.getTasksByStudent = function(req, res) {
                         student: student
                     });
                 } else {
-                    res.sendStatus(404);
+                    async.parallel([
+                        GroupFunction.get.bind(GroupFunction, groupId),
+                        UserFunctions.getUserById.bind(UserFunctions, studentId)
+                    ], function(err, result) {
+                        if (err) {
+                            console.log(err);
+                            err.code = parseInt(err.code) || 500;
+                            res.status(err.code).send(err);
+                        } else {
+                            res.status(200).json({
+                                tasks: tasks,
+                                group: result[0],
+                                student: result[1]
+                            });
+                        }
+                    });
                 }
             }
         });

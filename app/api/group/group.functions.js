@@ -77,3 +77,16 @@ exports.getStudents = function(groupId, userId, next) {
         }
     });
 };
+
+
+/**
+ * Get group name
+ * @param {String} groupId
+ * @param {Function} next
+ * @return {Object} group._id group.name
+ */
+exports.get = function(groupId, next) {
+    Group.findById(groupId)
+        .select('name')
+        .exec(next);
+};
