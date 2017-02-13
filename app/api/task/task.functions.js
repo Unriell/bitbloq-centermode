@@ -16,8 +16,9 @@ var maxPerPage = 10;
 exports.checkAndCreateTask = function(taskData, studentId, next) {
     Task.findOne({
         exercise: taskData.exercise,
+        group: taskData.group,
         student: studentId
-    }).populate('group', 'name').exec(function(err, task) {
+    }).populate('group', 'name center').exec(function(err, task) {
         if (task) {
             //already a task
             var taskObject = task.toObject();
@@ -25,16 +26,14 @@ exports.checkAndCreateTask = function(taskData, studentId, next) {
             taskObject.endDate = taskData.endDate;
             task.update(taskObject, function(err) {
                 if (!err) {
-                    Group.findById(taskObject.group, function(err, group) {
-                        var groupTask = {
-                            '_id': group._id,
-                            'initDate': taskObject.initDate,
-                            'endDate': taskObject.endDate,
-                            'name': group.name,
-                            'centerId': group.centerId
-                        }
-                        next(err, groupTask);
-                    })
+                    var groupTask = {
+                        '_id': task.group._id,
+                        'initDate': taskObject.initDate,
+                        'endDate': taskObject.endDate,
+                        'name': task.group.name,
+                        'centerId': task.group.center
+                    };
+                    next(err, groupTask);
                 } else {
                     next(err, {});
                 }
@@ -51,8 +50,8 @@ exports.checkAndCreateTask = function(taskData, studentId, next) {
                             'initDate': taskCreated.initDate,
                             'endDate': taskCreated.endDate,
                             'name': group.name,
-                            'centerId': group.centerId
-                        }
+                            'centerId': group.center
+                        };
                         next(err, groupTask);
                     })
                 }
@@ -199,16 +198,15 @@ exports.getExercisesByGroup = function(groupId, next) {
 
 /**
  * Remove task with specific exercise and group
- * @param {String} groupId
+ * @param {Array} groupIdArray
  * @param {String} exerciseId
  * @param {Function} next
- * @return {Array} tasks
  */
-exports.removeTasksByGroupAndEx = function(groupId, exerciseId, next) {
+exports.removeTasksByGroupAndEx = function(groupIdArray, exerciseId, next) {
     Task.find({
-            group: groupId,
             exercise: exerciseId
         })
+        .where('group').in(groupIdArray)
         .remove(next);
 };
 

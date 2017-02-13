@@ -56,7 +56,10 @@ function clearExercise(exercise) {
 
 /**
  * An exercise is assigned to group
- * @param req
+ * @param {Object} req
+ * @params {String} req.params.exerciseId
+ * @params {Object} req.body.assign
+ * @params {Array} req.body.remove
  * @param res
  */
 exports.assignGroups = function(req, res) {
@@ -64,18 +67,22 @@ exports.assignGroups = function(req, res) {
         userId = req.user._id,
         groupsToAssign = req.body.assign,
         groupsToRemove = req.body.remove;
-    async.map(groupsToRemove, function(group, next) {
-        TaskFunctions.removeTasksByGroupAndEx(group._id, exerciseId, next);
-    });
-    async.map(groupsToAssign, function(group, next) {
-        assignGroup(group, userId, exerciseId, next)
-    }, function(err, newGroups) {
+    async.parallel([
+        function(next) {
+            TaskFunctions.removeTasksByGroupAndEx(groupsToRemove, exerciseId, next);
+        },
+        function(next) {
+            async.map(groupsToAssign, function(group, next) {
+                assignGroup(group, userId, exerciseId, next)
+            }, next);
+        }
+    ], function(err, result) {
         if (err) {
             console.log(err);
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else {
-            res.status(200).send(newGroups);
+            res.status(200).send(result[1])
         }
     });
 };
