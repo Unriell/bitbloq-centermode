@@ -262,7 +262,9 @@ exports.mark = function(req, res) {
                 .populate('group', 'center')
                 .exec(next);
         }, function(task, next) {
-            if (String(task.owner) == userId || String(task.teacher) === userId) {
+            //  ==  it's correct because I want check only the content, I don't want check the type
+            // If you change == to === this request will be rejected when user is teacher
+            if (String(task.owner) == userId || String(task.teacher) == userId) {
                 next(null, task);
             } else {
                 UserFunctions.userIsHeadMaster(userId, task.group.center, function(err, centerId) {
@@ -274,7 +276,7 @@ exports.mark = function(req, res) {
                     } else {
                         next(err, task);
                     }
-                })
+                });
             }
         }, function(task, next) {
             task.update({
@@ -288,7 +290,6 @@ exports.mark = function(req, res) {
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else {
-            console.log('result', result);
             res.status(200).send(result);
         }
     });
