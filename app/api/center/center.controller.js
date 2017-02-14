@@ -157,22 +157,7 @@ exports.getMyCenter = function(req, res) {
                     }
                 });
             } else {
-                async.waterfall([
-                    UserFunctions.getCenterIdbyTeacher.bind(UserFunctions, userId),
-                    function(centerId, next) {
-                        Center.findById(centerId, next);
-                    }
-                ], function(err, center) {
-                    if (err) {
-                        console.log(err);
-                        err.code = parseInt(err.code) || 500;
-                        res.status(err.code).send(err);
-                    } else if (center) {
-                        res.send(center);
-                    } else {
-                        res.sendStatus(204);
-                    }
-                });
+                res.sendStatus(403);
             }
         }
     });
