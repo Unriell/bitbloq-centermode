@@ -227,7 +227,7 @@ exports.getCountByTeacher = function(req, res) {
         teacherId = req.params.teacherId;
 
     async.waterfall([
-        UserFunctions.getCenterIdbyHeadMaster.bind(UserFunctions, userId),
+        UserFunctions.getCenterIdbyheadmaster.bind(UserFunctions, userId),
         function(centerId, next) {
             UserFunctions.getTeacher(teacherId, centerId, next);
         },
@@ -263,7 +263,7 @@ exports.getByTeacher = function(req, res) {
         userId = req.user._id,
         teacherId = req.params.teacherId;
     async.waterfall([
-        UserFunctions.getCenterIdbyHeadMaster.bind(UserFunctions, userId),
+        UserFunctions.getCenterIdbyheadmaster.bind(UserFunctions, userId),
         function(centerId, next) {
             if (!centerId) {
                 next({

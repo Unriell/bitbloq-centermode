@@ -60,7 +60,7 @@ GroupSchema.methods = {
             next(null, true);
         } else {
             this.timesViewed++;
-            UserFunctions.userIsHeadMaster(userId, this.center, function(err, centerId) {
+            UserFunctions.userIsHeadmaster(userId, this.center, function(err, centerId) {
                 if (centerId) {
                     next(null, true);
                 } else {

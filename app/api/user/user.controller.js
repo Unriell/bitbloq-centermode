@@ -10,9 +10,9 @@ var User = require('./user.model.js'),
  * @param req
  * @param res
  */
-exports.isHeadMaster = function(req, res) {
+exports.isHeadmaster = function(req, res) {
     var userId = req.user._id;
-    UserFunctions.getCenterIdbyHeadMaster(userId, function(err, result) {
+    UserFunctions.getCenterIdbyheadmaster(userId, function(err, result) {
         if (err) {
             console.log(err);
             err.code = parseInt(err.code) || 500;
@@ -44,11 +44,11 @@ exports.getMyRole = function(req, res) {
                 role = 'student';
                 _.forEach(user.centers, function(center) {
                     switch (center.role) {
-                        case 'headMaster':
+                        case 'headmaster':
                             role = center.role;
                             break;
                         case 'teacher':
-                            if (role !== 'headMaster') {
+                            if (role !== 'headmaster') {
                                 role = center.role;
                             }
                             break;

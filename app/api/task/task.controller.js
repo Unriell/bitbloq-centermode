@@ -322,7 +322,7 @@ exports.mark = function(req, res) {
             if (String(task.owner) == userId || String(task.teacher) == userId) {
                 next(null, task);
             } else {
-                UserFunctions.userIsHeadMaster(userId, task.group.center, function(err, centerId) {
+                UserFunctions.userIsHeadmaster(userId, task.group.center, function(err, centerId) {
                     if (!centerId) {
                         next({
                             code: 401,
@@ -435,7 +435,7 @@ exports.update = function(req, res) {
  * @param req
  * @param res
  */
-exports.userIsHeadMasterByTask = function(req, res) {
+exports.userIsHeadmasterByTask = function(req, res) {
     var userId = req.user._id,
         taskId = req.params.taskId;
     Task.findById(taskId)
@@ -447,14 +447,14 @@ exports.userIsHeadMasterByTask = function(req, res) {
                 res.status(err.code).send(err);
             } else {
                 if (task && task.group && task.group.center) {
-                    UserFunctions.userIsHeadMaster(userId, task.group.center, function(err, centerId) {
+                    UserFunctions.userIsHeadmaster(userId, task.group.center, function(err, centerId) {
                         if (centerId) {
                             res.status(204).set({
-                                'headMaster': true
+                                'headmaster': true
                             }).send();
                         } else {
                             res.status(204).set({
-                                'headMaster': false
+                                'headmaster': false
                             }).send();
                         }
                     });

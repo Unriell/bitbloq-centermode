@@ -11,7 +11,7 @@ router.head('/:id/register', auth.isAuthenticated(), controller.registerInGroup)
 
 // GET
 router.get('/:id', auth.isAuthenticated(), controller.getGroup);
-router.get('/teacher/:teacherId', auth.isAuthenticated(), controller.getGroupByHeadMaster);
+router.get('/teacher/:teacherId', auth.isAuthenticated(), controller.getGroupByHeadmaster);
 router.get('/center/:centerId', auth.isAuthenticated(), controller.getGroups);
 router.get('/exercise/:exerciseId', auth.isAuthenticated(), controller.getGroupsByExercise);
 router.get('/', auth.isAuthenticated(), controller.getAllGroups);

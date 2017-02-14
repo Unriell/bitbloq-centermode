@@ -51,7 +51,7 @@ exports.getGroup = function(req, res) {
                 if (String(group.teacher) === String(userId) || String(group.creator) === String(userId)) {
                     next(null, group);
                 } else {
-                    UserFunctions.userIsHeadMaster(userId, group.center, function(err, centerId) {
+                    UserFunctions.userIsHeadmaster(userId, group.center, function(err, centerId) {
                         if (!centerId) {
                             next(401);
                         } else {
@@ -162,8 +162,8 @@ exports.getGroupsByExercise = function(req, res) {
                 if (String(exercise.teacher) == userId) {
                     next(null, {exercise: exercise});
                 } else {
-                    //check if user is headMaster
-                    UserFunctions.getCenterIdbyHeadMaster(userId, function(err, centerId) {
+                    //check if user is headmaster
+                    UserFunctions.getCenterIdbyheadmaster(userId, function(err, centerId) {
                         if (!centerId) {
                             next({
                                 code: 401,
@@ -216,11 +216,11 @@ exports.getGroupsByExercise = function(req, res) {
  * @param req
  * @param res
  */
-exports.getGroupByHeadMaster = function(req, res) {
+exports.getGroupByHeadmaster = function(req, res) {
     var userId = req.user._id,
         teacherId = req.params.teacherId;
     async.waterfall([
-        UserFunctions.getCenterIdbyHeadMaster.bind(UserFunctions, userId),
+        UserFunctions.getCenterIdbyheadmaster.bind(UserFunctions, userId),
         function(centerId, next) {
             Group.find({
                 teacher: teacherId,

@@ -17,7 +17,7 @@ exports.deleteGroups = function(teacherId, centerId, next) {
             UserFunctions.getMyRoleInCenter(teacherId, centerId, callBack);
         },
         function(role, callBack) {
-            if (role === 'teacher' || role === 'headMaster') {
+            if (role === 'teacher' || role === 'headmaster') {
                 Group.remove({
                     teacher: teacherId,
                     center: centerId
@@ -61,7 +61,7 @@ exports.getStudents = function(groupId, userId, next) {
             if (String(group.teacher) === String(userId)) {
                 next(null, group.students);
             } else {
-                UserFunctions.userIsHeadMaster(userId, group.center, function(err, centerId) {
+                UserFunctions.userIsHeadmaster(userId, group.center, function(err, centerId) {
                     if (!centerId) {
                         next(401);
                     } else {

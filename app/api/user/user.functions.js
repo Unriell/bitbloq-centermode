@@ -60,16 +60,16 @@ exports.getAllUsersByEmails = function(emails, next) {
  * @param {String} centerId
  * @param {Function} next
  */
-exports.addHeadMaster = function(userId, centerId, next) {
+exports.addheadmaster = function(userId, centerId, next) {
     User.findById(userId, function(err, user) {
         if (err) {
             console.log(err);
             next(err);
         } else {
             user.centers = user.centers || {};
-            if (!user.centers[centerId] || (user.centers[centerId].role !== 'headMaster')) {
+            if (!user.centers[centerId] || (user.centers[centerId].role !== 'headmaster')) {
                 var newCenter = {
-                    role: 'headMaster',
+                    role: 'headmaster',
                     date: Date.now()
                 };
                 user.centers[centerId] = newCenter;
@@ -174,7 +174,7 @@ exports.getAllTeachers = function(centerId, next) {
 
     User.find({})
         .select('_id username firstName lastName email centers')
-        .where('centers.' + centerId + '.role').in(['teacher', 'headMaster'])
+        .where('centers.' + centerId + '.role').in(['teacher', 'headmaster'])
         .sort(sortFilters)
         .exec(next);
 };
@@ -184,11 +184,11 @@ exports.getAllTeachers = function(centerId, next) {
  * @param {String} user Id
  * @param {Function} next
  */
-exports.getCenterIdbyHeadMaster = function(userId, next) {
+exports.getCenterIdbyheadmaster = function(userId, next) {
     User.findById(userId, function(err, user) {
         var centerId;
         if (user) {
-            centerId = user.getHeadMasterCenter();
+            centerId = user.getheadmasterCenter();
         }
         next(err, centerId);
     });
@@ -235,7 +235,7 @@ exports.getMyRoleInCenter = function(userId, centerId, next) {
 exports.getTeacher = function(teacherId, centerId, next) {
     User.findById(teacherId, function(err, user) {
         var response;
-        if (user && user.centers && user.centers[centerId] && (user.centers[centerId].role === 'teacher' || user.centers[centerId].role === 'headMaster')) {
+        if (user && user.centers && user.centers[centerId] && (user.centers[centerId].role === 'teacher' || user.centers[centerId].role === 'headmaster')) {
             user.dateAdded = user.centers[centerId].date;
             response = user.teacherProfile;
         }
@@ -249,12 +249,12 @@ exports.getTeacher = function(teacherId, centerId, next) {
  * @param {String} centerId
  * @param {Function} next
  */
-exports.userIsHeadMaster = function(userId, centerId, next) {
+exports.userIsHeadmaster = function(userId, centerId, next) {
     User.findById(userId, function(err, user) {
         if (err) {
             next(err);
         } else {
-            if (user.isHeadMaster(centerId)) {
+            if (user.isHeadmaster(centerId)) {
                 next(null, centerId);
             } else {
                 next(null, false);

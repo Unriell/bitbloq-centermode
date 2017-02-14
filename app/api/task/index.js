@@ -8,7 +8,7 @@ var router = express.Router();
 
 
 //HEAD
-router.head('/:taskId/headmaster', auth.isAuthenticated(), controller.userIsHeadMasterByTask);
+router.head('/:taskId/headmaster', auth.isAuthenticated(), controller.userIsHeadmasterByTask);
 
 // GET
 router.get('/group/:groupId/student/:studentId', auth.isAuthenticated(), controller.getTasksByStudent);

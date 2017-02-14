@@ -106,7 +106,7 @@ var UserSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    centers: {} // CenterId : {date, role: headMaster | teacher | student}
+    centers: {} // CenterId : {date, role: headmaster | teacher | student}
 }, {
     timestamps: true
 });
@@ -426,19 +426,19 @@ UserSchema.methods = {
         });
     },
 
-    isHeadMaster: function(centerId) {
-        return (this.centers && this.centers[centerId] && this.centers[centerId].role === 'headMaster');
+    isHeadmaster: function(centerId) {
+        return (this.centers && this.centers[centerId] && this.centers[centerId].role === 'headmaster');
     },
 
     isStudent: function() {
         return this.studentMode;
     },
 
-    getHeadMasterCenter: function() {
+    getheadmasterCenter: function() {
         var centerId;
         if (this.centers) {
             _.forEach(this.centers, function(center, key) {
-                if (center.role === 'headMaster') {
+                if (center.role === 'headmaster') {
                     centerId = key;
                 }
             });

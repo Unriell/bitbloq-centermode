@@ -7,7 +7,7 @@ var express = require('express'),
 var router = express.Router();
 
 //HEAD
-router.head('/headMaster', auth.isAuthenticated(), controller.isHeadMaster);
+router.head('/headmaster', auth.isAuthenticated(), controller.isHeadmaster);
 
 // GET
 router.get('/role', auth.isAuthenticated(), controller.getMyRole);
