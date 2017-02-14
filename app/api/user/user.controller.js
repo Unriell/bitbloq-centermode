@@ -54,7 +54,7 @@ exports.getMyRole = function(req, res) {
                             break;
                     }
                 });
-            } else if (role.studentMode) {
+            } else if (user.studentMode) {
                 role = 'student';
             }
             res.status(200).send(role);
