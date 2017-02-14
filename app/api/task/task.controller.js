@@ -7,6 +7,7 @@ var Task = require('./task.model.js'),
     async = require('async'),
     _ = require('lodash');
 
+var maxPerPage = 10;
 
 function getResultTask(exercise) {
     var resultTask = {
@@ -84,7 +85,6 @@ exports.delete = function(req, res) {
         });
 };
 
-
 /**
  * Get a student task
  * @param req
@@ -115,7 +115,6 @@ exports.get = function(req, res) {
         });
 };
 
-
 /**
  * Get my tasks
  * @param req
@@ -128,41 +127,16 @@ exports.getMyTasks = function(req, res) {
             student: userId
 
         })
-        .or([{initDate: {$lt: now}}, {initDate: now}, {initDate: null}])
-        .populate('exercise', 'name')
-        .exec(function(err, tasks) {
-                if (err) {
-                    console.log(err);
-                    err.code = parseInt(err.code) || 500;
-                    res.status(err.code).send(err);
-                } else {
-                    res.status(200).send(tasks);
-                }
+        .or([{
+            initDate: {
+                $lt: now
             }
-        );
-};
-
-/**
- * Get completed task by exercise
- * @param req
- * @param res
- */
-exports.getTasksByExercise = function(req, res) {
-    var userId = req.user._id,
-        exerciseId = req.params.exerciseId;
-    Task.find({
-            exercise: exerciseId,
-            $or: [{
-                creator: userId
-            },
-                {
-                    teacher: userId
-                }]
-        })
-        .select('exercise student group mark status initDate endDate')
-        .populate('exercise', 'name createdAt')
-        .populate('student', 'firstName lastName username')
-        .populate('group', 'name')
+        }, {
+            initDate: now
+        }, {
+            initDate: null
+        }])
+        .populate('exercise', 'name')
         .exec(function(err, tasks) {
             if (err) {
                 console.log(err);
@@ -172,6 +146,69 @@ exports.getTasksByExercise = function(req, res) {
                 res.status(200).send(tasks);
             }
         });
+};
+
+/**
+ * Get completed task by exercise
+ * @param req
+ * @param res
+ */
+exports.getTasksByExercise = function(req, res) {
+    var page = req.query.page - 1 || 0,
+        perPage = (req.query.pageSize && (req.query.pageSize <= maxPerPage)) ? req.query.pageSize : maxPerPage,
+        userId = req.user._id,
+        exerciseId = req.params.exerciseId;
+    Task.find({
+            exercise: exerciseId,
+            $or: [{
+                creator: userId
+            }, {
+                teacher: userId
+            }]
+        })
+        .select('exercise student group mark status initDate endDate')
+        .populate('exercise', 'name createdAt')
+        .populate('student', 'firstName lastName username')
+        .populate('group', 'name')
+        .limit(parseInt(perPage))
+        .skip(parseInt(perPage * page))
+        .exec(function(err, tasks) {
+            if (err) {
+                console.log(err);
+                err.code = parseInt(err.code) || 500;
+                res.status(err.code).send(err);
+            } else {
+                res.status(200).send(tasks);
+            }
+        });
+};
+
+/**
+ * Get count of completed task by exercise
+ * @param req
+ * @param res
+ */
+exports.getTasksByExerciseCount = function(req, res) {
+    var userId = req.user._id,
+        exerciseId = req.params.exerciseId;
+    Task.count({
+        exercise: exerciseId,
+        $or: [{
+            creator: userId
+        }, {
+            teacher: userId
+        }]
+    }, function(err, counter) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else {
+            res.status(200).json({
+                'count': counter
+            });
+        }
+    });
 };
 
 /**
@@ -236,7 +273,6 @@ exports.getTasksByStudent = function(req, res) {
         });
 };
 
-
 /**
  * Get tasks by group
  * @param req
@@ -265,7 +301,6 @@ exports.getTasksByGroup = function(req, res) {
         });
 };
 
-
 /**
  * Mark a task
  * @param req
@@ -280,7 +315,8 @@ exports.mark = function(req, res) {
             Task.findById(taskId)
                 .populate('group', 'center')
                 .exec(next);
-        }, function(task, next) {
+        },
+        function(task, next) {
             //  ==  it's correct because I want check only the content, I don't want check the type
             // If you change == to === this request will be rejected when user is teacher
             if (String(task.owner) == userId || String(task.teacher) == userId) {
@@ -297,7 +333,8 @@ exports.mark = function(req, res) {
                     }
                 });
             }
-        }, function(task, next) {
+        },
+        function(task, next) {
             task.update({
                 mark: parseFloat(markData.mark),
                 remark: markData.remark

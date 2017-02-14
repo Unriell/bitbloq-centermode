@@ -13,6 +13,7 @@ router.head('/:taskId/headmaster', auth.isAuthenticated(), controller.userIsHead
 // GET
 router.get('/group/:groupId/student/:studentId', auth.isAuthenticated(), controller.getTasksByStudent);
 router.get('/group/:groupId', auth.isAuthenticated(), controller.getTasksByGroup);
+router.get('/exercise/:exerciseId/count', auth.isAuthenticated(), controller.getTasksByExerciseCount);
 router.get('/exercise/:exerciseId', auth.isAuthenticated(), controller.getTasksByExercise);
 router.get('/:id', auth.isAuthenticated(), controller.get);
 router.get('/', auth.isAuthenticated(), controller.getMyTasks);
