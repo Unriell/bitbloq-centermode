@@ -22,6 +22,7 @@ exports.getUserById = function(userId, next) {
  * @return {Object} user.owner
  */
 exports.getUserByEmail = function(email, next) {
+    email = email.toLowerCase();
     User.findOne({
         email: email
     }, function(err, user) {
