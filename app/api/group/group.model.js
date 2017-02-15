@@ -86,10 +86,10 @@ GroupSchema
             }
         }, function(err, lastGroup) {
             var lastAccessId;
-            if (!lastAccessId) {
+            if (!lastGroup) {
                 lastAccessId = '000000';
-            }else{
-            lastAccessId  = lastGroup.accessId;
+            } else {
+                lastAccessId = lastGroup.accessId;
             }
             var accessId = ((parseInt(lastAccessId, 36) + 1).toString(36)) + '';
             group.accessId = accessId.length >= 6 ? accessId : new Array(6 - accessId.length + 1).join('0') + accessId;
