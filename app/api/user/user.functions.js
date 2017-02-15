@@ -102,7 +102,7 @@ exports.addTeacher = function(user, centerId, next) {
                 role: 'teacher',
                 date: Date.now()
             };
-            if(!user.centers[centerId] || user.centers[centerId].role !== 'headmaster'){
+            if (!user.centers[centerId]) {
                 user.centers[centerId] = newCenter;
                 User.update({
                     _id: user._id
@@ -129,8 +129,8 @@ exports.addTeacher = function(user, centerId, next) {
  * @param {Function} next
  */
 exports.addAllTeachers = function(users, centerId, next) {
-    var usersResult = {};
-    var userDontExist = [];
+    var usersResult = {},
+        userDontExist = [];
     async.map(users, function(user, next) {
         if (user._id) {
             exports.addTeacher(user, centerId, next);
