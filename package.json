@@ -23,6 +23,10 @@
         {
             "name": "Laura del Río",
             "email": "laura.delrio@bq.com"
+        },
+        {
+            "name": "Álvaro Sánchez",
+            "email": "alvaro.sanchez@bq.com"
         }
     ],
     "license": "GPL-3.0",
