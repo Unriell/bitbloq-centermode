@@ -15,7 +15,7 @@ var GroupSchema = new mongoose.Schema({
     },
     accessId: {
         type: String,
-        required: true
+        unique: true
     },
     creator: {
         type: mongoose.Schema.Types.ObjectId,
@@ -45,6 +45,7 @@ var GroupSchema = new mongoose.Schema({
 
 /**
  * Methods
+
  */
 
 GroupSchema.methods = {
@@ -55,6 +56,7 @@ GroupSchema.methods = {
      * @param {Function} next
      * @api public
      */
+
     userCanUpdate: function(userId, next) {
         if (String(userId) === String(this.creator) || String(userId) == String(this.teacher)) {
             next(null, true);
@@ -70,4 +72,28 @@ GroupSchema.methods = {
         }
     }
 };
+
+/**
+ * Pre-save hook
+ */
+GroupSchema
+    .pre('save', function(next) {
+        var group = this;
+        //accessKey seleccionar solo
+        this.constructor.findOne({}, 'accessId', {
+            sort: {
+                'createdAt': -1
+            }
+        }, function(err, lastGroup) {
+            var lastAccessId = lastGroup.accessId;
+            if (!lastAccessId) {
+                lastAccessId = '000000';
+            }
+            var accessId = ((parseInt(lastAccessId, 36) + 1).toString(36)) + '';
+            group.accessId = accessId.length >= 6 ? accessId : new Array(6 - accessId.length + 1).join('0') + accessId;
+            next();
+        });
+
+    });
+
 module.exports = mongoose.model('CenterMode-Group', GroupSchema);

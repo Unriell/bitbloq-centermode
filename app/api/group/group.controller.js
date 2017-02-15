@@ -17,10 +17,13 @@ exports.createGroup = function(req, res) {
         group = req.body;
     group.creator = userId;
     var newGroup = new Group(group);
-    newGroup.save(group, function(err, result) {
+    createGroup(newGroup, group, true, function(err, result) {
         if (err) {
             console.log(err);
             err.code = parseInt(err.code) || 500;
+            if (err.code === 11000) {
+                err.code = 409;
+            }
             res.status(err.code).send(err);
         } else if (result) {
             res.status(200).send(result);
@@ -93,7 +96,9 @@ exports.getAllGroups = function(req, res) {
         function(isStudent, next) {
             if (isStudent) {
                 Group.find({
-                    students: {$in: [userId]}
+                    students: {
+                        $in: [userId]
+                    }
                 }, next);
             } else {
                 Group.find({
@@ -112,7 +117,6 @@ exports.getAllGroups = function(req, res) {
     });
 };
 
-
 /**
  * Get student group in a center
  * @param req
@@ -126,7 +130,9 @@ exports.getGroups = function(req, res) {
         function(isStudent, next) {
             if (isStudent) {
                 Group.find({
-                    students: {$in: [userId]},
+                    students: {
+                        $in: [userId]
+                    },
                     center: centerId
                 }, next);
             } else {
@@ -160,7 +166,9 @@ exports.getGroupsByExercise = function(req, res) {
         function(exercise, next) {
             if (exercise) {
                 if (String(exercise.teacher) == userId) {
-                    next(null, {exercise: exercise});
+                    next(null, {
+                        exercise: exercise
+                    });
                 } else {
                     //check if user is headmaster
                     UserFunctions.getCenterIdbyheadmaster(userId, function(err, centerId) {
@@ -349,7 +357,6 @@ exports.deleteStudent = function(req, res) {
     });
 };
 
-
 /**
  * Register a student in a group
  * @param req
@@ -397,3 +404,18 @@ exports.registerInGroup = function(req, res) {
         }
     });
 };
+
+function createGroup(group, groupData, recursive, next) {
+
+    group.save(groupData, function(err, result) {
+        if (err) {
+            if (recursive && err.name === 'MongoError' && err.code === 11000) {
+                createGroup(group, groupData, false, next)
+            } else {
+                next(err, result);
+            }
+        } else {
+            next(err, result);
+        }
+    });
+}
