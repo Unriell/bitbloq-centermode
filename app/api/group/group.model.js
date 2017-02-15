@@ -85,9 +85,11 @@ GroupSchema
                 'createdAt': -1
             }
         }, function(err, lastGroup) {
-            var lastAccessId = lastGroup.accessId;
+            var lastAccessId;
             if (!lastAccessId) {
                 lastAccessId = '000000';
+            }else{
+            lastAccessId  = lastGroup.accessId;
             }
             var accessId = ((parseInt(lastAccessId, 36) + 1).toString(36)) + '';
             group.accessId = accessId.length >= 6 ? accessId : new Array(6 - accessId.length + 1).join('0') + accessId;
