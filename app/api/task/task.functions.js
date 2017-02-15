@@ -150,7 +150,6 @@ exports.getGroups = function(exerciseId, teacherId, next) {
 exports.getExercises = function(centerId, teacherId, page, perPage, next) {
     page = page || 0;
     perPage = perPage || maxPerPage;
-    console.log('voy a buscar', teacherId);
     Task.find({
             teacher: teacherId
         })

@@ -30,6 +30,7 @@ exports.addTeacher = function(req, res) {
             if (!result[0]) {
                 res.sendStatus(401);
             } else {
+                var users = result[1];
                 UserFunctions.addAllTeachers(result[1], result[0], function(err, teachers) {
                     if (err) {
                         console.log(err);

@@ -102,14 +102,18 @@ exports.addTeacher = function(user, centerId, next) {
                 role: 'teacher',
                 date: Date.now()
             };
-            user.centers[centerId] = newCenter;
-            User.update({
-                _id: user._id
-            }, {
-                centers: user.centers
-            }, function(err) {
-                next(err, (new User(user)).teacherProfile);
-            });
+            if(!user.centers[centerId] || user.centers[centerId].role !== 'headmaster'){
+                user.centers[centerId] = newCenter;
+                User.update({
+                    _id: user._id
+                }, {
+                    centers: user.centers
+                }, function(err) {
+                    next(err, (new User(user)).teacherProfile);
+                });
+            } else {
+                next();
+            }
         } else {
             next(null, user);
         }
