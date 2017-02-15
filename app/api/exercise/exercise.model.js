@@ -42,7 +42,13 @@ var ExerciseSchema = new mongoose.Schema({
         loop: {}
     },
     hardwareTags: [String],
-    selectedBloqs: {}
+    selectedBloqs: {},
+    useBitbloqConnect: {
+        type: Boolean,
+        default: false
+    },
+
+    bitbloqConnectBT: {}
 }, {
     timestamps: true
 });

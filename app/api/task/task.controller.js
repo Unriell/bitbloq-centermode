@@ -92,7 +92,7 @@ exports.delete = function(req, res) {
  */
 exports.get = function(req, res) {
     Task.findById(req.params.id)
-        .populate('exercise', 'name description teacher selectedBloqs hardwareTags software hardware defaultTheme')
+        .populate('exercise', 'name description teacher selectedBloqs hardwareTags software hardware defaultTheme useBitbloqConnect bitbloqConnectBT')
         .exec(function(err, task) {
             if (err) {
                 console.log(err);
@@ -122,7 +122,9 @@ exports.get = function(req, res) {
  */
 exports.getMyTasks = function(req, res) {
     var userId = req.user._id,
-        now = Date.now();
+        now = Date.now(),
+        page = req.query.page - 1 || 0,
+        perPage = (req.query.pageSize && (req.query.pageSize <= maxPerPage)) ? req.query.pageSize : maxPerPage;
     Task.find({
             student: userId
 
@@ -137,6 +139,8 @@ exports.getMyTasks = function(req, res) {
             initDate: null
         }])
         .populate('exercise', 'name')
+        .limit(parseInt(perPage))
+        .skip(parseInt(perPage * page))
         .exec(function(err, tasks) {
             if (err) {
                 console.log(err);
@@ -146,6 +150,38 @@ exports.getMyTasks = function(req, res) {
                 res.status(200).send(tasks);
             }
         });
+};
+
+/**
+ * Get my tasks count
+ * @param req
+ * @param res
+ */
+exports.getMyTasksCount = function(req, res) {
+    var userId = req.user._id,
+        now = Date.now();
+    Task.count({
+        student: userId,
+        $or: [{
+            initDate: {
+                $lt: now
+            }
+        }, {
+            initDate: now
+        }, {
+            initDate: null
+        }]
+    }, function(err, counter) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else {
+            res.status(200).json({
+                'count': counter
+            });
+        }
+    });
 };
 
 /**
