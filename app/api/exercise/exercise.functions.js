@@ -23,3 +23,19 @@ exports.getGroups = function(exerciseId, next) {
         .populate('groups')
         .exec(next);
 };
+
+
+
+/**
+ * Get exercises by group id
+ * @param {String} groupId
+ * @param {Function} next
+ */
+exports.getExerciseByGroup = function(groupId, next) {
+    Exercise.find({})
+        .where('groups._id').eq(groupId)
+        .exec(function(err,result){
+            console.log('result', result);
+            next(err,result);
+        });
+};

@@ -372,7 +372,7 @@ exports.registerInGroup = function(req, res) {
                             next(err);
                         } else {
                             //Generate old tasks to student
-                            TaskFunction.cloneTaskByGroup(group._id, userId, next());
+                            TaskFunction.createTaskByGroup(group, userId, next());
                         }
                     });
                 } else {
@@ -384,13 +384,16 @@ exports.registerInGroup = function(req, res) {
                     message: 'Unauthorized'
                 });
             }
+
+
         }
-    ], function(err) {
+    ], function(err, result) {
         if (err) {
             console.log(err);
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else {
+
             res.sendStatus(200);
         }
     });

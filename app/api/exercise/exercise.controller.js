@@ -33,7 +33,7 @@ function assignGroup(group, userId, exercise, next) {
             };
             if (students.length > 0) {
                 async.map(students, function(studentId, next) {
-                    TaskFunctions.checkAndCreateTask(task, studentId, next);
+                    TaskFunctions.checkAndCreateTask(task, studentId, null, next);
                 }, next);
             } else {
                 GroupFunctions.get(group._id, function(err, result) {

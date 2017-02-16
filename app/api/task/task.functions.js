@@ -1,5 +1,6 @@
 'use strict';
 var Task = require('./task.model.js'),
+    ExerciseFunction = require('../exercise/exercise.functions.js'),
     _ = require('lodash'),
     mongoose = require('mongoose'),
     Group = require('../group/group.model.js'),
@@ -13,7 +14,7 @@ var maxPerPage = 10;
  * @param {String} studentId
  * @param {Function} next
  */
-exports.checkAndCreateTask = function(taskData, studentId, next) {
+exports.checkAndCreateTask = function(taskData, studentId, groupName, next) {
     Task.findOne({
         exercise: taskData.exercise,
         group: taskData.group,
@@ -41,17 +42,27 @@ exports.checkAndCreateTask = function(taskData, studentId, next) {
             taskData.student = studentId;
             var newTask = new Task(taskData);
             newTask.save(function(err, taskSaved) {
-                if (taskSaved) {
-                    Group.findById(taskSaved.group, function(err, group) {
-                        var taskCreated = taskSaved.toObject();
-                        var groupTask = {
-                            '_id': group._id,
-                            'initDate': taskCreated.initDate,
-                            'endDate': taskCreated.endDate,
-                            'name': group.name
-                        };
-                        next(err, groupTask);
-                    })
+                if (err) {
+                    next(err);
+                } else {
+                    if (groupName) {
+                        next(err, {
+                            '_id': taskSaved.group,
+                            'initDate': taskSaved.initDate,
+                            'endDate': taskSaved.endDate,
+                            'name': groupName
+                        });
+                    } else {
+                        Group.findById(taskSaved.group, function(err, group) {
+                            var groupTask = {
+                                '_id': group._id,
+                                'initDate': taskSaved.initDate,
+                                'endDate': taskSaved.endDate,
+                                'name': group.name
+                            };
+                            next(err, groupTask);
+                        });
+                    }
                 }
             });
         }
@@ -225,17 +236,25 @@ exports.removeTasksByGroupAndEx = function(groupIdArray, exerciseId, next) {
 };
 
 /**
- * Clone tasks
+ * Create default tasks
  * @param {String} groupId
  * @param {String} studentId
  * @param {Function} next
  * @return {Array} tasks
  */
-exports.cloneTaskByGroup = function(groupId, studentId, next) {
-    exports.getExercisesByGroup(groupId, function(err, tasks) {
-        if (tasks) {
-            async.map(tasks, function(task, next) {
-                exports.checkAndCreateTask(task, studentId, next);
+exports.createTaskByGroup = function(group, studentId, next) {
+    ExerciseFunction.getExerciseByGroup(group._id, function(err, exercises) {
+        if (exercises) {
+            async.map(exercises, function(exercise, next) {
+                var task = {
+                    exercise: exercise._id,
+                    group: group._id,
+                    creator: group.creator,
+                    teacher: group.teacher,
+                    initDate: group.initDate,
+                    endDate: group.endDate
+                };
+                exports.checkAndCreateTask(task, studentId, group.name, next);
             }, next);
         } else {
             next(err);
