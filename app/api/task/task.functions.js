@@ -148,8 +148,6 @@ exports.getGroups = function(exerciseId, teacherId, next) {
  * @return {Array} exercises
  */
 exports.getExercises = function(centerId, teacherId, page, perPage, next) {
-    page = page || 0;
-    perPage = perPage || maxPerPage;
     Task.find({
             teacher: teacherId
         })
@@ -160,7 +158,6 @@ exports.getExercises = function(centerId, teacherId, page, perPage, next) {
         .limit(parseInt(perPage))
         .skip(parseInt(perPage * page))
         .exec(function(err, tasks) {
-            console.log();
             var exercises = [];
             tasks.forEach(function(task) {
                 var taskObject = task.toObject();
@@ -170,6 +167,24 @@ exports.getExercises = function(centerId, teacherId, page, perPage, next) {
                 exercises.push(taskObject);
             });
             next(err, exercises);
+        });
+};
+
+
+/**
+ * Get exercises count with specific center and teacher
+ * @param {String} centerId
+ * @param {String} teacherId
+ * @param {Function} next
+ * @return {Array} exercises
+ */
+exports.getExercisesCount = function(centerId, teacherId, next) {
+    Task.count({
+            teacher: teacherId
+        })
+        .where('group.center').equals(mongoose.Schema.Types.ObjectId(centerId))
+        .exec(function(err, count) {
+            next(err, count);
         });
 };
 

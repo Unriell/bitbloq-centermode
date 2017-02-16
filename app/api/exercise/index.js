@@ -7,8 +7,8 @@ var express = require('express'),
 var router = express.Router();
 
 // GET
-router.get('/teacher/:teacherId', auth.isAuthenticated(), controller.getByTeacher);
 router.get('/teacher/:teacherId/count', auth.isAuthenticated(), controller.getCountByTeacher);
+router.get('/teacher/:teacherId', auth.isAuthenticated(), controller.getByTeacher);
 router.get('/count', auth.isAuthenticated(), controller.getAllCount);
 router.get('/:id', auth.isAuthenticated(), controller.get);
 router.get('/', auth.isAuthenticated(), controller.getAll);

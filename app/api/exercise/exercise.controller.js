@@ -225,17 +225,29 @@ exports.getAllCount = function(req, res) {
 exports.getCountByTeacher = function(req, res) {
     var userId = req.user._id,
         teacherId = req.params.teacherId;
-
     async.waterfall([
         UserFunctions.getCenterIdbyheadmaster.bind(UserFunctions, userId),
         function(centerId, next) {
-            UserFunctions.getTeacher(teacherId, centerId, next);
+            if (!centerId) {
+                next({
+                    code: 401,
+                    message: 'Unauthorized'
+                });
+            } else {
+                UserFunctions.getTeacher(teacherId, centerId, function(err, teacher) {
+                    if (!teacher) {
+                        next({
+                            code: 404,
+                            message: 'Teacher not found'
+                        });
+                    } else {
+                        next(err, teacher, centerId);
+                    }
+                });
+            }
         },
-        function(teacher, next) {
-            Exercise.count({
-                    teacher: teacherId
-                })
-                .exec(next)
+        function(teacher, centerId, next) {
+            TaskFunctions.getExercisesCount(centerId, teacher._id, next);
         }
     ], function(err, counter) {
         if (err) {
@@ -248,7 +260,6 @@ exports.getCountByTeacher = function(req, res) {
             });
         }
     });
-
 };
 
 /**
@@ -257,7 +268,6 @@ exports.getCountByTeacher = function(req, res) {
  * @param res
  */
 exports.getByTeacher = function(req, res) {
-
     var page = req.query.page - 1 || 0,
         perPage = (req.query.pageSize && (req.query.pageSize <= maxPerPage)) ? req.query.pageSize : maxPerPage,
         userId = req.user._id,
