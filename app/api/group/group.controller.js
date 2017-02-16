@@ -1,11 +1,12 @@
-'use strict';
+'use strict'
 
 var Group = require('./group.model.js'),
     UserFunctions = require('../user/user.functions.js'),
     ExerciseFunction = require('../exercise/exercise.functions.js'),
     TaskFunction = require('../task/task.functions.js'),
     async = require('async'),
-    _ = require('lodash');
+    _ = require('lodash'),
+    triesCounter;
 
 /**
  * Create group
@@ -17,7 +18,8 @@ exports.createGroup = function(req, res) {
         group = req.body;
     group.creator = userId;
     var newGroup = new Group(group);
-    createGroup(newGroup, group, true, function(err, result) {
+    triesCounter = 0;
+    createGroup(newGroup, group, true, triesCounter, function(err, result) {
         if (err) {
             console.log(err);
             err.code = parseInt(err.code) || 500;
@@ -30,8 +32,8 @@ exports.createGroup = function(req, res) {
         } else {
             res.sendStatus(204);
         }
-    });
-};
+    })
+}
 
 /**
  * Get student group
@@ -45,14 +47,14 @@ exports.getGroup = function(req, res) {
         function(next) {
             Group.findById(groupId)
                 .populate('students', 'firstName lastName username email')
-                .exec(next);
+                .exec(next)
         },
         function(group, next) {
             if (group.creator === userId) {
-                next(null, group)
+                next(null, group);
             } else {
                 if (String(group.teacher) === String(userId) || String(group.creator) === String(userId)) {
-                    next(null, group);
+                    next(null, group)
                 } else {
                     UserFunctions.userIsHeadmaster(userId, group.center, function(err, centerId) {
                         if (!centerId) {
@@ -60,7 +62,7 @@ exports.getGroup = function(req, res) {
                         } else {
                             next(err, group);
                         }
-                    });
+                    })
                 }
             }
         },
@@ -81,8 +83,8 @@ exports.getGroup = function(req, res) {
         } else {
             res.status(200).send(group);
         }
-    });
-};
+    })
+}
 
 /**
  * Get group as student or as teacher
@@ -99,11 +101,11 @@ exports.getAllGroups = function(req, res) {
                     students: {
                         $in: [userId]
                     }
-                }, next);
+                }, next)
             } else {
                 Group.find({
                     teacher: userId
-                }, next);
+                }, next)
             }
         }
     ], function(err, groups) {
@@ -114,8 +116,8 @@ exports.getAllGroups = function(req, res) {
         } else {
             res.status(200).send(groups);
         }
-    });
-};
+    })
+}
 
 /**
  * Get student group in a center
@@ -134,12 +136,12 @@ exports.getGroups = function(req, res) {
                         $in: [userId]
                     },
                     center: centerId
-                }, next);
+                }, next)
             } else {
                 Group.find({
                     teacher: userId,
                     center: centerId
-                }, next);
+                }, next)
             }
         }
     ], function(err, groups) {
@@ -150,8 +152,8 @@ exports.getGroups = function(req, res) {
         } else {
             res.status(200).send(groups);
         }
-    });
-};
+    })
+}
 
 /**
  * Get groups by an exercise
@@ -168,44 +170,44 @@ exports.getGroupsByExercise = function(req, res) {
                 if (String(exercise.teacher) == userId) {
                     next(null, {
                         exercise: exercise
-                    });
+                    })
                 } else {
-                    //check if user is headmaster
+                    // check if user is headmaster
                     UserFunctions.getCenterIdbyheadmaster(userId, function(err, centerId) {
                         if (!centerId) {
                             next({
                                 code: 401,
                                 message: 'Unauthorized'
-                            });
+                            })
                         } else {
                             next(err, {
                                 exercise: exercise,
                                 centerId: centerId
-                            });
+                            })
                         }
-                    });
+                    })
                 }
             } else {
                 next({
                     code: 404,
                     message: 'Not Found'
-                });
+                })
             }
         },
         function(result, next) {
             TaskFunction.getGroups(result.exercise._id, result.exercise.teacher, function(err, groups) {
                 next(err, groups, result.centerId);
-            });
+            })
         },
         function(groups, centerId, next) {
             if (!centerId) {
-                next(null, groups);
+                next(null, groups)
             } else {
-                //get only groups of my center
+                // get only groups of my center
                 var myCenterGroups = _.filter(groups, function(group) {
                     return group.center == centerId;
-                });
-                next(null, myCenterGroups);
+                })
+                next(null, myCenterGroups)
             }
         }
     ], function(err, myGroups) {
@@ -216,8 +218,8 @@ exports.getGroupsByExercise = function(req, res) {
         } else {
             res.status(200).send(myGroups);
         }
-    });
-};
+    })
+}
 
 /**
  * Get student group by its teacher if user role is head master
@@ -243,8 +245,8 @@ exports.getGroupByHeadmaster = function(req, res) {
         } else {
             res.status(200).send(groups);
         }
-    });
-};
+    })
+}
 
 /**
  * Update a student group
@@ -268,7 +270,7 @@ exports.updateGroup = function(req, res) {
                 } else {
                     group.update(req.body, next);
                 }
-            });
+            })
         }
     ], function(err) {
         if (err) {
@@ -278,8 +280,8 @@ exports.updateGroup = function(req, res) {
         } else {
             res.sendStatus(200);
         }
-    });
-};
+    })
+}
 
 /**
  * Delete a group if user is owner
@@ -299,11 +301,11 @@ exports.deleteGroup = function(req, res) {
                     next({
                         code: 401,
                         message: 'Unauthorized'
-                    });
+                    })
                 } else {
                     group.remove(next);
                 }
-            });
+            })
         }
     ], function(err) {
         if (err) {
@@ -313,8 +315,8 @@ exports.deleteGroup = function(req, res) {
         } else {
             res.sendStatus(200);
         }
-    });
-};
+    })
+}
 
 /**
  * Delete a student if user is group teacher
@@ -334,8 +336,8 @@ exports.deleteStudent = function(req, res) {
             if (group) {
                 _.remove(group.students, function(item) {
                     return String(item) === studentId;
-                });
-                group.update(group, next);
+                })
+                group.update(group, next)
             } else {
                 next({
                     code: 404,
@@ -354,8 +356,8 @@ exports.deleteStudent = function(req, res) {
         } else {
             res.sendStatus(200);
         }
-    });
-};
+    })
+}
 
 /**
  * Register a student in a group
@@ -380,12 +382,12 @@ exports.registerInGroup = function(req, res) {
                         if (err) {
                             next(err);
                         } else {
-                            //Generate old tasks to student
+                            // Generate old tasks to student
                             TaskFunction.cloneTaskByGroup(group._id, userId, next());
                         }
-                    });
+                    })
                 } else {
-                    next();
+                    next()
                 }
             } else {
                 next({
@@ -402,20 +404,24 @@ exports.registerInGroup = function(req, res) {
         } else {
             res.sendStatus(200);
         }
-    });
-};
+    })
+}
 
-function createGroup(group, groupData, recursive, next) {
-
+function createGroup(group, groupData, recursive, triesCounter, next) {
     group.save(groupData, function(err, result) {
         if (err) {
             if (recursive && err.name === 'MongoError' && err.code === 11000) {
-                createGroup(group, groupData, false, next)
+                if (triesCounter < 2) {
+                    triesCounter = triesCounter + 1;
+                    createGroup(group, groupData, true, triesCounter, next);
+                } else {
+                    createGroup(group, groupData, false, triesCounter, next);
+                }
             } else {
                 next(err, result);
             }
         } else {
             next(err, result);
         }
-    });
+    })
 }
