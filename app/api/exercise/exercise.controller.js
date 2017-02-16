@@ -28,8 +28,8 @@ function assignGroup(group, userId, exercise, next) {
                 group: group._id,
                 creator: userId,
                 teacher: userId,
-                initDate: group.calendar.from,
-                endDate: group.calendar.to
+                initDate: group.date.initDate,
+                endDate: group.date.endDate
             };
             if (students.length > 0) {
                 async.map(students, function(studentId, next) {
@@ -84,18 +84,7 @@ exports.assignGroups = function(req, res) {
                     TaskFunctions.removeTasksByGroupAndEx(groupsToRemove, exerciseId, next);
                 },
                 function(next) {
-                    var newGroups = [];
-                    _.forEach(groupsToAssign, function(group) {
-                        var item = {
-                            _id: group._id,
-                            date: {
-                                initDate: group.calendar.from,
-                                endDate: group.calendar.to
-                            }
-                        };
-                        newGroups.push(item);
-                    });
-                    exercise.update({groups: newGroups}, next);
+                    exercise.update({groups: groupsToAssign}, next);
                 },
                 function(next) {
                     async.map(groupsToAssign, function(group, next) {
