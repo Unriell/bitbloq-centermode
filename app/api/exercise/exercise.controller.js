@@ -14,20 +14,15 @@ var maxPerPage = 10;
  * An exercise is assigned to group
  * @param {Object} group
  * @param {String} userId
- * @param {String} exerciseId
+ * @param {Object} exercise
  * @param {Function} next
  */
-function assignGroup(group, userId, exerciseId, next) {
+function assignGroup(group, userId, exercise, next) {
     async.waterfall([
         function(next) {
             GroupFunctions.getStudents(group._id, userId, next);
         },
         function(students, next) {
-            Exercise.findById(exerciseId, function(err, exercise) {
-                next(err, exercise, students);
-            });
-        },
-        function(exercise, students, next) {
             var task = {
                 exercise: exercise._id,
                 group: group._id,
@@ -36,9 +31,20 @@ function assignGroup(group, userId, exerciseId, next) {
                 initDate: group.calendar.from,
                 endDate: group.calendar.to
             };
-            async.map(students, function(studentId, next) {
-                TaskFunctions.checkAndCreateTask(task, studentId, next);
-            }, next);
+            if (students.length > 0) {
+                async.map(students, function(studentId, next) {
+                    TaskFunctions.checkAndCreateTask(task, studentId, next);
+                }, next);
+            } else {
+                GroupFunctions.get(group._id, function(err, result) {
+                    next(err, [{
+                        _id: group._id,
+                        name: result.name,
+                        initDate: group.calendar.from,
+                        endDate: group.calendar.to
+                    }]);
+                });
+            }
         }
     ], function(err, newTask) {
         next(err, newTask[0]);
@@ -67,22 +73,44 @@ exports.assignGroups = function(req, res) {
         userId = req.user._id,
         groupsToAssign = req.body.assign,
         groupsToRemove = req.body.remove;
-    async.parallel([
-        function(next) {
-            TaskFunctions.removeTasksByGroupAndEx(groupsToRemove, exerciseId, next);
-        },
-        function(next) {
-            async.map(groupsToAssign, function(group, next) {
-                assignGroup(group, userId, exerciseId, next)
-            }, next);
-        }
-    ], function(err, result) {
+    Exercise.findById(exerciseId, function(err, exercise) {
         if (err) {
             console.log(err);
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else {
-            res.status(200).send(result[1])
+            async.parallel([
+                function(next) {
+                    TaskFunctions.removeTasksByGroupAndEx(groupsToRemove, exerciseId, next);
+                },
+                function(next) {
+                    var newGroups = [];
+                    _.forEach(groupsToAssign, function(group) {
+                        var item = {
+                            _id: group._id,
+                            date: {
+                                initDate: group.calendar.from,
+                                endDate: group.calendar.to
+                            }
+                        };
+                        newGroups.push(item);
+                    });
+                    exercise.update({groups: newGroups}, next);
+                },
+                function(next) {
+                    async.map(groupsToAssign, function(group, next) {
+                        assignGroup(group, userId, exercise, next)
+                    }, next);
+                }
+            ], function(err, result) {
+                if (err) {
+                    console.log(err);
+                    err.code = parseInt(err.code) || 500;
+                    res.status(err.code).send(err);
+                } else {
+                    res.status(200).send(result[2])
+                }
+            });
         }
     });
 };

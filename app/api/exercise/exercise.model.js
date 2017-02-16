@@ -25,6 +25,16 @@ var ExerciseSchema = new mongoose.Schema({
         trim: false,
         required: true
     },
+    groups: [{
+        _id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        date: {
+            initDate: Date,
+            endDate: Date
+        }
+    }],
     defaultTheme: {
         type: String,
         default: 'infotab_option_colorTheme'

@@ -9,7 +9,7 @@ var maxPerPage = 10;
 
 /**
  * Create task if user doesn't have this task
- * @param {Object} task
+ * @param {Object} taskData
  * @param {String} studentId
  * @param {Function} next
  */
@@ -30,8 +30,7 @@ exports.checkAndCreateTask = function(taskData, studentId, next) {
                         '_id': task.group._id,
                         'initDate': taskObject.initDate,
                         'endDate': taskObject.endDate,
-                        'name': task.group.name,
-                        'centerId': task.group.center
+                        'name': task.group.name
                     };
                     next(err, groupTask);
                 } else {
@@ -49,8 +48,7 @@ exports.checkAndCreateTask = function(taskData, studentId, next) {
                             '_id': group._id,
                             'initDate': taskCreated.initDate,
                             'endDate': taskCreated.endDate,
-                            'name': group.name,
-                            'centerId': group.center
+                            'name': group.name
                         };
                         next(err, groupTask);
                     })
