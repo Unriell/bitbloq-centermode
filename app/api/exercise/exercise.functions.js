@@ -35,7 +35,6 @@ exports.getExerciseByGroup = function(groupId, next) {
     Exercise.find({})
         .where('groups._id').eq(groupId)
         .exec(function(err,result){
-            console.log('result', result);
             next(err,result);
         });
 };
