@@ -399,7 +399,7 @@ exports.registerInGroup = function(req, res) {
     });
 };
 
-function createGroup(group, groupData, recursive, next) {
+function createGroup(group, groupData, recursive, triesCounter, next) {
 
     group.save(groupData, function(err, result) {
         if (err) {
