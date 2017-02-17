@@ -40,8 +40,8 @@ function assignGroup(group, userId, exercise, next) {
                     next(err, [{
                         _id: group._id,
                         name: result.name,
-                        initDate: group.calendar.from,
-                        endDate: group.calendar.to
+                        initDate: group.date.initDate,
+                        endDate: group.date.endDate
                     }]);
                 });
             }
