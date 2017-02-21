@@ -94,7 +94,22 @@ exports.getGroup = function(req, res) {
 exports.getAllGroups = function(req, res) {
     var userId = req.user._id;
     async.waterfall([
-        UserFunctions.userIsStudent.bind(UserFunctions, userId),
+        function(next) {
+            if (req.query.role) {
+                switch (req.query.role) {
+                    case 'student':
+                        next(null, true);
+                        break;
+                    case 'teacher':
+                        next(null, false);
+                        break;
+                    default:
+                        UserFunctions.userIsStudent(userId, next);
+                }
+            } else {
+                UserFunctions.userIsStudent(userId, next);
+            }
+        },
         function(isStudent, next) {
             if (isStudent) {
                 Group.find({
