@@ -372,10 +372,14 @@ exports.mark = function(req, res) {
         },
         function(task, next) {
             markData.mark = markData.mark ? parseFloat(markData.mark) : markData.mark;
-            task.update({
-                mark: markData.mark,
+            var updateTask = {
                 remark: markData.remark
-            }, next);
+            };
+            if(markData.mark){
+                updateTask.mark = markData.mark;
+                updateTask.status = 'corrected';
+            }
+            task.update(updateTask, next);
         }
     ], function(err, result) {
         if (err) {
