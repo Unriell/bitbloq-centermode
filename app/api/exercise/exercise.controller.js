@@ -84,7 +84,9 @@ exports.assignGroups = function(req, res) {
                     TaskFunctions.removeTasksByGroupAndEx(groupsToRemove, exerciseId, next);
                 },
                 function(next) {
-                    exercise.update({groups: groupsToAssign}, next);
+                    exercise.update({
+                        groups: groupsToAssign
+                    }, next);
                 },
                 function(next) {
                     async.map(groupsToAssign, function(group, next) {
@@ -194,11 +196,32 @@ exports.get = function(req, res) {
  */
 exports.getAll = function(req, res) {
     var page = req.query.page - 1 || 0,
-        perPage = (req.query.pageSize && (req.query.pageSize <= maxPerPage)) ? req.query.pageSize : maxPerPage
+        perPage = (req.query.pageSize && (req.query.pageSize <= maxPerPage)) ? req.query.pageSize : maxPerPage,
+        search = req.query,
+        queryParams = {};
 
-    Exercise.find({
+    console.log(req.user._id);
+
+    if (search.searchParams && (JSON.parse(search.searchParams)).name) {
+        queryParams = {
+            name: {
+                $regex: (JSON.parse(search.searchParams)).name,
+                $options: 'i'
+            },
             teacher: req.user._id
-        })
+        };
+        console.log("aquiii");
+        console.log(queryParams);
+    } else {
+        queryParams = {
+            teacher: req.user._id
+        }
+    }
+
+    console.log("queryParams");
+    console.log(queryParams);
+
+    Exercise.find(queryParams)
         .limit(parseInt(perPage))
         .skip(parseInt(perPage * page))
         .exec(function(err, exercises) {
@@ -219,9 +242,23 @@ exports.getAll = function(req, res) {
  */
 
 exports.getAllCount = function(req, res) {
-    Exercise.count({
-        teacher: req.user._id
-    }, function(err, counter) {
+    var search = req.query,
+        queryParams = {};
+
+    if (search.name) {
+        queryParams = {
+            name: {
+                $regex: search.name,
+                $options: 'i'
+            },
+            teacher: req.user._id
+        };
+    } else {
+        queryParams = {
+            teacher: req.user._id
+        };
+    }
+    Exercise.count(queryParams, function(err, counter) {
         if (err) {
             console.log(err);
             err.code = parseInt(err.code) || 500;
