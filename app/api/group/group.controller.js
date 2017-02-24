@@ -14,9 +14,8 @@ var Group = require('./group.model.js'),
  * @param res
  */
 exports.createGroup = function(req, res) {
-    var userId = req.user._id,
-        group = req.body;
-    group.creator = userId;
+    var group = req.body;
+    group.creator = req.user._id;
     var newGroup = new Group(group);
     triesCounter = 0;
     createGroup(newGroup, group, true, triesCounter, function(err, result) {
