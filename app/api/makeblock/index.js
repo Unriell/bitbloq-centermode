@@ -6,6 +6,11 @@ var express = require('express'),
 
 var router = express.Router();
 
+//GET
+router.get('/:robot/unused', controller.getUnusedCodesByRobot);
+router.get('/:robot/used', controller.getUsedCodesByRobot);
+router.get('/:robot/', controller.getCodesByRobot);
+
 // POST
 // RECORDAR CAMBIAR: router.post('/generateCodes', auth.hasRole('admin'), controller.generateCodes);
 router.post('/generateCodes', controller.generateCodes);
