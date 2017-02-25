@@ -106,6 +106,7 @@ var UserSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    makeblock: {},
     centers: {} // CenterId : {date, role: headmaster | teacher | student}
 }, {
     timestamps: true
@@ -319,6 +320,7 @@ UserSchema
         }
     });
 
+//Add makeblock
 UserSchema
     .pre('validate', function(next) {
         // Handle new/update role

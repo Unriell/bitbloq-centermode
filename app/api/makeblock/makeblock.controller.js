@@ -2,6 +2,7 @@
 
 var Code = require('./makeblock.model.js'),
     CodeFunctions = require('./makeblock.functions.js'),
+    UserFunctions = require('../user/user.functions.js'),
     async = require('async'),
     _ = require('lodash');
 
@@ -84,3 +85,45 @@ exports.getUsedCodesByRobot = function(req, res) {
         }
     })
 };
+
+exports.activateRobot = function(req, res) {
+    var code = req.body.code,
+        robot = req.body.robot,
+        userId = req.user._id;
+
+    // TESTING: userId = '5750561d404d59be2534af47';
+    Code.findOne({
+        'code': code,
+        'robot': robot
+    }, function(err, code) {
+        var codeObject = code.toObject();
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else if (codeObject.used) {
+            res.sendStatus(409);
+        } else {
+            codeObject.used = {};
+            codeObject.used.user = userId;
+            codeObject.used.date = new Date();
+            async.parallel([
+                function(next) {
+                    code.update(codeObject, next);
+                },
+                function(next) {
+                    UserFunctions.addRobotActivation(userId, robot, next)
+                }
+            ], function(err) {
+                if (err) {
+                    console.log(err);
+                    err.code = parseInt(err.code) || 500;
+                    res.status(err.code).send(err);
+                } else {
+                    res.sendStatus(200);
+                }
+            })
+        }
+    })
+
+}

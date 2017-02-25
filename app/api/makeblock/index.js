@@ -7,12 +7,16 @@ var express = require('express'),
 var router = express.Router();
 
 //GET
+// RECORDAR CAMBIAR:
 router.get('/:robot/unused', controller.getUnusedCodesByRobot);
+// RECORDAR CAMBIAR:
 router.get('/:robot/used', controller.getUsedCodesByRobot);
+// RECORDAR CAMBIAR:
 router.get('/:robot/', controller.getCodesByRobot);
 
 // POST
 // RECORDAR CAMBIAR: router.post('/generateCodes', auth.hasRole('admin'), controller.generateCodes);
 router.post('/generateCodes', controller.generateCodes);
+router.post('/activate', controller.activateRobot)
 
 module.exports = router;
