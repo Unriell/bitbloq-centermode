@@ -51,7 +51,8 @@
         "jsonwebtoken": "^5.7.0",
         "express-jwt": "^3.3.0",
         "composable-middleware": "^0.3.0",
-        "gcloud": "^0.36.0"
+        "gcloud": "^0.36.0",
+        "node-uuid": "1.4.7"
     },
     "devDependencies": {
         "jshint": "^2.9.1",

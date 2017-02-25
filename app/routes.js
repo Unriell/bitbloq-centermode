@@ -15,6 +15,7 @@ module.exports = function(app) {
     router.use('/exercise', require('./api/exercise/index'));
     router.use('/task', require('./api/task/index'));
     router.use('/group', require('./api/group/index'));
+    router.use('/makeblock', require('./api/makeblock/index'));
     router.use('/version', require('./api/version/index'));
     router.use('/user', require('./api/user/index'));
 
