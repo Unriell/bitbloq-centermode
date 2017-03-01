@@ -11,17 +11,12 @@ router.get('/:centerId/teacher/:teacherId', auth.isAuthenticated(), controller.g
 router.get('/me', auth.isAuthenticated(), controller.getMyCenter);
 router.get('/teacher/me', auth.isAuthenticated(), controller.getMyCenters);
 router.get('/:centerId/teacher', auth.isAuthenticated(), controller.getTeachers);
-router.get('/:id', auth.isAuthenticated(), controller.getCenter);
 
 // POST
 router.post('/:centerId/teacher', auth.isAuthenticated(), controller.addTeacher);
 router.post('/', auth.isAuthenticated(), controller.createCenter);
 
-// PUT
-router.put('/:id', auth.isAuthenticated(), controller.updateCenter);
-
 // DELETE
 router.delete('/:centerId/teacher/:teacherId', auth.isAuthenticated(), controller.deleteTeacher);
-router.delete('/:id', auth.isAuthenticated(), controller.anonCenter);
 
 module.exports = router;
