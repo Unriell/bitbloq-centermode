@@ -19,7 +19,7 @@ exports.getInfo = function(exerciseId, next) {
  */
 exports.getGroups = function(exerciseId, next) {
     Exercise.findById(exerciseId)
-        .select('groups')
+        .select('groups teacher')
         .populate('groups')
         .exec(next);
 };
