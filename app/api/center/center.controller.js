@@ -105,7 +105,10 @@ exports.deleteTeacher = function(req, res) {
             UserFunctions.userIsHeadmaster.bind(UserFunctions, userId, centerId),
             function(centerId, next) {
                 if (!centerId) {
-                    next(401);
+                    next({
+                        code: 403,
+                        message: 'Forbidden'
+                    });
                 } else {
                     GroupFunctions.deleteGroups(teacherId, centerId, next);
                 }

@@ -1,6 +1,7 @@
 'use strict';
 var Task = require('./task.model.js'),
     ExerciseFunction = require('../exercise/exercise.functions.js'),
+    GroupFunction = require('../group/group.functions.js'),
     _ = require('lodash'),
     mongoose = require('mongoose'),
     Group = require('../group/group.model.js'),
@@ -54,7 +55,7 @@ exports.checkAndCreateTask = function(taskData, studentId, groupName, next) {
                             'name': groupName
                         });
                     } else {
-                        Group.findById(taskSaved.group, function(err, group) {
+                        GroupFunction.get(taskSaved.group, function(err, group) {
                             var groupTask = {
                                 '_id': group._id,
                                 'initDate': taskSaved.initDate,

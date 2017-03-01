@@ -48,8 +48,8 @@ exports.getGroups = function(teacherId, centerId, next) {
 
 /**
  * Get user role all groups of teacher in a center
- * @param {String} teacherId
- * @param {String} centerId
+ * @param {String} groupId
+ * @param {String} userId
  * @param {Function} next
  * @return {Object} user.owner
  */
