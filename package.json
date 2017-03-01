@@ -1,7 +1,7 @@
 {
-    "name": "Botbloq-Server",
+    "name": "Bitbloq-centermode",
     "version": "v1.0.0",
-    "description": "Backend for botbloq ITS (Sistema Tutor Inteligente)",
+    "description": "School management on Bitbloq",
     "main": "index.js",
     "scripts": {
         "start": "supervisor index.js",
@@ -12,12 +12,12 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/bq/botbloq-backend"
+        "url": "https://github.com/bq/bitbloq-centermode"
     },
     "keywords": [
         "Backend",
         "Server",
-        "Botbloq"
+        "Center"
     ],
     "contributors": [
         {
@@ -25,8 +25,8 @@
             "email": "laura.delrio@bq.com"
         },
         {
-            "name": "Tomás Calvo",
-            "email": "tomas.calvo@bq.com"
+            "name": "Álvaro Sánchez",
+            "email": "alvaro.sanchez@bq.com"
         }
     ],
     "license": "GPL-3.0",
@@ -42,12 +42,17 @@
         "errorhandler": "^1.4.3",
         "express": "^4.13.4",
         "http": "0.0.0",
-        "lodash": "^4.5.1",
-        "mongoose": "^4.4.4",
+        "lodash": "^4.17.4",
+        "mongoose": "4.8.2",
         "morgan": "^1.7.0",
         "path": "^0.12.7",
         "request": "^2.72.0",
-        "supervisor": "^0.10.0"
+        "supervisor": "^0.10.0",
+        "jsonwebtoken": "^5.7.0",
+        "express-jwt": "^3.3.0",
+        "composable-middleware": "^0.3.0",
+        "gcloud": "^0.36.0",
+        "node-uuid": "1.4.7"
     },
     "devDependencies": {
         "jshint": "^2.9.1",
