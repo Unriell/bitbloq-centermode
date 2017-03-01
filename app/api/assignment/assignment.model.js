@@ -3,24 +3,18 @@
 var mongoose = require('mongoose');
 
 
-var TaskSchema = new mongoose.Schema({
+var AssignmentSchema = new mongoose.Schema({
     exercise: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'CenterMode-Exercise',
         required: true
     },
-    student: {
+    group: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'CenterMode-Group',
+        trim: false,
         required: true
     },
-    mark: Number,
-    remark: String,
-    status: {
-        type: String,
-        default: 'pending' //pending | delivered | corrected
-    },
-    result: {},
     creator: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -33,12 +27,7 @@ var TaskSchema = new mongoose.Schema({
         trim: false,
         required: true
     },
-    group: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'CenterMode-Group',
-        trim: false,
-        required: true
-    },
+
     initDate: Date,
     endDate: Date
 }, {
@@ -46,4 +35,4 @@ var TaskSchema = new mongoose.Schema({
 });
 
 
-module.exports = mongoose.model('CenterMode-Task', TaskSchema);
+module.exports = mongoose.model('CenterMode-Assignment', AssignmentSchema);
