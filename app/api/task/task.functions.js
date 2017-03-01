@@ -12,6 +12,7 @@ var maxPerPage = 10;
  * Create task if user doesn't have this task
  * @param {Object} taskData
  * @param {String} studentId
+ * @param {String} groupName
  * @param {Function} next
  */
 exports.checkAndCreateTask = function(taskData, studentId, groupName, next) {
@@ -71,7 +72,9 @@ exports.checkAndCreateTask = function(taskData, studentId, groupName, next) {
 
 /**
  * Delete tasks
+ * @param {String} groupId
  * @param {String} studentId
+ * @param {String} teacherId
  * @param {Function} next
  */
 exports.delete = function(groupId, studentId, teacherId, next) {
@@ -85,7 +88,7 @@ exports.delete = function(groupId, studentId, teacherId, next) {
 
 /**
  * Delete tasks by exercise
- * @param {String} studentId
+ * @param {String} exerciseId
  * @param {Function} next
  */
 exports.deleteByExercise = function(exerciseId, next) {
@@ -165,6 +168,8 @@ exports.getGroups = function(exerciseId, teacherId, next) {
  * Get exercises with specific center and teacher
  * @param {String} centerId
  * @param {String} teacherId
+ * @param {Number} page
+ * @param {Number} perPage
  * @param {Function} next
  * @return {Array} exercises
  */
@@ -249,7 +254,7 @@ exports.removeTasksByGroupAndEx = function(groupIdArray, exerciseId, next) {
 
 /**
  * Create default tasks
- * @param {String} groupId
+ * @param {Object} group
  * @param {String} studentId
  * @param {Function} next
  * @return {Array} tasks
