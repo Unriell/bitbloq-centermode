@@ -289,8 +289,6 @@ exports.userIsStudent = function(userId, next) {
 
 exports.addRobotActivation = function(userId, robot, next) {
     var robotActivation = '{"makeblock": {"' + robot + '":true}}';
-    console.log('robotActivation');
-    console.log(robotActivation);
     User.update({
         '_id': userId
     }, {

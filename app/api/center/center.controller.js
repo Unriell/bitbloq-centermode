@@ -3,7 +3,8 @@
 var Center = require('./center.model.js'),
     UserFunctions = require('../user/user.functions.js'),
     GroupFunctions = require('../group/group.functions.js'),
-    centerFunctions = require('./center.functions.js'),
+    CenterFunctions = require('./center.functions.js'),
+    TaskFunctions = require('../task/task.functions.js'),
     async = require('async'),
     _ = require('lodash');
 
@@ -101,37 +102,40 @@ exports.deleteTeacher = function(req, res) {
         centerId = req.params.centerId,
         teacherId = req.params.teacherId;
     if (userId.toString() !== teacherId.toString()) {
-        async.waterfall([
-            UserFunctions.userIsHeadmaster.bind(UserFunctions, userId, centerId),
-            function(centerId, next) {
-                if (!centerId) {
-                    next({
-                        code: 403,
-                        message: 'Forbidden'
-                    });
-                } else {
-                    GroupFunctions.deleteGroups(teacherId, centerId, next);
-                }
-            },
-            function(updated, next) {
-                UserFunctions.deleteTeacher(teacherId, centerId, next);
-            }
-        ], function(err, result) {
+        UserFunctions.userIsHeadmaster(userId, centerId, function(err, centerId){
             if (err) {
                 console.log(err);
                 err.code = parseInt(err.code) || 500;
                 res.status(err.code).send(err);
-            } else if (!result) {
-                res.sendStatus(304);
+            } else if (centerId) {
+                async.waterfall([
+                    function(next) {
+                            GroupFunctions.deleteGroups(teacherId, centerId, next);
+                    },
+                    function(groups, next) {
+                        TaskFunctions.deleteByTeacherAndGroups(teacherId, groups, next);
+                    },
+                    function(updated, next) {
+                        UserFunctions.deleteTeacher(teacherId, centerId, next);
+                    }
+                ], function(err, result) {
+                    if (err) {
+                        console.log(err);
+                        err.code = parseInt(err.code) || 500;
+                        res.status(err.code).send(err);
+                    } else if (!result) {
+                        res.sendStatus(304);
+                    } else {
+                        res.sendStatus(200);
+                    }
+                });
             } else {
-                res.sendStatus(200);
+                res.sendStatus(403);
             }
         });
     } else {
         res.sendStatus(409);
-
     }
-
 };
 
 /**
@@ -182,7 +186,7 @@ exports.getMyCenters = function(req, res) {
                     mycenters.push(key);
                 }
             });
-            centerFunctions.getCentersInArray(mycenters, next);
+            CenterFunctions.getCentersInArray(mycenters, next);
         }
     ], function(err, centers) {
         if (err) {
@@ -246,8 +250,8 @@ exports.getTeachers = function(req, res) {
             }
         },
         function(teachers, centerId, next) {
-            async.map(centerFunctions.teacherGetDateByCenterId(teachers, centerId), function(teacher, next) {
-                centerFunctions.getStats(teacher, centerId, next);
+            async.map(CenterFunctions.teacherGetDateByCenterId(teachers, centerId), function(teacher, next) {
+                CenterFunctions.getStats(teacher, centerId, next);
             }, function(err, completedTeachers) {
                 next(err, completedTeachers);
             })

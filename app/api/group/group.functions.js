@@ -18,16 +18,26 @@ exports.deleteGroups = function(teacherId, centerId, next) {
         },
         function(role, callBack) {
             if (role === 'teacher' || role === 'headmaster') {
-                Group.remove({
-                    teacher: teacherId,
-                    center: centerId
-                }, callBack);
+                Group.find({
+                        teacher: teacherId,
+                        center: centerId
+                    })
+                    .select('_id')
+                    .exec(callBack);
             } else {
                 callBack({
                     code: 401,
                     message: 'Unauthorized'
                 });
             }
+        },
+        function(groups, callBack) {
+            Group.remove({
+                teacher: teacherId,
+                center: centerId
+            }, function(err){
+                callBack(err, groups);
+            });
         }
     ], next);
 };
