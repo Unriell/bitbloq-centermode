@@ -210,16 +210,11 @@ exports.getAll = function(req, res) {
             },
             teacher: req.user._id
         };
-        console.log("aquiii");
-        console.log(queryParams);
     } else {
         queryParams = {
             teacher: req.user._id
         }
     }
-
-    console.log("queryParams");
-    console.log(queryParams);
 
     Exercise.find(queryParams)
         .limit(parseInt(perPage))
@@ -437,12 +432,21 @@ exports.delete = function(req, res) {
         function(exercise, next) {
             if (exercise) {
                 if (exercise.isOwner(userId)) {
-                    Exercise.findByIdAndRemove(exerciseId, next);
+                    async.parallel([
+                        Exercise.findByIdAndRemove.bind(Exercise, exerciseId),
+                        TaskFunctions.deleteByExercise.bind(TaskFunctions, exerciseId)
+                    ], next);
                 } else {
-                    res.sendStatus(401);
+                    next({
+                        code: 401,
+                        message: 'Unauthorized'
+                    });
                 }
             } else {
-                res.sendStatus(404);
+                next({
+                    code: 404,
+                    message: 'Exercise not found'
+                });
             }
         },
         function(exercise, next) {

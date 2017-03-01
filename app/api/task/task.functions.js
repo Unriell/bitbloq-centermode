@@ -82,6 +82,18 @@ exports.delete = function(groupId, studentId, teacherId, next) {
     }).remove(next);
 };
 
+
+/**
+ * Delete tasks by exercise
+ * @param {String} studentId
+ * @param {Function} next
+ */
+exports.deleteByExercise = function(exerciseId, next) {
+    Task.find({
+        exercise: exerciseId
+    }).remove(next);
+};
+
 /**
  * Get user average mark in specific group
  * @param {String} groupId
