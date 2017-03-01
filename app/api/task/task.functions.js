@@ -4,7 +4,6 @@ var Task = require('./task.model.js'),
     GroupFunction = require('../group/group.functions.js'),
     _ = require('lodash'),
     mongoose = require('mongoose'),
-    Group = require('../group/group.model.js'),
     async = require('async');
 
 var maxPerPage = 10;
