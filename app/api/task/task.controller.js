@@ -67,22 +67,29 @@ exports.cloneToProject = function(req, res) {
  * @param res
  */
 exports.delete = function(req, res) {
-    Task.find({
+    async.waterfall([
+        Task.findOne.bind(Task, {
             _id: req.params.id,
             teacher: req.user._id
-        })
-        .remove()
-        .exec(function(err, data) {
-            if (err) {
-                console.log(err);
-                err.code = parseInt(err.code) || 500;
-                res.status(err.code).send(err);
-            } else if (!data) {
-                res.sendStatus(404);
+        }),
+        function(task, next) {
+            if (task) {
+                task.delete(next);
             } else {
-                res.sendStatus(200);
+                next();
             }
-        });
+        }
+    ], function(err, data) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else if (!data) {
+            res.sendStatus(404);
+        } else {
+            res.sendStatus(200);
+        }
+    });
 };
 
 /**
@@ -375,7 +382,7 @@ exports.mark = function(req, res) {
             var updateTask = {
                 remark: markData.remark
             };
-            if(markData.mark){
+            if (markData.mark) {
                 updateTask.mark = markData.mark;
                 updateTask.status = 'corrected';
             }

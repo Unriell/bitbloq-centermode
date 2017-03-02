@@ -93,7 +93,15 @@ exports.delete = function(groupId, studentId, teacherId, next) {
 exports.deleteByExercise = function(exerciseId, next) {
     Task.find({
         exercise: exerciseId
-    }).remove(next);
+    }, function(err, tasks) {
+        if (tasks.length > 0) {
+            async.map(tasks, function(task, callback) {
+                task.delete(callback);
+            }, next);
+        } else {
+            next(err);
+        }
+    });
 };
 
 /**

@@ -344,7 +344,7 @@ exports.delete = function(req, res) {
             if (exercise) {
                 if (exercise.isOwner(userId)) {
                     async.parallel([
-                        Exercise.findByIdAndRemove.bind(Exercise, exerciseId),
+                        exercise.delete.bind(exercise),
                         TaskFunctions.deleteByExercise.bind(TaskFunctions, exerciseId)
                     ], next);
                 } else {
@@ -359,13 +359,7 @@ exports.delete = function(req, res) {
                     message: 'Exercise not found'
                 });
             }
-        },
-        function(exercise, next) {
-            ImageFunctions.delete('exercise', exerciseId, function() {
-                next();
-            });
         }
-
     ], function(err) {
         if (err) {
             console.log(err);

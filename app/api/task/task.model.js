@@ -40,10 +40,45 @@ var TaskSchema = new mongoose.Schema({
         required: true
     },
     initDate: Date,
-    endDate: Date
+    endDate: Date,
+    deleted: Boolean
 }, {
     timestamps: true
 });
+
+
+/**
+ * Pre hook
+ */
+
+function findNotDeletedMiddleware(next) {
+    this.where('deleted').in([false, undefined, null]);
+    next();
+}
+
+TaskSchema.pre('find', findNotDeletedMiddleware);
+TaskSchema.pre('findOne', findNotDeletedMiddleware);
+TaskSchema.pre('findOneAndUpdate', findNotDeletedMiddleware);
+TaskSchema.pre('count', findNotDeletedMiddleware);
+
+
+/**
+ * Methods
+ */
+
+TaskSchema.methods = {
+
+    /**
+     * delete - change deleted attribute to true
+     *
+     * @param {Function} next
+     * @api public
+     */
+    delete: function(next) {
+        this.deleted = true;
+        this.save(next);
+    }
+};
 
 
 module.exports = mongoose.model('CenterMode-Task', TaskSchema);

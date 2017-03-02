@@ -47,11 +47,27 @@ var ExerciseSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-
-    bitbloqConnectBT: {}
+    bitbloqConnectBT: {},
+    deleted: Boolean
 }, {
     timestamps: true
 });
+
+
+/**
+ * Pre hook
+ */
+
+function findNotDeletedMiddleware(next) {
+    this.where('deleted').in([false, undefined, null]);
+    next();
+}
+
+ExerciseSchema.pre('find', findNotDeletedMiddleware);
+ExerciseSchema.pre('findOne', findNotDeletedMiddleware);
+ExerciseSchema.pre('findOneAndUpdate', findNotDeletedMiddleware);
+ExerciseSchema.pre('count', findNotDeletedMiddleware);
+
 
 /**
  * Methods
@@ -60,7 +76,7 @@ var ExerciseSchema = new mongoose.Schema({
 ExerciseSchema.methods = {
 
     /**
-     * share - project is shared with users
+     * isOwner - check if an user is owner of exercise
      *
      * @param {String} userId
      * @return {Boolean}
@@ -72,6 +88,17 @@ ExerciseSchema.methods = {
             owner = true;
         }
         return owner;
+    },
+
+    /**
+     * delete - change deleted attribute to true
+     *
+     * @param {String} next
+     * @api public
+     */
+    delete: function(next) {
+        this.deleted = true;
+        this.save(next);
     }
 
 };
