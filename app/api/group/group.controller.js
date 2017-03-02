@@ -3,6 +3,7 @@
 var Group = require('./group.model.js'),
     UserFunctions = require('../user/user.functions.js'),
     TaskFunction = require('../task/task.functions.js'),
+    AssignmentFunction = require('../assignment/assignment.functions.js'),
     async = require('async'),
     _ = require('lodash'),
     triesCounter;
@@ -330,7 +331,7 @@ exports.registerInGroup = function(req, res) {
                             next(err);
                         } else {
                             //Generate old tasks to student
-                            TaskFunction.createTaskByGroup(group, userId, next());
+                            AssignmentFunction.createTasksToStudent(group._id, userId, next);
                         }
                     });
                 } else {
@@ -342,8 +343,6 @@ exports.registerInGroup = function(req, res) {
                     message: 'Unauthorized'
                 });
             }
-
-
         }
     ], function(err, result) {
         if (err) {

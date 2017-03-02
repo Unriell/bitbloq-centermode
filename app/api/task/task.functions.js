@@ -1,6 +1,5 @@
 'use strict';
 var Task = require('./task.model.js'),
-    ExerciseFunction = require('../exercise/exercise.functions.js'),
     GroupFunction = require('../group/group.functions.js'),
     _ = require('lodash'),
     mongoose = require('mongoose'),
@@ -267,29 +266,3 @@ exports.removeTasksByGroupAndEx = function(groupIdArray, exerciseId, next) {
         .remove(next);
 };
 
-/**
- * Create default tasks
- * @param {Object} group
- * @param {String} studentId
- * @param {Function} next
- * @return {Array} tasks
- */
-exports.createTaskByGroup = function(group, studentId, next) {
-    ExerciseFunction.getExerciseByGroup(group._id, function(err, exercises) {
-        if (exercises) {
-            async.map(exercises, function(exercise, next) {
-                var task = {
-                    exercise: exercise._id,
-                    group: group._id,
-                    creator: group.creator,
-                    teacher: group.teacher,
-                    initDate: group.initDate,
-                    endDate: group.endDate
-                };
-                exports.checkAndCreateTask(task, studentId, group.name, next);
-            }, next);
-        } else {
-            next(err);
-        }
-    });
-};

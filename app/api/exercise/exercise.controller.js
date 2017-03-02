@@ -2,54 +2,12 @@
 
 var Exercise = require('./exercise.model.js'),
     UserFunctions = require('../user/user.functions.js'),
-    GroupFunctions = require('../group/group.functions.js'),
     TaskFunctions = require('../task/task.functions.js'),
     ImageFunctions = require('../image/image.functions.js'),
     _ = require('lodash'),
     async = require('async');
 
 var maxPerPage = 10;
-
-/**
- * An exercise is assigned to group
- * @param {Object} group
- * @param {String} userId
- * @param {Object} exercise
- * @param {Function} next
- */
-function assignGroup(group, userId, exercise, next) {
-    async.waterfall([
-        function(next) {
-            GroupFunctions.getStudents(group._id, userId, next);
-        },
-        function(students, next) {
-            var task = {
-                exercise: exercise._id,
-                group: group._id,
-                creator: userId,
-                teacher: userId,
-                initDate: group.date.initDate,
-                endDate: group.date.endDate
-            };
-            if (students.length > 0) {
-                async.map(students, function(studentId, next) {
-                    TaskFunctions.checkAndCreateTask(task, studentId, null, next);
-                }, next);
-            } else {
-                GroupFunctions.get(group._id, function(err, result) {
-                    next(err, [{
-                        _id: group._id,
-                        name: result.name,
-                        initDate: group.date.initDate,
-                        endDate: group.date.endDate
-                    }]);
-                });
-            }
-        }
-    ], function(err, newTask) {
-        next(err, newTask[0]);
-    });
-}
 
 function clearExercise(exercise) {
     delete exercise._id;
@@ -59,52 +17,6 @@ function clearExercise(exercise) {
     delete exercise.__v;
     return exercise;
 }
-
-/**
- * An exercise is assigned to group
- * @param {Object} req
- * @params {String} req.params.exerciseId
- * @params {Object} req.body.assign
- * @params {Array} req.body.remove
- * @param res
- */
-exports.assignGroups = function(req, res) {
-    var exerciseId = req.params.exerciseId,
-        userId = req.user._id,
-        groupsToAssign = req.body.assign,
-        groupsToRemove = req.body.remove;
-    Exercise.findById(exerciseId, function(err, exercise) {
-        if (err) {
-            console.log(err);
-            err.code = parseInt(err.code) || 500;
-            res.status(err.code).send(err);
-        } else {
-            async.parallel([
-                function(next) {
-                    TaskFunctions.removeTasksByGroupAndEx(groupsToRemove, exerciseId, next);
-                },
-                function(next) {
-                    exercise.update({
-                        groups: groupsToAssign
-                    }, next);
-                },
-                function(next) {
-                    async.map(groupsToAssign, function(group, next) {
-                        assignGroup(group, userId, exercise, next)
-                    }, next);
-                }
-            ], function(err, result) {
-                if (err) {
-                    console.log(err);
-                    err.code = parseInt(err.code) || 500;
-                    res.status(err.code).send(err);
-                } else {
-                    res.status(200).send(result[2])
-                }
-            });
-        }
-    });
-};
 
 /**
  * Clone an exercise
@@ -124,7 +36,6 @@ exports.clone = function(req, res) {
                 exerciseObject.name = newName;
                 exerciseObject.creator = userId;
                 exerciseObject.teacher = userId;
-                exerciseObject.groups = [];
                 var newExercise = new Exercise(exerciseObject);
                 newExercise.save(next);
             } else {

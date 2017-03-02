@@ -2,7 +2,7 @@
 
 var Assignment = require('./assignment.model.js'),
     UserFunctions = require('../user/user.functions.js'),
-    GroupFunctions = require('../group/group.functions.js'),
+    AssignmentFunctions = require('./assignment.functions.js'),
     TaskFunctions = require('../task/task.functions.js'),
     mongoose = require('mongoose'),
     _ = require('lodash'),
@@ -39,7 +39,7 @@ exports.assign = function(req, res) {
         },
         function(next) {
             async.map(groupsToAssign, function(assignment, next) {
-                createTasks(assignment, userId, next)
+                AssignmentFunctions.createTasks(assignment, userId, next)
             }, next);
         }
     ], function(err, result) {
@@ -96,50 +96,6 @@ exports.getByExercise = function(req, res) {
 /* **********************************
  ******** PRIVATE FUNCTIONS *********
  * **********************************/
-
-/**
- * create tasks by an assignment
- * @param {Object} assignment
- * @param {String} assignment.group
- * @param {String} assignment.exercise
- * @param {Date} assignment.initDate [optional]
- * @param {Date} assignment.endDate [optional]
- * @param {String} userId
- * @param {Function} next
- */
-function createTasks(assignment, userId, next) {
-    async.waterfall([
-        function(next) {
-            GroupFunctions.getStudents(assignment.group, userId, next);
-        },
-        function(students, next) {
-            var task = {
-                exercise: assignment.exercise,
-                group: assignment.group,
-                creator: userId,
-                teacher: userId,
-                initDate: assignment.initDate,
-                endDate: assignment.endDate
-            };
-            if (students.length > 0) {
-                async.map(students, function(studentId, next) {
-                    TaskFunctions.checkAndCreateTask(task, studentId, null, next);
-                }, next);
-            } else {
-                GroupFunctions.get(assignment.group, function(err, result) {
-                    next(err, [{
-                        _id: assignment.group,
-                        name: result.name,
-                        initDate: assignment.initDate,
-                        endDate: assignment.endDate
-                    }]);
-                });
-            }
-        }
-    ], function(err, newTask) {
-        next(err, newTask[0]);
-    });
-}
 
 /**
  * create an assignment
