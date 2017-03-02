@@ -2,7 +2,6 @@
 
 var Group = require('./group.model.js'),
     UserFunctions = require('../user/user.functions.js'),
-    ExerciseFunction = require('../exercise/exercise.functions.js'),
     TaskFunction = require('../task/task.functions.js'),
     async = require('async'),
     _ = require('lodash'),
@@ -165,61 +164,6 @@ exports.getGroups = function(req, res) {
             res.status(err.code).send(err);
         } else {
             res.status(200).send(groups);
-        }
-    });
-};
-
-/**
- * Get groups by an exercise
- * @param req
- * @param res
- */
-exports.getGroupsByExercise = function(req, res) {
-    var userId = req.user._id,
-        exerciseId = req.params.exerciseId;
-    async.waterfall([
-        ExerciseFunction.getGroups.bind(ExerciseFunction, exerciseId),
-        function(exercise, next) {
-            if (exercise) {
-                if (String(exercise.teacher) == userId) {
-                    next(null, {
-                        exercise: exercise
-                    });
-                } else {
-                    //check if user is headmaster
-                    UserFunctions.getCenterIdbyheadmaster(userId, function(err, centerId) {
-                        if (!centerId) {
-                            next({
-                                code: 401,
-                                message: 'Unauthorized'
-                            });
-                        } else {
-                            next(err, {
-                                exercise: exercise,
-                                centerId: centerId
-                            });
-                        }
-                    });
-                }
-            } else {
-                next({
-                    code: 404,
-                    message: 'Not Found'
-                });
-            }
-        },
-        function(result, next) {
-            async.map(result.exercise.groups, function(group, next) {
-                _getGroupByCenter(group._id, result.centerId, userId, group.date, next)
-            }, next);
-        }
-    ], function(err, myGroups) {
-        if (err) {
-            console.log(err);
-            err.code = parseInt(err.code) || 500;
-            res.status(err.code).send(err);
-        } else {
-            res.status(200).send(myGroups);
         }
     });
 };
@@ -431,21 +375,4 @@ function createGroup(group, groupData, recursive, triesCounter, next) {
             next(err, result);
         }
     });
-}
-
-function _getGroupByCenter(groupId, centerId, userId, calendar, next) {
-    Group.findById(groupId)
-        .or([{center: centerId}, {teacher: userId}])
-        .exec(function(err, result) {
-            if (result) {
-                var groupObject = result.toObject();
-                if (calendar) {
-                    groupObject.initDate = calendar.initDate;
-                    groupObject.endDate = result.endDate;
-                }
-                next(err, groupObject);
-            } else {
-                next(err);
-            }
-        });
 }

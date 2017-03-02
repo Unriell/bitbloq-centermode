@@ -21,13 +21,6 @@ var AssignmentSchema = new mongoose.Schema({
         trim: false,
         required: true
     },
-    teacher: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        trim: false,
-        required: true
-    },
-
     initDate: Date,
     endDate: Date
 }, {

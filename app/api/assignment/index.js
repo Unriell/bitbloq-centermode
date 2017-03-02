@@ -6,6 +6,9 @@ var express = require('express'),
 
 var router = express.Router();
 
+//GET
+router.get('/exercise/:exerciseId', auth.isAuthenticated(), controller.getByExercise);
+
 // PUT
 router.put('/', auth.isAuthenticated(), controller.assign);
 
