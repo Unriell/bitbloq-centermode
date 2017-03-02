@@ -1,7 +1,7 @@
 'use strict';
 
 var express = require('express'),
-    controller = require('./makeblock.controller.js'),
+    controller = require('./thirdPartyRobots.controller.js'),
     auth = require('../../components/auth/auth.service');
 
 var router = express.Router();
@@ -17,6 +17,6 @@ router.get('/:robot/', controller.getCodesByRobot);
 // POST
 // RECORDAR CAMBIAR: router.post('/generateCodes', auth.hasRole('admin'), controller.generateCodes);
 router.post('/generateCodes', controller.generateCodes);
-router.post('/activate', controller.activateRobot)
+router.post('/activate', auth.isAuthenticated(), controller.activateRobot)
 
 module.exports = router;

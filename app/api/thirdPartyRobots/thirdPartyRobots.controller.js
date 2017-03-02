@@ -1,7 +1,7 @@
 'use strict';
 
-var Code = require('./makeblock.model.js'),
-    CodeFunctions = require('./makeblock.functions.js'),
+var Code = require('./thirdPartyRobots.model.js'),
+    CodeFunctions = require('./thirdPartyRobots.functions.js'),
     UserFunctions = require('../user/user.functions.js'),
     async = require('async'),
     _ = require('lodash');
@@ -89,40 +89,53 @@ exports.getUsedCodesByRobot = function(req, res) {
 exports.activateRobot = function(req, res) {
     var code = req.body.code,
         robot = req.body.robot,
-        userId = req.user._id;
+        userId = req.user._id,
+        codeFormatted;
 
     // TESTING: userId = '5750561d404d59be2534af47';
+    if (code) {
+        codeFormatted = CodeFunctions.formatCode(code);
+    }
+
     Code.findOne({
-        'code': code,
+        'code': codeFormatted,
         'robot': robot
-    }, function(err, code) {
-        var codeObject = code.toObject();
+    }, function(err, codeResult) {
         if (err) {
             console.log(err);
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
-        } else if (codeObject.used) {
-            res.sendStatus(409);
         } else {
-            codeObject.used = {};
-            codeObject.used.user = userId;
-            codeObject.used.date = new Date();
-            async.parallel([
-                function(next) {
-                    code.update(codeObject, next);
-                },
-                function(next) {
-                    UserFunctions.addRobotActivation(userId, robot, next)
-                }
-            ], function(err) {
-                if (err) {
-                    console.log(err);
-                    err.code = parseInt(err.code) || 500;
-                    res.status(err.code).send(err);
+            if (codeResult) {
+                if (codeResult && codeResult.used.user) {
+                    res.sendStatus(409);
                 } else {
-                    res.sendStatus(200);
+                    async.parallel([
+                        function(next) {
+                            codeResult.update({
+                                used: {
+                                    user: userId,
+                                    date: new Date()
+                                }
+                            }, next);
+                        },
+                        function(next) {
+                            UserFunctions.addRobotActivation(userId, robot, next)
+                        }
+                    ], function(err, userUpdated) {
+                        if (err) {
+                            console.log(err);
+                            err.code = parseInt(err.code) || 500;
+                            res.status(err.code).send(err);
+                        } else {
+                            res.status(200).json(userUpdated[1]);
+                        }
+                    })
                 }
-            })
+            } else {
+                res.sendStatus(404);
+            }
+
         }
     })
 

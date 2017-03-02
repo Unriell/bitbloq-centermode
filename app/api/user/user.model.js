@@ -106,7 +106,7 @@ var UserSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    makeblock: {},
+    thirdPartyRobots: {},
     centers: {} // CenterId : {date, role: headmaster | teacher | student}
 }, {
     timestamps: true
@@ -159,7 +159,8 @@ UserSchema
             'hasFirstComponent': this.hasFirstComponent,
             'takeTour': this.takeTour,
             'hasBeenValidated': this.hasBeenValidated,
-            'centers': this.centers
+            'centers': this.centers,
+            'thirdPartyRobots': this.makeblock
         };
     });
 

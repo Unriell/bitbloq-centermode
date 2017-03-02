@@ -288,10 +288,14 @@ exports.userIsStudent = function(userId, next) {
 };
 
 exports.addRobotActivation = function(userId, robot, next) {
-    var robotActivation = '{"makeblock": {"' + robot + '":true}}';
-    User.update({
+    var query = {};
+    query.thirdPartyRobots = {};
+    query.thirdPartyRobots[robot] = true;
+    User.findOneAndUpdate({
         '_id': userId
-    }, {
-        robotActivation
-    }, next);
+    }, query, {
+        new: true
+    }, function(err, updated) {
+        next(err, updated);
+    });
 };
