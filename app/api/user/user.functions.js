@@ -291,7 +291,11 @@ exports.addRobotActivation = function(userId, robot, next) {
     var query = {};
     query.thirdPartyRobots = {};
     query.thirdPartyRobots[robot] = true;
-    User.update({
+    User.findOneAndUpdate({
         '_id': userId
-    }, query, next);
+    }, query, {
+        new: true
+    }, function(err, updated) {
+        next(err, updated);
+    });
 };
