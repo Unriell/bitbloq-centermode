@@ -244,7 +244,9 @@ exports.deleteGroup = function(req, res) {
         Group.findById.bind(Group, groupId),
         function(group, next) {
             if (group) {
-                group.userCanUpdate(userId, next);
+                group.userCanUpdate(userId, function(err, canUpdate) {
+                    next(err, group, canUpdate);
+                });
             } else {
                 next({
                     code: 404,
@@ -252,21 +254,13 @@ exports.deleteGroup = function(req, res) {
                 });
             }
         },
-        function(canUpdate, next) {
+        function(group, canUpdate, next) {
             if (canUpdate) {
-                if (group.isOwner(userId)) {
-                    async.parallel([
-                        group.delete.bind(group),
-                        function(next) {
-                            TaskFunctions.deleteByTeacherAndGroups(userId, [groupId], next);
-                        }
-                    ], next);
-                } else {
-                    next({
-                        code: 401,
-                        message: 'Unauthorized'
-                    });
-                }
+                async.parallel([
+                    group.delete.bind(group),
+                    function(next) {
+                        TaskFunctions.deleteByTeacherAndGroups(userId, [groupId], next);
+                    }], next);
             } else {
                 next({
                     code: 403,

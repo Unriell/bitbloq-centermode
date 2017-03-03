@@ -44,6 +44,22 @@ var GroupSchema = new mongoose.Schema({
     timestamps: true
 });
 
+
+/**
+ * Pre hook
+ */
+
+function findNotDeletedMiddleware(next) {
+    this.where('deleted').in([false, undefined, null]);
+    next();
+}
+
+GroupSchema.pre('find', findNotDeletedMiddleware);
+GroupSchema.pre('findOne', findNotDeletedMiddleware);
+GroupSchema.pre('findOneAndUpdate', findNotDeletedMiddleware);
+GroupSchema.pre('count', findNotDeletedMiddleware);
+
+
 /**
  * Methods
 
@@ -57,7 +73,6 @@ GroupSchema.methods = {
      * @param {Function} next
      * @api public
      */
-
     userCanUpdate: function(userId, next) {
         if (String(userId) === String(this.creator) || String(userId) == String(this.teacher)) {
             next(null, true);
@@ -71,6 +86,18 @@ GroupSchema.methods = {
                 }
             });
         }
+    },
+
+
+    /**
+     * delete - change deleted attribute to true
+     *
+     * @param {String} next
+     * @api public
+     */
+    delete: function(next) {
+        this.deleted = true;
+        this.save(next);
     }
 };
 
