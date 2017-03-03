@@ -47,6 +47,7 @@ var ProjectSchema = new mongoose.Schema({
         type: String,
         default: 'default'
     },
+    deleted: Boolean,
     _acl: {}
 }, {
     timestamps: true
@@ -76,6 +77,22 @@ ProjectSchema
         };
     });
 
+
+/**
+ * Pre hook
+ */
+
+function findNotDeletedMiddleware(next) {
+    this.where('deleted').in([false, undefined, null]);
+    next();
+}
+
+ProjectSchema.pre('find', findNotDeletedMiddleware);
+ProjectSchema.pre('findOne', findNotDeletedMiddleware);
+ProjectSchema.pre('findOneAndUpdate', findNotDeletedMiddleware);
+ProjectSchema.pre('count', findNotDeletedMiddleware);
+
+
 /**
  * Pre-save hook
  */
@@ -88,6 +105,26 @@ ProjectSchema
             next();
         }
     });
+
+
+/**
+ * Methods
+ */
+
+ProjectSchema.methods = {
+
+    /**
+     * delete - change deleted attribute to true
+     *
+     * @param {Function} next
+     * @api public
+     */
+    delete: function(next) {
+        this.deleted = true;
+        this.save(next);
+    }
+};
+
 
 /**
  * Private functions

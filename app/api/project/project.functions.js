@@ -1,23 +1,24 @@
 'use strict';
 
 var Project = require('./project.model.js'),
-    async = require('async'),
-    ImageFunctions = require('../image/image.functions.js');
+    async = require('async');
 
 exports.deleteAllByUser = function(userId, next) {
-    async.waterfall([
-        Project.find.bind(Project, {creator: userId}),
-        function(projects, next){
-            projects.forEach(function(project){
-                ImageFunctions.delete('project', project._id);
+    Project.find({creator: userId}, function(projects) {
+        if (projects.length > 0) {
+            projects.forEach(function(project) {
+                project.delete();
             });
-            next();
-        },
-        Project.remove.bind(Project, {creator: userId})
-    ], next);
+        } else {
+            next({
+                code: 404,
+                message: 'Exercise not found'
+            });
+        }
+    });
 };
 
-exports.create = function(project, next){
+exports.create = function(project, next) {
     var project = new Project(project);
     project.save(next);
 };
