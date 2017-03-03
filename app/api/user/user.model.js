@@ -437,7 +437,7 @@ UserSchema.methods = {
         return this.studentMode;
     },
 
-    getheadmasterCenter: function() {
+    getHeadmasterCenter: function() {
         var centerId;
         if (this.centers) {
             _.forEach(this.centers, function(center, key) {

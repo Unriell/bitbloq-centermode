@@ -7,7 +7,7 @@ exports.deleteAllByUser = function(userId, next) {
     Project.find({creator: userId}, function(projects) {
         if (projects.length > 0) {
             projects.forEach(function(project) {
-                project.delete();
+                project.delete(next);
             });
         } else {
             next({
@@ -16,9 +16,4 @@ exports.deleteAllByUser = function(userId, next) {
             });
         }
     });
-};
-
-exports.create = function(project, next) {
-    var project = new Project(project);
-    project.save(next);
 };

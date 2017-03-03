@@ -193,7 +193,7 @@ exports.getCenterIdbyheadmaster = function(userId, next) {
     User.findById(userId, function(err, user) {
         var centerId;
         if (user) {
-            centerId = user.getheadmasterCenter();
+            centerId = user.getHeadmasterCenter();
         }
         next(err, centerId);
     });
