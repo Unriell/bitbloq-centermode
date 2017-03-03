@@ -28,4 +28,38 @@ var AssignmentSchema = new mongoose.Schema({
 });
 
 
+/**
+ * Pre hook
+ */
+
+function findNotDeletedMiddleware(next) {
+    this.where('deleted').in([false, undefined, null]);
+    next();
+}
+
+AssignmentSchema.pre('find', findNotDeletedMiddleware);
+AssignmentSchema.pre('findOne', findNotDeletedMiddleware);
+AssignmentSchema.pre('findOneAndUpdate', findNotDeletedMiddleware);
+AssignmentSchema.pre('count', findNotDeletedMiddleware);
+
+
+/**
+ * Methods
+ */
+
+AssignmentSchema.methods = {
+
+    /**
+     * delete - change deleted attribute to true
+     *
+     * @param {String} next
+     * @api public
+     */
+    delete: function(next) {
+        this.deleted = true;
+        this.save(next);
+    }
+
+};
+
 module.exports = mongoose.model('CenterMode-Assignment', AssignmentSchema);

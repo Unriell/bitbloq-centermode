@@ -38,7 +38,8 @@ var GroupSchema = new mongoose.Schema({
     students: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
-    }]
+    }],
+    deleted: Boolean
 }, {
     timestamps: true
 });

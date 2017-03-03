@@ -4,6 +4,7 @@ var Group = require('./group.model.js'),
     UserFunctions = require('../user/user.functions.js'),
     TaskFunction = require('../task/task.functions.js'),
     AssignmentFunction = require('../assignment/assignment.functions.js'),
+    TaskFunctions = require('../task/task.functions.js'),
     async = require('async'),
     _ = require('lodash'),
     triesCounter;
@@ -242,18 +243,36 @@ exports.deleteGroup = function(req, res) {
     async.waterfall([
         Group.findById.bind(Group, groupId),
         function(group, next) {
-            group.userCanUpdate(userId, function(err, canUpdate) {
-                if (err) {
-                    next(err);
-                } else if (!canUpdate) {
+            if (group) {
+                group.userCanUpdate(userId, next);
+            } else {
+                next({
+                    code: 404,
+                    message: 'Exercise not found'
+                });
+            }
+        },
+        function(canUpdate, next) {
+            if (canUpdate) {
+                if (group.isOwner(userId)) {
+                    async.parallel([
+                        group.delete.bind(group),
+                        function(next) {
+                            TaskFunctions.deleteByTeacherAndGroups(userId, [groupId], next);
+                        }
+                    ], next);
+                } else {
                     next({
                         code: 401,
                         message: 'Unauthorized'
                     });
-                } else {
-                    group.remove(next);
                 }
-            });
+            } else {
+                next({
+                    code: 403,
+                    message: 'Forbidden'
+                });
+            }
         }
     ], function(err) {
         if (err) {

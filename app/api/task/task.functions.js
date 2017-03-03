@@ -115,7 +115,15 @@ exports.deleteByTeacherAndGroups = function(teacherId, groupIds, next) {
             teacher: teacherId
         })
         .where('group').in(groupIds)
-        .remove(next);
+        .exec(function(err, tasks) {
+            if (tasks.length > 0) {
+                async.map(tasks, function(task, callback) {
+                    task.delete(callback);
+                }, next);
+            } else {
+                next(err);
+            }
+        });
 };
 
 
