@@ -22,7 +22,8 @@ var AssignmentSchema = new mongoose.Schema({
         required: true
     },
     initDate: Date,
-    endDate: Date
+    endDate: Date,
+    deleted: Boolean
 }, {
     timestamps: true
 });
