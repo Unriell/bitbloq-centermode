@@ -1,8 +1,94 @@
 'use strict';
 
 var Member = require('./member.model.js'),
+    MemberFunctions = require('./member.functions.js'),
+    UserFunctions = require('../user/user.functions.js'),
+    GroupFunctions = require('../group/group.functions.js'),
+    TaskFunctions = require('../task/task.functions.js'),
+    async = require('async'),
     _ = require('lodash');
 
+
+/**
+ * Add teacher in a center
+ * @param req
+ * @param req.body.teachers
+ * @param req.body.centerId
+ * @param res
+ */
+exports.addTeacher = function(req, res) {
+    var userId = req.user._id,
+        newTeacherEmails = req.body.teachers,
+        centerId = req.body.centerId;
+    async.parallel([
+        MemberFunctions.userIsHeadmaster.bind(MemberFunctions, userId, centerId),
+        UserFunctions.getUsersByEmails.bind(UserFunctions, newTeacherEmails)
+    ], function(err, result) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else if (!result) {
+            res.sendStatus(304);
+        } else {
+            if (!result[0]) {
+                res.sendStatus(403);
+            } else {
+                MemberFunctions.addAllTeachers(result[1], centerId, function(err, teachers) {
+                    if (err) {
+                        console.log(err);
+                        err.code = parseInt(err.code) || 500;
+                        res.status(err.code).send(err);
+                    } else {
+                        res.status(200).send(teachers);
+                    }
+                });
+            }
+        }
+    });
+};
+
+/**
+ * Delete a teacher in a center
+ * @param req
+ * @param res
+ */
+exports.deleteTeacher = function(req, res) {
+    var userId = req.user._id,
+        centerId = req.params.centerId,
+        teacherId = req.params.teacherId;
+    if (userId.toString() !== teacherId.toString()) {
+        MemberFunctions.userIsHeadmaster(userId, centerId, function(err, isHeadmaster) {
+            if (err) {
+                console.log(err);
+                err.code = parseInt(err.code) || 500;
+                res.status(err.code).send(err);
+            } else if (isHeadmaster) {
+                async.waterfall([
+                    GroupFunctions.deleteGroups.bind(GroupFunctions, teacherId, centerId),
+                    function(groups, next) {
+                        TaskFunctions.deleteByTeacherAndGroups(teacherId, groups, next);
+                    },
+                    MemberFunctions.deleteTeacher.bind(MemberFunctions, teacherId, centerId)
+                ], function(err, result) {
+                    if (err) {
+                        console.log(err);
+                        err.code = parseInt(err.code) || 500;
+                        res.status(err.code).send(err);
+                    } else if (!result) {
+                        res.sendStatus(304);
+                    } else {
+                        res.sendStatus(200);
+                    }
+                });
+            } else {
+                res.sendStatus(403);
+            }
+        });
+    } else {
+        res.sendStatus(409);
+    }
+};
 
 /**
  * Returns if a Member is head master

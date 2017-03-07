@@ -31,19 +31,21 @@ exports.addTeacher = function(userId, centerId, next) {
  * @param {Function} next
  */
 exports.addAllTeachers = function(users, centerId, next) {
-    var membersResult = {},
-        userDontExist = [];
+    var userDontExist = [];
     async.map(users, function(user, next) {
         if (user && user._id) {
-            exports.addTeacher(user._id, centerId, next);
+            exports.addTeacher(user._id, centerId, function(err) {
+                next(err, user);
+            });
         } else {
             userDontExist.push(user.email);
-            membersResult.teachersNotAdded = userDontExist;
             next();
         }
     }, function(err, completedMembers) {
-        membersResult.teachersAdded = _.pull(completedMembers, undefined);
-        next(err, membersResult);
+        next(err, {
+            teachersAdded: completedMembers,
+            teachersNotAdded: !_.isEmpty(userDontExist) ? userDontExist : undefined
+        });
     });
 };
 
