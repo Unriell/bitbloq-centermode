@@ -1,6 +1,6 @@
 'use strict';
 var Group = require('./group.model.js'),
-    UserFunctions = require('../user/user.functions.js'),
+    MemberFunctions = require('../member/member.functions.js'),
     async = require('async');
 
 
@@ -14,10 +14,10 @@ var Group = require('./group.model.js'),
 exports.deleteGroups = function(teacherId, centerId, next) {
     async.waterfall([
         function(callBack) {
-            UserFunctions.getMyRoleInCenter(teacherId, centerId, callBack);
+            MemberFunctions.getMyRolesInCenter(teacherId, centerId, callBack);
         },
-        function(role, callBack) {
-            if (role === 'teacher' || role === 'headmaster') {
+        function(roles, callBack) {
+            if (roles.indexOf('teacher') > -1 || roles.indexOf('headmaster') > -1) {
                 Group.find({
                         teacher: teacherId,
                         center: centerId
@@ -35,7 +35,7 @@ exports.deleteGroups = function(teacherId, centerId, next) {
             Group.remove({
                 teacher: teacherId,
                 center: centerId
-            }, function(err){
+            }, function(err) {
                 callBack(err, groups);
             });
         }
@@ -71,9 +71,12 @@ exports.getStudents = function(groupId, userId, next) {
             if (String(group.teacher) === String(userId)) {
                 next(null, group.students);
             } else {
-                UserFunctions.userIsHeadmaster(userId, group.center, function(err, centerId) {
-                    if (!centerId) {
-                        next(401);
+                MemberFunctions.userIsHeadmaster(userId, group.center, function(err, isHeadmaster) {
+                    if (!isHeadmaster) {
+                        next({
+                            code: 403,
+                            message: 'Forbidden'
+                        });
                     } else {
                         next(err, group.students);
                     }

@@ -1,7 +1,7 @@
 'use strict';
 
 var mongoose = require('mongoose'),
-    UserFunctions = require('../user/user.functions.js');
+    MemberFunctions = require('../member/member.functions.js');
 
 var GroupSchema = new mongoose.Schema({
     name: {
@@ -78,13 +78,7 @@ GroupSchema.methods = {
             next(null, true);
         } else {
             this.timesViewed++;
-            UserFunctions.userIsHeadmaster(userId, this.center, function(err, centerId) {
-                if (centerId) {
-                    next(null, true);
-                } else {
-                    next(err, false);
-                }
-            });
+            MemberFunctions.userIsHeadmaster(userId, this.center, next);
         }
     },
 

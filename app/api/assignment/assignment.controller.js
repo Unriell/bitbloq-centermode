@@ -1,7 +1,7 @@
 'use strict';
 
 var Assignment = require('./assignment.model.js'),
-    UserFunctions = require('../user/user.functions.js'),
+    MemberFunctions = require('../member/member.functions.js'),
     AssignmentFunctions = require('./assignment.functions.js'),
     TaskFunctions = require('../task/task.functions.js'),
     mongoose = require('mongoose'),
@@ -63,7 +63,7 @@ exports.getByExercise = function(req, res) {
     var userId = req.user._id,
         exerciseId = req.params.exerciseId;
     async.waterfall([
-        UserFunctions.getCenterIdbyheadmaster.bind(UserFunctions, userId),
+        MemberFunctions.getCenterIdByHeadmaster.bind(MemberFunctions, userId),
         function(centerId, next) {
             Assignment.find({
                     exercise: exerciseId

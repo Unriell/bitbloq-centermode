@@ -10,7 +10,7 @@ var GroupFunctions = require('../group/group.functions.js'),
  * @return {Object} teacher
  */
 exports.getStats = function(teacher, centerId, next) {
-    GroupFunctions.getGroups(teacher, centerId, function(err, groups) {
+    GroupFunctions.getGroups(teacher._id, centerId, function(err, groups) {
         var teacherObject = teacher;
         teacherObject.students = 0;
         if (groups) {
@@ -23,26 +23,15 @@ exports.getStats = function(teacher, centerId, next) {
     });
 };
 
-exports.teacherGetDateByCenterId = function(teachers, centerId) {
-    var teacherArray = [];
-    teachers.forEach(function(teacher) {
-        var teacherObject = teacher.toObject();
-        teacherObject.dateCreated = teacherObject.centers[centerId].date;
-        delete teacherObject.centers;
-        teacherArray.push(teacherObject);
-    });
-    return teacherArray;
-};
-
 
 /**
  * Get information center in array
- * @param {Array} center ids
+ * @param {Array} centerIds
  * @param {Function} next
  * @return {Object} center
  */
-exports.getCentersInArray = function(ids, next) {
+exports.getCentersInArray = function(centerIds, next) {
     Center.find()
-        .where('_id').in(ids)
+        .where('_id').in(centerIds)
         .exec(next);
 };

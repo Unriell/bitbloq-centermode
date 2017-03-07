@@ -1,7 +1,7 @@
 'use strict';
 
 var Group = require('./group.model.js'),
-    UserFunctions = require('../user/user.functions.js'),
+    MemberFunctions = require('../member/member.functions.js'),
     TaskFunction = require('../task/task.functions.js'),
     AssignmentFunction = require('../assignment/assignment.functions.js'),
     TaskFunctions = require('../task/task.functions.js'),
@@ -56,9 +56,12 @@ exports.getGroup = function(req, res) {
                 if (String(group.teacher) === String(userId) || String(group.creator) === String(userId)) {
                     next(null, group);
                 } else {
-                    UserFunctions.userIsHeadmaster(userId, group.center, function(err, centerId) {
+                    MemberFunctions.userIsHeadmaster(userId, group.center, function(err, centerId) {
                         if (!centerId) {
-                            next(401);
+                            next({
+                                code: 403,
+                                message: 'Forbidden'
+                            });
                         } else {
                             next(err, group);
                         }
@@ -104,10 +107,10 @@ exports.getAllGroups = function(req, res) {
                         next(null, false);
                         break;
                     default:
-                        UserFunctions.userIsStudent(userId, next);
+                        MemberFunctions.userIsStudent(userId, next);
                 }
             } else {
-                UserFunctions.userIsStudent(userId, next);
+                MemberFunctions.userIsStudent(userId, next);
             }
         },
         function(isStudent, next) {
@@ -143,7 +146,7 @@ exports.getGroups = function(req, res) {
     var userId = req.user._id,
         centerId = req.params.centerId;
     async.waterfall([
-        UserFunctions.userIsStudent.bind(UserFunctions, userId),
+        MemberFunctions.userIsStudent.bind(MemberFunctions, userId),
         function(isStudent, next) {
             if (isStudent) {
                 Group.find({
@@ -179,7 +182,7 @@ exports.getGroupByHeadmaster = function(req, res) {
     var userId = req.user._id,
         teacherId = req.params.teacherId;
     async.waterfall([
-        UserFunctions.getCenterIdbyheadmaster.bind(UserFunctions, userId),
+        MemberFunctions.getCenterIdByHeadmaster.bind(MemberFunctions, userId),
         function(centerId, next) {
             Group.find({
                 teacher: teacherId,

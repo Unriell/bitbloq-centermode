@@ -1,6 +1,7 @@
 'use strict';
 var Task = require('./task.model.js'),
     UserFunctions = require('../user/user.functions.js'),
+    MemberFunctions = require('../member/member.functions.js'),
     ProjectFunction = require('../project/project.functions.js'),
     TaskFunction = require('./task.functions.js'),
     GroupFunction = require('../group/group.functions.js'),
@@ -365,11 +366,11 @@ exports.mark = function(req, res) {
             if (String(task.owner) == userId || String(task.teacher) == userId) {
                 next(null, task);
             } else {
-                UserFunctions.userIsHeadmaster(userId, task.group.center, function(err, centerId) {
-                    if (!centerId) {
+                MemberFunctions.userIsHeadmaster(userId, task.group.center, function(err, isHeadmaster) {
+                    if (!isHeadmaster) {
                         next({
-                            code: 401,
-                            message: 'Unauthorized'
+                            code: 403,
+                            message: 'Forbidden'
                         });
                     } else {
                         next(err, task);
@@ -495,14 +496,14 @@ exports.userIsHeadmasterByTask = function(req, res) {
                 res.status(err.code).send(err);
             } else {
                 if (task && task.group && task.group.center) {
-                    UserFunctions.userIsHeadmaster(userId, task.group.center, function(err, centerId) {
-                        if (centerId) {
-                            res.status(204).set({
-                                'headmaster': true
-                            }).send();
+                    MemberFunctions.userIsHeadmaster(userId, task.group.center, function(err, isHeadmaster) {
+                        if (err) {
+                            console.log(err);
+                            err.code = parseInt(err.code) || 500;
+                            res.status(err.code).send(err);
                         } else {
                             res.status(204).set({
-                                'headmaster': false
+                                'headmaster': isHeadmaster
                             }).send();
                         }
                     });

@@ -2,6 +2,7 @@
 
 var Exercise = require('./exercise.model.js'),
     UserFunctions = require('../user/user.functions.js'),
+    MemberFunctions = require('../member/member.functions.js'),
     TaskFunctions = require('../task/task.functions.js'),
     _ = require('lodash'),
     async = require('async');
@@ -185,7 +186,7 @@ exports.getCountByTeacher = function(req, res) {
     var userId = req.user._id,
         teacherId = req.params.teacherId;
     async.waterfall([
-        UserFunctions.getCenterIdbyheadmaster.bind(UserFunctions, userId),
+        MemberFunctions.getCenterIdByHeadmaster.bind(UserFunctions, userId),
         function(centerId, next) {
             if (!centerId) {
                 next({
@@ -193,7 +194,7 @@ exports.getCountByTeacher = function(req, res) {
                     message: 'Unauthorized'
                 });
             } else {
-                UserFunctions.getTeacher(teacherId, centerId, function(err, teacher) {
+                MemberFunctions.getTeacher(teacherId, centerId, function(err, teacher) {
                     if (!teacher) {
                         next({
                             code: 404,
@@ -232,7 +233,7 @@ exports.getByTeacher = function(req, res) {
         userId = req.user._id,
         teacherId = req.params.teacherId;
     async.waterfall([
-        UserFunctions.getCenterIdbyheadmaster.bind(UserFunctions, userId),
+        MemberFunctions.getCenterIdByHeadmaster.bind(UserFunctions, userId),
         function(centerId, next) {
             if (!centerId) {
                 next({
@@ -240,7 +241,7 @@ exports.getByTeacher = function(req, res) {
                     message: 'Unauthorized'
                 });
             } else {
-                UserFunctions.getTeacher(teacherId, centerId, function(err, teacher) {
+                MemberFunctions.getTeacher(teacherId, centerId, function(err, teacher) {
                     if (!teacher) {
                         next({
                             code: 404,

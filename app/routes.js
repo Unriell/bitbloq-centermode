@@ -14,11 +14,11 @@ module.exports = function(app) {
     router.use('/assignment', require('./api/assignment/index'));
     router.use('/center', require('./api/center/index'));
     router.use('/exercise', require('./api/exercise/index'));
-    router.use('/task', require('./api/task/index'));
     router.use('/group', require('./api/group/index'));
+    router.use('/member', require('./api/member/index'));
+    router.use('/task', require('./api/task/index'));
     router.use('/third-party-robots', require('./api/thirdPartyRobots/index'));
     router.use('/version', require('./api/version/index'));
-    router.use('/user', require('./api/user/index'));
 
     // Set a prefix for all calls
     app.use('/centerMode/v1', router);
