@@ -20,6 +20,9 @@ var thirdPartyRobotsSchema = new mongoose.Schema({
             trim: true
         },
         date: Date
+    },
+    reason: {
+        type: String
     }
 }, {
     timestamps: true

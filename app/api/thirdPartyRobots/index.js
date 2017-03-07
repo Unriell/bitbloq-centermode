@@ -8,15 +8,14 @@ var router = express.Router();
 
 //GET
 // RECORDAR CAMBIAR:
-router.get('/:robot/unused', controller.getUnusedCodesByRobot);
+router.get('/:robot/unused', auth.hasRole('admin'), controller.getUnusedCodesByRobot);
 // RECORDAR CAMBIAR:
-router.get('/:robot/used', controller.getUsedCodesByRobot);
+router.get('/:robot/used', auth.hasRole('admin'), controller.getUsedCodesByRobot);
 // RECORDAR CAMBIAR:
-router.get('/:robot/', controller.getCodesByRobot);
+router.get('/:robot/', auth.hasRole('admin'), controller.getCodesByRobot);
 
-// POST
-// RECORDAR CAMBIAR: router.post('/generateCodes', auth.hasRole('admin'), controller.generateCodes);
-router.post('/generateCodes', controller.generateCodes);
+router.post('/generateCodes', auth.hasRole('admin'), controller.generateCodes);
 router.post('/activate', auth.isAuthenticated(), controller.activateRobot)
+router.post('/trial', auth.isAuthenticated(), controller.startTrialRobot)
 
 module.exports = router;

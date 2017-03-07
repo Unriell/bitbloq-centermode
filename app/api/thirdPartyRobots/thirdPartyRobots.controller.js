@@ -2,7 +2,7 @@
 
 var Code = require('./thirdPartyRobots.model.js'),
     CodeFunctions = require('./thirdPartyRobots.functions.js'),
-    UserFunctions = require('../user/user.functions.js'),
+    UserRobotsFunctions = require('../userrobots/userrobots.functions.js'),
     async = require('async'),
     _ = require('lodash');
 
@@ -25,13 +25,15 @@ exports.generateCodes = function(req, res) {
         }
     });
 
-    Code.create(codes, function(err, codes) {
+    Code.create(codes, function(err, codesGenerated) {
+        console.log('codes');
+        console.log(codesGenerated);
         if (err) {
             console.log(err);
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else {
-            res.status(200).json(codes);
+            res.status(200).json(codesGenerated);
         }
     })
 
@@ -120,22 +122,57 @@ exports.activateRobot = function(req, res) {
                             }, next);
                         },
                         function(next) {
-                            UserFunctions.addRobotActivation(userId, robot, next)
+                            UserRobotsFunctions.addUserRobot(userId, robot, true, next);
                         }
-                    ], function(err, userUpdated) {
+                    ], function(err) {
                         if (err) {
                             console.log(err);
                             err.code = parseInt(err.code) || 500;
                             res.status(err.code).send(err);
                         } else {
-                            res.status(200).json(userUpdated[1]);
+                            UserRobotsFunctions.getUserRobots(userId, function(error, result) {
+                                if (error) {
+                                    console.log(error);
+                                    error.code = parseInt(error.code) || 500;
+                                    res.status(error.code).send(error);
+                                } else {
+                                    res.status(200).json(result);
+                                }
+                            });
                         }
-                    })
+                    });
                 }
             } else {
                 res.sendStatus(404);
             }
 
+        }
+    })
+
+}
+
+exports.startTrialRobot = function(req, res) {
+    var robot = req.body.robot,
+        userId = req.user._id;
+
+    console.log('robot');
+    console.log(robot);
+
+    UserRobotsFunctions.addUserRobot(userId, robot, false, function(err) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else {
+            UserRobotsFunctions.getUserRobots(userId, function(error, result) {
+                if (error) {
+                    console.log(error);
+                    error.code = parseInt(error.code) || 500;
+                    res.status(error.code).send(error);
+                } else {
+                    res.status(200).json(result);
+                }
+            });
         }
     })
 
