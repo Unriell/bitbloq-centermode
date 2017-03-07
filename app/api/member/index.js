@@ -11,6 +11,8 @@ router.head('/headmaster', auth.isAuthenticated(), controller.isHeadmaster);
 
 // GET
 router.get('/role', auth.isAuthenticated(), controller.getMyRole);
+router.get('/teacher/:teacherId/center/:centerId', auth.isAuthenticated(), controller.getTeacher);
+router.get('/teachers/center/:centerId', auth.isAuthenticated(), controller.getTeachers);
 
 // POST
 router.post('/teacher', auth.isAuthenticated(), controller.addTeacher);

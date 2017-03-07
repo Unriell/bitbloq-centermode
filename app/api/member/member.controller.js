@@ -2,6 +2,7 @@
 
 var Member = require('./member.model.js'),
     MemberFunctions = require('./member.functions.js'),
+    CenterFunctions = require('../center/center.functions.js'),
     UserFunctions = require('../user/user.functions.js'),
     GroupFunctions = require('../group/group.functions.js'),
     TaskFunctions = require('../task/task.functions.js'),
@@ -146,6 +147,84 @@ exports.getMyRole = function(req, res) {
             res.status(200).send(role);
         } else {
             res.sendStatus(204);
+        }
+    });
+};
+
+
+/**
+ * Get a teacher
+ * @param req
+ * @param req.params.teacherId
+ * @param req.params.centerId
+ * @param res
+ */
+exports.getTeacher = function(req, res) {
+    var userId = req.user._id,
+        centerId = req.params.centerId,
+        teacherId = req.params.teacherId;
+    async.waterfall([
+        MemberFunctions.userIsHeadmaster.bind(MemberFunctions, userId, centerId),
+        function(isHeadmaster, next) {
+            if (!isHeadmaster) {
+                next({
+                    code: 403,
+                    message: 'Forbidden'
+                });
+            } else {
+                MemberFunctions.getTeacher(teacherId, centerId, next);
+            }
+        }
+    ], function(err, teacher) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else if (!teacher) {
+            res.sendStatus(404);
+        } else {
+            res.send(teacher);
+        }
+    });
+};
+
+
+/**
+ * Get teachers in a center
+ * @param req
+ * @param res
+ */
+exports.getTeachers = function(req, res) {
+    var userId = req.user._id,
+        centerId = req.params.centerId;
+    async.waterfall([
+        MemberFunctions.userIsHeadmaster.bind(MemberFunctions, userId, centerId),
+        function(isHeadmaster, next) {
+            if (!isHeadmaster) {
+                next({
+                    code: 401,
+                    message: 'Forbidden'
+                });
+            } else {
+                MemberFunctions.getAllTeachers(centerId, function(err, members) {
+                    next(err, members, centerId);
+                });
+            }
+        },
+        function(members, centerId, next) {
+            async.map(members, function(member, next) {
+                CenterFunctions.getStats(member.user, centerId, next);
+            }, next);
+        }
+    ], function(err, teachers) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else if (!teachers) {
+            res.sendStatus(304);
+        } else {
+            res.send(teachers);
         }
     });
 };

@@ -2,7 +2,6 @@
 
 var Center = require('./center.model.js'),
     MemberFunctions = require('../member/member.functions.js'),
-    CenterFunctions = require('./center.functions.js'),
     async = require('async'),
     _ = require('lodash');
 
@@ -91,80 +90,6 @@ exports.getMyCenters = function(req, res) {
             res.status(err.code).send(err);
         } else {
             res.status(200).send(centers);
-        }
-    });
-};
-
-/**
- * Get a teacher
- * @param req
- * @param res
- */
-exports.getTeacher = function(req, res) {
-    var userId = req.user._id,
-        centerId = req.params.centerId,
-        teacherId = req.params.teacherId;
-    async.waterfall([
-        MemberFunctions.userIsHeadmaster.bind(MemberFunctions, userId, centerId),
-        function(isHeadmaster, next) {
-            if (!isHeadmaster) {
-                next({
-                    code: 403,
-                    message: 'Forbidden'
-                });
-            } else {
-                MemberFunctions.getTeacher(teacherId, centerId, next);
-            }
-        }
-    ], function(err, teacher) {
-        if (err) {
-            console.log(err);
-            err.code = parseInt(err.code) || 500;
-            res.status(err.code).send(err);
-        } else if (!teacher) {
-            res.sendStatus(404);
-        } else {
-            res.send(teacher);
-        }
-    });
-};
-
-/**
- * Get teachers in a center
- * @param req
- * @param res
- */
-exports.getTeachers = function(req, res) {
-    var userId = req.user._id,
-        centerId = req.params.centerId;
-    async.waterfall([
-        MemberFunctions.userIsHeadmaster.bind(MemberFunctions, userId, centerId),
-        function(isHeadmaster, next) {
-            if (!isHeadmaster) {
-                next({
-                    code: 401,
-                    message: 'Forbidden'
-                });
-            } else {
-                MemberFunctions.getAllTeachers(centerId, function(err, members) {
-                    next(err, members, centerId);
-                });
-            }
-        },
-        function(members, centerId, next) {
-            async.map(members, function(member, next) {
-                CenterFunctions.getStats(member.user, centerId, next);
-            }, next);
-        }
-    ], function(err, teachers) {
-        if (err) {
-            console.log(err);
-            err.code = parseInt(err.code) || 500;
-            res.status(err.code).send(err);
-        } else if (!teachers) {
-            res.sendStatus(304);
-        } else {
-            res.send(teachers);
         }
     });
 };
