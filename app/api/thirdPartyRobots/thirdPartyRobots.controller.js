@@ -25,13 +25,15 @@ exports.generateCodes = function(req, res) {
         }
     });
 
-    Code.create(codes, function(err, codes) {
+    Code.create(codes, function(err, codesGenerated) {
+        console.log('codes');
+        console.log(codesGenerated);
         if (err) {
             console.log(err);
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else {
-            res.status(200).json(codes);
+            res.status(200).json(codesGenerated);
         }
     })
 
