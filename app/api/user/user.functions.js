@@ -50,21 +50,3 @@ exports.getUsersByEmails = function(emails, next) {
         next(err, userIds);
     });
 };
-
-/**********************************
- *** Center functions with users
- **********************************/
-
-
-exports.addRobotActivation = function(userId, robot, next) {
-    var query = {};
-    query.thirdPartyRobots = {};
-    query.thirdPartyRobots[robot] = true;
-    User.findOneAndUpdate({
-        '_id': userId
-    }, query, {
-        new: true
-    }, function(err, updated) {
-        next(err, updated);
-    });
-};

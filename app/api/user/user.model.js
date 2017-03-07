@@ -101,8 +101,7 @@ var UserSchema = new mongoose.Schema({
             result: Boolean
         }
     },
-    anonymous: String,
-    thirdPartyRobots: {}
+    anonymous: String
 }, {
     timestamps: true
 });
@@ -110,6 +109,16 @@ var UserSchema = new mongoose.Schema({
 /**
  * Virtuals
  */
+
+// Public profile information
+UserSchema
+    .virtual('profile')
+    .get(function() {
+        return {
+            'username': this.username,
+            'role': this.role
+        };
+    });
 
 // Information for the owner
 UserSchema
@@ -143,8 +152,7 @@ UserSchema
             'hasBeenWarnedAboutChangeBloqsToCode': this.hasBeenWarnedAboutChangeBloqsToCode,
             'hasFirstComponent': this.hasFirstComponent,
             'takeTour': this.takeTour,
-            'hasBeenValidated': this.hasBeenValidated,
-            'thirdPartyRobots': this.makeblock
+            'hasBeenValidated': this.hasBeenValidated
         };
     });
 
