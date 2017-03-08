@@ -41,4 +41,4 @@ thirdPartyRobotsSchema.pre('save', function(next) {
     });
 });
 
-module.exports = mongoose.model('CenterMode-thirdPartyRobots', thirdPartyRobotsSchema);
+module.exports = mongoose.model('robots-thirdPartyRobots', thirdPartyRobotsSchema);

@@ -122,7 +122,7 @@ exports.activateRobot = function(req, res) {
                             }, next);
                         },
                         function(next) {
-                            UserRobotsFunctions.addUserRobot(userId, robot, true, next);
+                            UserRobotsFunctions.addUserRobot(userId, robot, next);
                         }
                     ], function(err) {
                         if (err) {
@@ -146,33 +146,6 @@ exports.activateRobot = function(req, res) {
                 res.sendStatus(404);
             }
 
-        }
-    })
-
-}
-
-exports.startTrialRobot = function(req, res) {
-    var robot = req.body.robot,
-        userId = req.user._id;
-
-    console.log('robot');
-    console.log(robot);
-
-    UserRobotsFunctions.addUserRobot(userId, robot, false, function(err) {
-        if (err) {
-            console.log(err);
-            err.code = parseInt(err.code) || 500;
-            res.status(err.code).send(err);
-        } else {
-            UserRobotsFunctions.getUserRobots(userId, function(error, result) {
-                if (error) {
-                    console.log(error);
-                    error.code = parseInt(error.code) || 500;
-                    res.status(error.code).send(error);
-                } else {
-                    res.status(200).json(result);
-                }
-            });
         }
     })
 

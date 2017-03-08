@@ -15,7 +15,6 @@ router.get('/:robot/used', auth.hasRole('admin'), controller.getUsedCodesByRobot
 router.get('/:robot/', auth.hasRole('admin'), controller.getCodesByRobot);
 
 router.post('/generateCodes', auth.hasRole('admin'), controller.generateCodes);
-router.post('/activate', auth.isAuthenticated(), controller.activateRobot)
-router.post('/trial', auth.isAuthenticated(), controller.startTrialRobot)
+router.post('/activate', auth.isAuthenticated(), controller.activateRobot);
 
 module.exports = router;

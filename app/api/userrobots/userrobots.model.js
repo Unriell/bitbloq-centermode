@@ -16,11 +16,9 @@ var userRobotsSchema = new mongoose.Schema({
     activated: {
         type: Boolean,
         default: false
-    },
-    expirationDate: Date
-
+    }
 }, {
     timestamps: true
 });
 
-module.exports = mongoose.model('CenterMode-userRobots', userRobotsSchema);
+module.exports = mongoose.model('robots-userRobots', userRobotsSchema);
