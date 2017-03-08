@@ -6,6 +6,7 @@ var Member = require('./member.model.js'),
     UserFunctions = require('../user/user.functions.js'),
     GroupFunctions = require('../group/group.functions.js'),
     TaskFunctions = require('../task/task.functions.js'),
+    AssignmentFunction = require('../assignment/assignment.functions.js'),
     async = require('async'),
     _ = require('lodash');
 
@@ -125,7 +126,6 @@ exports.isHeadmaster = function(req, res) {
  * @param res
  */
 exports.getMyRole = function(req, res) {
-    console.log('en getMy role');
     var userId = req.user._id;
     Member.find({
         user: userId
@@ -225,6 +225,43 @@ exports.getTeachers = function(req, res) {
             res.sendStatus(304);
         } else {
             res.send(teachers);
+        }
+    });
+};
+
+
+/**
+ * Register a student in a group
+ * @param req
+ * @param res
+ */
+exports.registerInGroup = function(req, res) {
+    var userId = req.user._id,
+        groupId = req.params.id;
+
+    async.waterfall([
+        GroupFunctions.getOpenGroup.bind(GroupFunctions, groupId),
+        function(group, next) {
+            if (group) {
+                MemberFunctions.addStudent(userId, groupId, next);
+            } else {
+                next({
+                    code: 403,
+                    message: 'Forbidden'
+                });
+            }
+        },
+        function(member, updated, next) {
+            AssignmentFunction.createTasksToStudent(groupId, userId, next);
+        }
+    ], function(err) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else {
+
+            res.sendStatus(200);
         }
     });
 };

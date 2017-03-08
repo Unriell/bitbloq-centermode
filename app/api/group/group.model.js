@@ -35,10 +35,6 @@ var GroupSchema = new mongoose.Schema({
         trim: false,
         required: true
     },
-    students: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-    }],
     deleted: Boolean
 }, {
     timestamps: true

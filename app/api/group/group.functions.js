@@ -44,10 +44,21 @@ exports.deleteGroups = function(teacherId, centerId, next) {
 
 /**
  * Get all groups of teacher in a center
+ * @param {String} accessId
+ * @param {Function} next
+ */
+exports.getOpenGroup = function(accessId, next) {
+    Group.findOne({
+        accessId: groupId,
+        status: 'open'
+    }, next);
+};
+
+/**
+ * Get all groups of teacher in a center
  * @param {String} teacherId
  * @param {String} centerId
  * @param {Function} next
- * @return {Object} user.owner
  */
 exports.getGroups = function(teacherId, centerId, next) {
     Group.find({
@@ -57,11 +68,23 @@ exports.getGroups = function(teacherId, centerId, next) {
 };
 
 /**
+ * Get group counter of groups with a determinate teacher in a center
+ * @param {String} teacherId
+ * @param {String} centerId
+ * @param {Function} next
+ */
+exports.getCounter = function(teacherId, centerId, next) {
+    Group.find({
+        teacher: teacherId,
+        center: centerId
+    }).count(next);
+};
+
+/**
  * Get user role all groups of teacher in a center
  * @param {String} groupId
  * @param {String} userId
  * @param {Function} next
- * @return {Object} user.owner
  */
 exports.getStudents = function(groupId, userId, next) {
     Group.findById(groupId, function(err, group) {

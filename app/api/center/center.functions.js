@@ -1,6 +1,9 @@
 'use strict';
-var GroupFunctions = require('../group/group.functions.js'),
-    Center = require('./center.model.js');
+var MemberFunctions = require('../member/member.functions.js'),
+    GroupFunctions = require('../group/group.functions.js'),
+    Center = require('./center.model.js'),
+    _ = require('lodash'),
+    async = require('async');
 
 /**
  * Get teacher  stats.
@@ -10,15 +13,15 @@ var GroupFunctions = require('../group/group.functions.js'),
  * @return {Object} teacher
  */
 exports.getStats = function(teacher, centerId, next) {
-    GroupFunctions.getGroups(teacher._id, centerId, function(err, groups) {
-        var teacherObject = teacher;
-        teacherObject.students = 0;
-        if (groups) {
-            teacherObject.groups = groups.length;
+    async.parallel([
+        MemberFunctions.getStudentsCounter.bind(MemberFunctions, teacher._id, centerId),
+        GroupFunctions.getCounter.bind(GroupFunctions, teacher._id, centerId)
+    ], function(err, result) {
+        var teacherObject = teacher.toObject();
+        if(!err){
+            teacherObject.students = result[0];
+            teacherObject.groups = result[1];
         }
-        groups.forEach(function(group) {
-            teacherObject.students = teacherObject.students + group.students.length;
-        });
         next(err, teacherObject);
     });
 };

@@ -6,9 +6,6 @@ var express = require('express'),
 
 var router = express.Router();
 
-//HEAD
-router.head('/:id/register', auth.isAuthenticated(), controller.registerInGroup);
-
 // GET
 router.get('/:id', auth.isAuthenticated(), controller.getGroup);
 router.get('/teacher/:teacherId', auth.isAuthenticated(), controller.getGroupByHeadmaster);

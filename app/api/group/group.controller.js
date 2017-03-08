@@ -323,54 +323,10 @@ exports.deleteStudent = function(req, res) {
     });
 };
 
-/**
- * Register a student in a group
- * @param req
- * @param res
- */
-exports.registerInGroup = function(req, res) {
-    var userId = req.user._id,
-        groupId = req.params.id;
 
-    async.waterfall([
-        Group.findOne.bind(Group, {
-            accessId: groupId,
-            status: 'open'
-        }),
-        function(group, next) {
-            if (group) {
-                group.students = group.students || [];
-                if (group.students.indexOf(userId) === -1) {
-                    group.students.push(userId);
-                    group.update(group, function(err) {
-                        if (err) {
-                            next(err);
-                        } else {
-                            //Generate old tasks to student
-                            AssignmentFunction.createTasksToStudent(group._id, userId, next);
-                        }
-                    });
-                } else {
-                    next();
-                }
-            } else {
-                next({
-                    code: 401,
-                    message: 'Unauthorized'
-                });
-            }
-        }
-    ], function(err, result) {
-        if (err) {
-            console.log(err);
-            err.code = parseInt(err.code) || 500;
-            res.status(err.code).send(err);
-        } else {
-
-            res.sendStatus(200);
-        }
-    });
-};
+/*********************
+ * Private functions *
+ *********************/
 
 function createGroup(group, groupData, recursive, triesCounter, next) {
 

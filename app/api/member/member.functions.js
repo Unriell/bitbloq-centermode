@@ -1,6 +1,7 @@
 'use strict';
 var Member = require('./member.model.js'),
     async = require('async'),
+    mongoose = require('mongoose'),
     _ = require('lodash');
 
 
@@ -11,7 +12,35 @@ var Member = require('./member.model.js'),
  * @param {Function} next
  */
 exports.addHeadmaster = function(userId, centerId, next) {
-    _addMember(userId, centerId, 'headmaster', next);
+    _addStaff(userId, centerId, 'headmaster', next);
+};
+
+/**
+ * Add an member in a center like student
+ * @param {String} userId
+ * @param {String} groupId
+ * @param {Function} next
+ */
+exports.addStudent = function(userId, groupId, next) {
+    async.waterfall([
+        Member.findOne.bind(Member, {
+            user: userId,
+            group: groupId,
+            role: 'student'
+        }),
+        function(member, callback) {
+            if (member) {
+                next();
+            } else {
+                var newMember = new Member({
+                    user: userId,
+                    group: groupId,
+                    role: 'student'
+                });
+                newMember.save(callback);
+            }
+        }
+    ], next);
 };
 
 /**
@@ -21,7 +50,7 @@ exports.addHeadmaster = function(userId, centerId, next) {
  * @param {Function} next
  */
 exports.addTeacher = function(userId, centerId, next) {
-    _addMember(userId, centerId, 'teacher', next);
+    _addStaff(userId, centerId, 'teacher', next);
 };
 
 /**
@@ -176,6 +205,40 @@ exports.getMyRolesInCenter = function(userId, centerId, next) {
         });
 };
 
+
+/**
+ * Get students in center with a teacher
+ * @param {String} teacherId
+ * @param {String} centerId
+ * @param {Function} next
+ * @return {Object} user
+ */
+exports.getStudentsInCenterWithTeacher = function(teacherId, centerId, next) {
+    Member.find({
+        role: 'student'
+        })
+        .where('group.teacher').equals(mongoose.Schema.Types.ObjectId(teacherId))
+        .where('group.center').equals(mongoose.Schema.Types.ObjectId(centerId))
+        .exec(next);
+};
+
+
+/**
+ * Get students COUNTER in center with a teacher
+ * @param {String} teacherId
+ * @param {String} centerId
+ * @param {Function} next
+ * @return {Object} user
+ */
+exports.getStudentsCounter = function(teacherId, centerId, next) {
+    Member.find({
+            role: 'student'
+        })
+        .where('group.teacher').equals(mongoose.Schema.Types.ObjectId(teacherId))
+        .where('group.center').equals(mongoose.Schema.Types.ObjectId(centerId))
+        .count(next);
+};
+
 /**
  * Get a single profile teacher
  * @param {String} teacherId
@@ -232,7 +295,7 @@ exports.userIsStudent = function(memberId, next) {
  *** Private functions
  **********************************/
 
-function _addMember(userId, centerId, type, next) {
+function _addStaff(userId, centerId, type, next) {
     async.waterfall([
         Member.findOne.bind(Member, {
             user: userId,
