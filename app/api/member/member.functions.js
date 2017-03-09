@@ -191,9 +191,9 @@ exports.getCenterInfoByHeadmaster = function(userId, next) {
  */
 exports.getMyCentersAsTeacher = function(memberId, next) {
     Member.find({
-            user: memberId
+            user: memberId,
+            role: 'teacher'
         })
-        .where('role').in(['headmaster', 'teacher'])
         .select('center')
         .populate('center')
         .exec(function(err, members) {
@@ -260,6 +260,20 @@ exports.getStudentsCounter = function(teacherId, centerId, next) {
         .where('group.teacher').equals(mongoose.Schema.Types.ObjectId(teacherId))
         .where('group.center').equals(mongoose.Schema.Types.ObjectId(centerId))
         .count(next);
+};
+
+/**
+ * Get students in center by group
+ * @param {String} groupId
+ * @param {Function} next
+ * @return {Object} user
+ */
+exports.getStudentsByGroup = function(groupId, next) {
+    Member.find({
+            role: 'student',
+            group: groupId
+        })
+        .exec(next);
 };
 
 /**

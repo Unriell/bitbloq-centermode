@@ -2,6 +2,7 @@
 var Assignment = require('./assignment.model.js'),
     TaskFunctions = require('../task/task.functions.js'),
     GroupFunctions = require('../group/group.functions.js'),
+    MemberFunctions = require('../member/member.functions.js'),
     async = require('async');
 
 
@@ -88,13 +89,7 @@ exports.createTasksToStudent = function(groupId, studentId, next) {
  */
 exports.createTasks = function(assignment, userId, next) {
     async.waterfall([
-        function(next) {
-            if (assignment.group.students) {
-                next(null, assignment.group.students);
-            } else {
-                GroupFunctions.getStudents(assignment.group, userId, next);
-            }
-        },
+        MemberFunctions.getStudentsByGroup.bind(MemberFunctions, assignment.group),
         function(students, next) {
             var task = {
                 exercise: assignment.exercise,
