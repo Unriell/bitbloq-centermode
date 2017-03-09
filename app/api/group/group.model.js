@@ -101,8 +101,6 @@ GroupSchema
             { $sort : { createdAt : -1 } },
             {$limit: 1}
         ], function(err, lastGroups) {
-            console.log('result');
-            console.log(lastGroups);
             var lastAccessId;
             if (lastGroups.length === 0) {
                 lastAccessId = '000000';

@@ -32,8 +32,8 @@ exports.deleteGroups = function(teacherId, centerId, next) {
             }
         },
         function(groups, callBack) {
-            async.map(groups, function(group){
-                group.delete(callBack);
+            async.map(groups, function(group, next){
+                group.delete(next);
             }, function(err){
                 callBack(err, groups);
             });
