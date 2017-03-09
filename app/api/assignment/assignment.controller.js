@@ -30,7 +30,13 @@ exports.assign = function(req, res) {
         function(next) {
             Assignment.find({exercise: groupsToRemove.exerciseId})
                 .where('group').in(groupsToRemove.groupIds)
-                .remove(next);
+                .exec(function(err, assignments){
+                    async.map(assignments, function(assignment, callBack) {
+                        assignment.delete(callBack);
+                    }, function(err) {
+                        next(err, assignments);
+                    });
+                });
         },
         function(next) {
             async.map(groupsToAssign, function(assignment, next) {
