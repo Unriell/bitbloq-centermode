@@ -80,6 +80,29 @@ exports.addAllTeachers = function(users, centerId, next) {
 
 /**
  * Add members in a center like teachers
+ * @param {String} studentId
+ * @param {String} groupId
+ * @param {Function} next
+ */
+exports.deleteStudent = function(studentId, groupId, next) {
+    async.waterfall([
+        Member.findOne.bind(Member, {
+            user: userId,
+            center: centerId,
+            role: 'teacher'
+        }),
+        function(member, next) {
+            if (member) {
+                member.delete(next);
+            } else {
+                next();
+            }
+        }
+    ], next);
+};
+
+/**
+ * Add members in a center like teachers
  * @param {String} userId
  * @param {String} centerId
  * @param {Function} next

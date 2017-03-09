@@ -50,6 +50,32 @@ exports.addTeacher = function(req, res) {
     });
 };
 
+
+/**
+ * Delete a student if user is group teacher
+ * @param req
+ * @param res
+ */
+exports.deleteStudent = function(req, res) {
+    var userId = req.user._id,
+        studentId = req.params.studentId,
+        groupId = req.params.groupId;
+    async.parallel([
+        MemberFunctions.deleteStudent.bind(MemberFunctions, studentId, groupId),
+        function(updated, next) {
+            TaskFunctions.delete(groupId, studentId, userId, next);
+        }
+    ], function(err) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else {
+            res.sendStatus(200);
+        }
+    });
+};
+
 /**
  * Delete a teacher in a center
  * @param req

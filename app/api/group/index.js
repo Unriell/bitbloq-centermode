@@ -19,7 +19,6 @@ router.post('/', auth.isAuthenticated(), controller.createGroup);
 router.put('/:id', auth.isAuthenticated(), controller.updateGroup);
 
 // DELETE
-router.delete('/:groupId/student/:studentId', auth.isAuthenticated(), controller.deleteStudent);
 router.delete('/:id', auth.isAuthenticated(), controller.deleteGroup);
 
 module.exports = router;

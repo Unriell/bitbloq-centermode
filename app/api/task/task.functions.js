@@ -116,7 +116,7 @@ exports.deleteByTeacherAndGroups = function(teacherId, groupIds, next) {
         })
         .where('group').in(groupIds)
         .exec(function(err, tasks) {
-            if (tasks.length > 0) {
+            if (tasks && tasks.length > 0) {
                 async.map(tasks, function(task, callback) {
                     task.delete(callback);
                 }, next);

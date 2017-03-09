@@ -20,6 +20,7 @@ router.post('/student', auth.isAuthenticated(), controller.registerInGroup);
 
 // DELETE
 router.delete('/teacher/:teacherId/center/:centerId', auth.isAuthenticated(), controller.deleteTeacher);
+router.delete('/student/:studentId/group/:groupId', auth.isAuthenticated(), controller.deleteStudent);
 
 
 module.exports = router;

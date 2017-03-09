@@ -32,10 +32,9 @@ exports.deleteGroups = function(teacherId, centerId, next) {
             }
         },
         function(groups, callBack) {
-            Group.remove({
-                teacher: teacherId,
-                center: centerId
-            }, function(err) {
+            async.map(groups, function(group){
+                group.delete(callBack);
+            }, function(err){
                 callBack(err, groups);
             });
         }

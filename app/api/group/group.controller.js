@@ -261,56 +261,14 @@ exports.deleteGroup = function(req, res) {
             if (canUpdate) {
                 async.parallel([
                     group.delete.bind(group),
-                    function(next) {
-                        TaskFunctions.deleteByTeacherAndGroups(userId, [groupId], next);
-                    }], next);
+                    TaskFunctions.deleteByTeacherAndGroups.bind(TaskFunctions, userId, [groupId])
+                ], next);
             } else {
                 next({
                     code: 403,
                     message: 'Forbidden'
                 });
             }
-        }
-    ], function(err) {
-        if (err) {
-            console.log(err);
-            err.code = parseInt(err.code) || 500;
-            res.status(err.code).send(err);
-        } else {
-            res.sendStatus(200);
-        }
-    });
-};
-
-/**
- * Delete a student if user is group teacher
- * @param req
- * @param res
- */
-exports.deleteStudent = function(req, res) {
-    var userId = req.user._id,
-        groupId = req.params.groupId,
-        studentId = req.params.studentId;
-    async.waterfall([
-        Group.findOne.bind(Group, {
-            _id: groupId,
-            teacher: userId
-        }),
-        function(group, next) {
-            if (group) {
-                _.remove(group.students, function(item) {
-                    return String(item) === studentId;
-                });
-                group.update(group, next);
-            } else {
-                next({
-                    code: 404,
-                    message: 'Not Found'
-                });
-            }
-        },
-        function(updated, next) {
-            TaskFunction.delete(groupId, studentId, userId, next);
         }
     ], function(err) {
         if (err) {

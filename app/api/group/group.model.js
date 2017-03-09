@@ -86,8 +86,7 @@ GroupSchema.methods = {
      * @api public
      */
     delete: function(next) {
-        this.deleted = true;
-        this.save(next);
+        this.update({deleted: true}, next);
     }
 };
 
@@ -98,16 +97,17 @@ GroupSchema
     .pre('save', function(next) {
         var group = this;
         //accessKey seleccionar solo
-        this.constructor.findOne({}, 'accessId', {
-            sort: {
-                'createdAt': -1
-            }
-        }, function(err, lastGroup) {
+        this.constructor.aggregate([
+            { $sort : { createdAt : -1 } },
+            {$limit: 1}
+        ], function(err, lastGroups) {
+            console.log('result');
+            console.log(lastGroups);
             var lastAccessId;
-            if (!lastGroup) {
+            if (lastGroups.length === 0) {
                 lastAccessId = '000000';
             } else {
-                lastAccessId = lastGroup.accessId;
+                lastAccessId = lastGroups[0].accessId;
             }
             var accessId = ((parseInt(lastAccessId, 36) + 1).toString(36)) + '';
             group.accessId = accessId.length >= 6 ? accessId : new Array(6 - accessId.length + 1).join('0') + accessId;
