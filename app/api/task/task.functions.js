@@ -81,7 +81,15 @@ exports.delete = function(groupId, studentId, teacherId, next) {
         group: groupId,
         student: studentId,
         teacher: teacherId
-    }).remove(next);
+    }).exec(function(err, tasks){
+        if (tasks.length > 0) {
+            async.map(tasks, function(task, callback) {
+                task.delete(callback);
+            }, next);
+        } else {
+            next(err);
+        }
+    });
 };
 
 
@@ -279,6 +287,16 @@ exports.removeTasksByGroupAndEx = function(groupIdArray, exerciseId, next) {
             exercise: exerciseId
         })
         .where('group').in(groupIdArray)
-        .remove(next);
+        .exec(function(err, tasks){
+            if(err){
+                next(err);
+            } else {
+                async.map(tasks, function(task, callBack) {
+                    task.delete(callBack);
+                }, function(err) {
+                    next(err, tasks);
+                });
+            }
+        });
 };
 
