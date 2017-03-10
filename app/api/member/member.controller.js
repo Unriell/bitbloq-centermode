@@ -283,17 +283,20 @@ exports.getTeachers = function(req, res) {
 /**
  * Register a student in a group
  * @param req
+ * @param req.body.groupId
  * @param res
  */
 exports.registerInGroup = function(req, res) {
     var userId = req.user._id,
-        groupId = req.params.id;
+        accessId = req.body.accessId;
 
     async.waterfall([
-        GroupFunctions.getOpenGroup.bind(GroupFunctions, groupId),
+        GroupFunctions.getOpenGroup.bind(GroupFunctions, accessId),
         function(group, next) {
             if (group) {
-                MemberFunctions.addStudent(userId, groupId, next);
+                MemberFunctions.addStudent(userId, group._id, function(err, member) {
+                    next(err, group);
+                });
             } else {
                 next({
                     code: 403,
@@ -301,8 +304,8 @@ exports.registerInGroup = function(req, res) {
                 });
             }
         },
-        function(member, updated, next) {
-            AssignmentFunction.createTasksToStudent(groupId, userId, next);
+        function(group, next) {
+            AssignmentFunction.createTasksToStudent(group._id, userId, next);
         }
     ], function(err) {
         if (err) {

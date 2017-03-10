@@ -32,9 +32,9 @@ exports.deleteGroups = function(teacherId, centerId, next) {
             }
         },
         function(groups, callBack) {
-            async.map(groups, function(group, next){
+            async.map(groups, function(group, next) {
                 group.delete(next);
-            }, function(err){
+            }, function(err) {
                 callBack(err, groups);
             });
         }
@@ -48,7 +48,7 @@ exports.deleteGroups = function(teacherId, centerId, next) {
  */
 exports.getOpenGroup = function(accessId, next) {
     Group.findOne({
-        accessId: groupId,
+        accessId: accessId,
         status: 'open'
     }, next);
 };
