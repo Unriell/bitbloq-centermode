@@ -30,7 +30,7 @@ exports.assign = function(req, res) {
         function(next) {
             Assignment.find({exercise: groupsToRemove.exerciseId})
                 .where('group').in(groupsToRemove.groupIds)
-                .exec(function(err, assignments){
+                .exec(function(err, assignments) {
                     async.map(assignments, function(assignment, callBack) {
                         assignment.delete(callBack);
                     }, function(err) {
@@ -111,6 +111,8 @@ exports.getByExercise = function(req, res) {
  */
 function createAssignment(assignment, userId, next) {
     assignment.creator = userId;
+    assignment.endDate = assignment.endDate || undefined;
+    assignment.initDate = assignment.initDate || undefined;
     Assignment.update({
         group: assignment.group,
         exercise: assignment.exercise
