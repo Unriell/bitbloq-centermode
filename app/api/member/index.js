@@ -17,6 +17,7 @@ router.get('/teachers/center/:centerId', auth.isAuthenticated(), controller.getT
 // POST
 router.post('/teacher', auth.isAuthenticated(), controller.addTeacher);
 router.post('/student', auth.isAuthenticated(), controller.registerInGroup);
+router.post('/activate', auth.isAuthenticated(), controller.activateStudentMode);
 
 // DELETE
 router.delete('/teacher/:teacherId/center/:centerId', auth.isAuthenticated(), controller.deleteTeacher);

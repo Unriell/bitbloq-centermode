@@ -5,8 +5,6 @@ var Task = require('./task.model.js'),
     mongoose = require('mongoose'),
     async = require('async');
 
-var maxPerPage = 10;
-
 /**
  * Create task if user doesn't have this task
  * @param {Object} taskData
@@ -81,7 +79,7 @@ exports.delete = function(groupId, studentId, teacherId, next) {
         group: groupId,
         student: studentId,
         teacher: teacherId
-    }).exec(function(err, tasks){
+    }).exec(function(err, tasks) {
         if (tasks.length > 0) {
             async.map(tasks, function(task, callback) {
                 task.delete(callback);
@@ -287,8 +285,8 @@ exports.removeTasksByGroupAndEx = function(groupIdArray, exerciseId, next) {
             exercise: exerciseId
         })
         .where('group').in(groupIdArray)
-        .exec(function(err, tasks){
-            if(err){
+        .exec(function(err, tasks) {
+            if (err) {
                 next(err);
             } else {
                 async.map(tasks, function(task, callBack) {

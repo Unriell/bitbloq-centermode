@@ -18,7 +18,10 @@ var MemberSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'CenterMode-Group'
     },
-    role: String, // headmaster | teacher | student
+    role: {
+        type: String, // headmaster | teacher | student
+        required: true
+    },
     deleted: Boolean
 }, {
     timestamps: true

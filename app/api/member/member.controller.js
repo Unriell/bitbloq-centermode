@@ -52,6 +52,30 @@ exports.addTeacher = function(req, res) {
 
 
 /**
+ * Activate student mode
+ * @param req
+ * @param res
+ */
+exports.activateStudentMode = function(req, res) {
+    var userId = req.user._id;
+    var newStudent = new Member({
+        user: userId,
+        role: 'student'
+    });
+
+    newStudent.save(function(err) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else {
+            res.sendStatus(200);
+        }
+    });
+};
+
+
+/**
  * Delete a student if user is group teacher
  * @param req
  * @param res
@@ -286,7 +310,6 @@ exports.registerInGroup = function(req, res) {
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else {
-
             res.sendStatus(200);
         }
     });
