@@ -115,11 +115,7 @@ exports.getAllGroups = function(req, res) {
         },
         function(isStudent, next) {
             if (isStudent) {
-                Group.find({
-                    students: {
-                        $in: [userId]
-                    }
-                }, next);
+                MemberFunctions.getGroups(userId, next);
             } else {
                 Group.find({
                     teacher: userId

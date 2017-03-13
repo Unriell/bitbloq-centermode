@@ -182,6 +182,29 @@ exports.getCenterInfoByHeadmaster = function(userId, next) {
         });
 };
 
+/**
+ * Get groups by userId as student
+ * @param {String} userId
+ * @param {Function} next
+ * @return {String} groups
+ */
+exports.getGroups = function(userId, next) {
+    Member.find({
+            user: userId,
+            role: 'student',
+            group: {$exists: true}
+        })
+        .populate('group')
+        .exec(function(err, members) {
+            if (members.length > 0) {
+                var groups = _.map(members, 'group');
+                next(err, groups);
+            } else {
+                next(err);
+            }
+        });
+};
+
 
 /**
  * Get my center as teacher role
@@ -238,7 +261,7 @@ exports.getMyRolesInCenter = function(userId, centerId, next) {
  */
 exports.getStudentsInCenterWithTeacher = function(teacherId, centerId, next) {
     Member.find({
-        role: 'student'
+            role: 'student'
         })
         .where('group.teacher').equals(mongoose.Schema.Types.ObjectId(teacherId))
         .where('group.center').equals(mongoose.Schema.Types.ObjectId(centerId))
