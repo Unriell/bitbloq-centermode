@@ -44,11 +44,7 @@ exports.getGroup = function(req, res) {
     var userId = req.user._id,
         groupId = req.params.id;
     async.waterfall([
-        function(next) {
-            Group.findById(groupId)
-                .populate('students', 'firstName lastName username email')
-                .exec(next);
-        },
+        Group.findById.bind(Group, groupId),
         function(group, next) {
             if (group.creator === userId) {
                 next(null, group);
@@ -70,13 +66,18 @@ exports.getGroup = function(req, res) {
             }
         },
         function(group, next) {
-            async.map(group.students, function(student, next) {
+            MemberFunctions.getStudentsByGroup(group._id, function(err, users) {
+                next(err, group, users);
+            });
+        },
+        function(group, users, next) {
+            async.map(users, function(student, next) {
                 TaskFunction.getAverageMark(group._id, student, next);
             }, function(err, students) {
                 var groupObject = group.toObject();
                 groupObject.students = students;
                 next(err, groupObject);
-            })
+            });
         }
     ], function(err, group) {
         if (err) {

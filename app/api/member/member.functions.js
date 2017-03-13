@@ -296,9 +296,10 @@ exports.getStudentsByGroup = function(groupId, next) {
             role: 'student',
             group: groupId
         })
-        .exec(function(err, members){
+        .populate('user', '_id firstName lastName username email')
+        .exec(function(err, members) {
             var userIds = [];
-            if(members.length > 0) {
+            if (members.length > 0) {
                 userIds = _.map(members, 'user');
             }
             next(err, userIds);

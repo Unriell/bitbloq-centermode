@@ -28,21 +28,6 @@ exports.getGroups = function(exerciseId, next) {
         .exec(next);
 };
 
-
-/**
- * Get exercises by group id
- * @param {String} groupId
- * @param {Function} next
- */
-exports.getAssignmentsByGroup = function(groupId, next) {
-    Assignment.find({
-            group: groupId
-        })
-        .populate('students')
-        .populate('group', 'teacher')
-        .exec(next);
-};
-
 /**
  * create assigned tasks by a groupId
  * @param {String} groupId
@@ -55,7 +40,6 @@ exports.createTasksToStudent = function(groupId, studentId, next) {
             Assignment.find({
                     group: groupId
                 })
-                .populate('students')
                 .populate('group', 'teacher')
                 .exec(callback);
         },
@@ -100,8 +84,8 @@ exports.createTasks = function(assignment, userId, next) {
                 endDate: assignment.endDate
             };
             if (students.length > 0) {
-                async.map(students, function(studentId, next) {
-                    TaskFunctions.checkAndCreateTask(task, studentId, null, next);
+                async.map(students, function(student, next) {
+                    TaskFunctions.checkAndCreateTask(task, student._id, null, next);
                 }, next);
             } else {
                 GroupFunctions.get(assignment.group, function(err, result) {
