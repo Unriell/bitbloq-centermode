@@ -296,7 +296,13 @@ exports.getStudentsByGroup = function(groupId, next) {
             role: 'student',
             group: groupId
         })
-        .exec(next);
+        .exec(function(err, members){
+            var userIds = [];
+            if(members.length > 0) {
+                userIds = _.map(members, 'user');
+            }
+            next(err, userIds);
+        });
 };
 
 /**
