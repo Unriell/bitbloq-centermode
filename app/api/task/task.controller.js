@@ -279,7 +279,6 @@ exports.getTasksByStudent = function(req, res) {
                 res.status(err.code).send(err);
             } else {
                 if (tasks.length > 0) {
-                    console.log(tasks);
                     var taskList = [],
                         student = tasks[0].student.toObject();
                     student.average = TaskFunction.calculateAverageMark(tasks);
