@@ -15,12 +15,20 @@ var Code = require('./thirdPartyRobots.model.js'),
 exports.generateCodes = function(req, res) {
     var number = req.body.number,
         robots = req.body.robots,
+        reason,
         codes = [];
+
+    if (req.body.reason) {
+        reason = req.body.reason;
+    } else {
+        reason = '';
+    }
     _.forEach(robots, function(robot) {
         for (var i = 0; i < number; i++) {
             codes.push({
                 'robot': robot,
-                'code': CodeFunctions.generateCode()
+                'code': CodeFunctions.generateCode(),
+                'reason': reason
             });
         }
     });
