@@ -1,7 +1,7 @@
 'use strict';
 
 var express = require('express'),
-    controller = require('./thirdPartyRobots.controller.js'),
+    controller = require('./robotsActivationCode.controller.js'),
     auth = require('../../components/auth/auth.service');
 
 var router = express.Router();

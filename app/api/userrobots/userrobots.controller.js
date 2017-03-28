@@ -21,4 +21,4 @@ exports.getUserRobots = function(req, res) {
         }
     });
 
-}
+};

@@ -2,7 +2,7 @@
 
 var mongoose = require('mongoose');
 
-var thirdPartyRobotsSchema = new mongoose.Schema({
+var robotsActivationCodeSchema = new mongoose.Schema({
     code: {
         type: String,
         trim: true,
@@ -28,7 +28,7 @@ var thirdPartyRobotsSchema = new mongoose.Schema({
     timestamps: true
 });
 
-thirdPartyRobotsSchema.pre('save', function(next) {
+robotsActivationCodeSchema.pre('save', function(next) {
     var self = this;
     this.constructor.find({
         code: self.code
@@ -41,4 +41,4 @@ thirdPartyRobotsSchema.pre('save', function(next) {
     });
 });
 
-module.exports = mongoose.model('robots-thirdPartyRobots', thirdPartyRobotsSchema);
+module.exports = mongoose.model('robots-activationCode', robotsActivationCodeSchema);

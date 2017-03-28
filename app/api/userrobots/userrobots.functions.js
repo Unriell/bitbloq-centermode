@@ -6,10 +6,10 @@ exports.addUserRobot = function(userId, robot, next) {
     var userrobot = new UserRobots({
         'userId': userId,
         'robot': robot,
-        'activated': true,
+        'activated': true
     });
     userrobot.save(next);
-}
+};
 
 exports.getUserRobots = function(userId, next) {
     UserRobots.find({
@@ -21,7 +21,7 @@ exports.getUserRobots = function(userId, next) {
             next(err, robotsResponse);
         });
 
-}
+};
 
 exports.formatRobotResponse = function(robotResponse) {
     var robotObject = {};
@@ -32,4 +32,4 @@ exports.formatRobotResponse = function(robotResponse) {
     });
 
     return robotObject;
-}
+};

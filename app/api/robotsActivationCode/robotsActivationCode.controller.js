@@ -1,7 +1,7 @@
 'use strict';
 
-var Code = require('./thirdPartyRobots.model.js'),
-    CodeFunctions = require('./thirdPartyRobots.functions.js'),
+var Code = require('./robotsActivationCode.model.js'),
+    CodeFunctions = require('./robotsActivationCode.functions.js'),
     UserRobotsFunctions = require('../userrobots/userrobots.functions.js'),
     async = require('async'),
     _ = require('lodash');
@@ -45,7 +45,7 @@ exports.generateCodes = function(req, res) {
         }
     })
 
-}
+};
 
 exports.getCodesByRobot = function(req, res) {
     var robot = req.params.robot;
@@ -60,7 +60,7 @@ exports.getCodesByRobot = function(req, res) {
             res.status(200).json(codes);
         }
     });
-}
+};
 
 exports.getUnusedCodesByRobot = function(req, res) {
     var robot = req.params.robot;
@@ -157,4 +157,4 @@ exports.activateRobot = function(req, res) {
         }
     })
 
-}
+};
