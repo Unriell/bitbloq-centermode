@@ -4,7 +4,6 @@ var Member = require('./member.model.js'),
     mongoose = require('mongoose'),
     _ = require('lodash');
 
-
 /**
  * Add an member in a center like head master
  * @param {String} userId
@@ -62,8 +61,12 @@ exports.addTeacher = function(userId, centerId, next) {
 exports.addAllTeachers = function(users, centerId, next) {
     var userDontExist = [];
     async.map(users, function(user, next) {
+        console.log('user');
+        console.log(user);
         if (user && user._id) {
+            console.log("entro 2??");
             exports.addTeacher(user._id, centerId, function(err) {
+                console.log("entro??");
                 next(err, user);
             });
         } else {
@@ -72,7 +75,7 @@ exports.addAllTeachers = function(users, centerId, next) {
         }
     }, function(err, completedMembers) {
         next(err, {
-            teachersAdded: completedMembers,
+            teachersAdded: _.without(completedMembers, undefined),
             teachersNotAdded: !_.isEmpty(userDontExist) ? userDontExist : undefined
         });
     });
@@ -192,7 +195,9 @@ exports.getGroups = function(userId, next) {
     Member.find({
             user: userId,
             role: 'student',
-            group: {$exists: true}
+            group: {
+                $exists: true
+            }
         })
         .populate('group')
         .exec(function(err, members) {
@@ -204,7 +209,6 @@ exports.getGroups = function(userId, next) {
             }
         });
 };
-
 
 /**
  * Get my center as teacher role
@@ -251,7 +255,6 @@ exports.getMyRolesInCenter = function(userId, centerId, next) {
         });
 };
 
-
 /**
  * Get students in center with a teacher
  * @param {String} teacherId
@@ -267,7 +270,6 @@ exports.getStudentsInCenterWithTeacher = function(teacherId, centerId, next) {
         .where('group.center').equals(mongoose.Schema.Types.ObjectId(centerId))
         .exec(next);
 };
-
 
 /**
  * Get students COUNTER in center with a teacher
@@ -386,4 +388,3 @@ function _addStaff(userId, centerId, type, next) {
         }
     ], next);
 }
-

@@ -10,7 +10,6 @@ var Member = require('./member.model.js'),
     async = require('async'),
     _ = require('lodash');
 
-
 /**
  * Add teacher in a center
  * @param req
@@ -50,7 +49,6 @@ exports.addTeacher = function(req, res) {
     });
 };
 
-
 /**
  * Activate student mode
  * @param req
@@ -73,7 +71,6 @@ exports.activateStudentMode = function(req, res) {
         }
     });
 };
-
 
 /**
  * Delete a student if user is group teacher
@@ -169,7 +166,6 @@ exports.isHeadmaster = function(req, res) {
     });
 };
 
-
 /**
  * Get user role
  * @param req
@@ -200,7 +196,6 @@ exports.getMyRole = function(req, res) {
         }
     });
 };
-
 
 /**
  * Get a teacher
@@ -237,7 +232,6 @@ exports.getTeacher = function(req, res) {
         }
     });
 };
-
 
 /**
  * Get teachers in a center
@@ -278,7 +272,6 @@ exports.getTeachers = function(req, res) {
         }
     });
 };
-
 
 /**
  * Register a student in a group
