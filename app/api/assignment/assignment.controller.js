@@ -28,7 +28,9 @@ exports.assign = function(req, res) {
             TaskFunctions.removeTasksByGroupAndEx(groupsToRemove.groupIds, groupsToRemove.exerciseId, next);
         },
         function(next) {
-            Assignment.find({exercise: groupsToRemove.exerciseId})
+            Assignment.find({
+                    exercise: groupsToRemove.exerciseId
+                })
                 .where('group').in(groupsToRemove.groupIds)
                 .exec(function(err, assignments) {
                     async.map(assignments, function(assignment, callBack) {
@@ -54,7 +56,9 @@ exports.assign = function(req, res) {
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else {
-            res.status(200).send(result[2])
+            console.log("result");
+            console.log(result);
+            res.status(200).send(result[3])
         }
     });
 };
@@ -75,7 +79,11 @@ exports.getByExercise = function(req, res) {
                     exercise: exerciseId
                 })
                 .populate('group')
-                .or([{'group.center': mongoose.Schema.Types.ObjectId(centerId)}, {'group.teacher': mongoose.Schema.Types.ObjectId(userId)}])
+                .or([{
+                    'group.center': mongoose.Schema.Types.ObjectId(centerId)
+                }, {
+                    'group.teacher': mongoose.Schema.Types.ObjectId(userId)
+                }])
                 .exec(next);
         },
         function(assignments, next) {
@@ -98,7 +106,6 @@ exports.getByExercise = function(req, res) {
     });
 };
 
-
 /* **********************************
  ******** PRIVATE FUNCTIONS *********
  * **********************************/
@@ -116,6 +123,7 @@ function createAssignment(assignment, userId, next) {
     Assignment.update({
         group: assignment.group,
         exercise: assignment.exercise
-    }, assignment, {upsert: true}, next);
+    }, assignment, {
+        upsert: true
+    }, next);
 }
-
