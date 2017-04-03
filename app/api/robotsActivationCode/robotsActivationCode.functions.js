@@ -2,7 +2,7 @@
 var uuid = require('node-uuid');
 
 exports.generateCode = function() {
-    return exports.formatCode(uuid.v1().replace(/-/g, ''));
+    return exports.formatCode(uuid.v4().replace(/-/g, ''));
 };
 
 exports.formatCode = function(code) {
