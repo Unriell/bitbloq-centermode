@@ -23,6 +23,9 @@ var robotsActivationCodeSchema = new mongoose.Schema({
     },
     reason: {
         type: String
+    },
+    reporter: {
+        type: String
     }
 }, {
     timestamps: true

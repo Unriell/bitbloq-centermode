@@ -16,6 +16,7 @@ exports.generateCodes = function(req, res) {
     var number = req.body.number,
         robots = req.body.robots,
         reason,
+        reporter,
         codes = [];
 
     if (req.body.reason) {
@@ -23,12 +24,19 @@ exports.generateCodes = function(req, res) {
     } else {
         reason = '';
     }
+
+    if (req.body.reporter) {
+        reporter = req.body.reporter;
+    } else {
+        reporter = '';
+    }
     _.forEach(robots, function(robot) {
         for (var i = 0; i < number; i++) {
             codes.push({
                 'robot': robot,
                 'code': CodeFunctions.generateCode(),
-                'reason': reason
+                'reason': reason,
+                'reporter': reporter
             });
         }
     });
