@@ -3,7 +3,6 @@
 var Group = require('./group.model.js'),
     MemberFunctions = require('../member/member.functions.js'),
     TaskFunction = require('../task/task.functions.js'),
-    AssignmentFunction = require('../assignment/assignment.functions.js'),
     TaskFunctions = require('../task/task.functions.js'),
     async = require('async'),
     _ = require('lodash'),
@@ -129,7 +128,7 @@ exports.getAllGroups = function(req, res) {
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else {
-            res.status(200).send(groups);
+            res.status(200).send(_.remove(groups, null));
         }
     });
 };
