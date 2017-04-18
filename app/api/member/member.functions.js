@@ -1,5 +1,6 @@
 'use strict';
 var Member = require('./member.model.js'),
+    GroupFunctions = require('../group/group.functions'),
     async = require('async'),
     mongoose = require('mongoose'),
     _ = require('lodash');
@@ -263,12 +264,18 @@ exports.getMyRolesInCenter = function(userId, centerId, next) {
  * @return {Object} user
  */
 exports.getStudentsInCenterWithTeacher = function(teacherId, centerId, next) {
-    Member.find({
-            role: 'student'
-        })
-        .where('group.teacher').equals(mongoose.Schema.Types.ObjectId(teacherId))
-        .where('group.center').equals(mongoose.Schema.Types.ObjectId(centerId))
-        .exec(next);
+    async.waterfall([
+        function(next) {
+            GroupFunctions.getGroupIdsByTeacherAndCenter(teacherId, centerId, next)
+        },
+        function(groupIds, next) {
+            Member.find({
+                    role: 'student'
+                })
+                .where('group').in(groupIds)
+                .exec(next);
+        }
+    ], next);
 };
 
 /**
@@ -279,12 +286,18 @@ exports.getStudentsInCenterWithTeacher = function(teacherId, centerId, next) {
  * @return {Object} user
  */
 exports.getStudentsCounter = function(teacherId, centerId, next) {
-    Member.find({
-            role: 'student'
-        })
-        .where('group.teacher').equals(mongoose.Schema.Types.ObjectId(teacherId))
-        .where('group.center').equals(mongoose.Schema.Types.ObjectId(centerId))
-        .count(next);
+    async.waterfall([
+        function(next) {
+            GroupFunctions.getGroupIdsByTeacherAndCenter(teacherId, centerId, next)
+        },
+        function(groupIds, next) {
+            Member.find({
+                    role: 'student'
+                })
+                .where('group').in(groupIds)
+                .count(next);
+        }
+    ], next);
 };
 
 /**

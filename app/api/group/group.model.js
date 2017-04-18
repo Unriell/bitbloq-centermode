@@ -31,7 +31,7 @@ var GroupSchema = new mongoose.Schema({
     },
     center: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Center',
+        ref: 'CenterMode-Center',
         trim: false,
         required: true
     },

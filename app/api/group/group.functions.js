@@ -1,6 +1,7 @@
 'use strict';
 var Group = require('./group.model.js'),
     MemberFunctions = require('../member/member.functions.js'),
+    _ = require('lodash'),
     async = require('async');
 
 
@@ -64,6 +65,22 @@ exports.getGroups = function(teacherId, centerId, next) {
         teacher: teacherId,
         center: centerId
     }, next);
+};
+
+
+/**
+ * Get group ids by teacher in a center
+ * @param {String} teacherId
+ * @param {String} centerId
+ * @param {Function} next
+ */
+exports.getGroupIdsByTeacherAndCenter = function(teacherId, centerId, next) {
+    Group.find({
+        teacher: teacherId,
+        center: centerId
+    }, function(err, groups){
+        next(err, _.map(groups, '_id'));
+    });
 };
 
 /**
