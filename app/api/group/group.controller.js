@@ -117,9 +117,20 @@ exports.getAllGroups = function(req, res) {
             if (isStudent) {
                 MemberFunctions.getGroups(userId, next);
             } else {
-                Group.find({
-                    teacher: userId
-                }, next);
+                async.waterfall([
+                    Group.find.bind(Group, {
+                        teacher: userId
+                    }),
+                    function(groups, next) {
+                        async.map(groups, function(group, next) {
+                            MemberFunctions.getStudentsByGroup(group._id, function(err, students) {
+                                var groupObject = group.toObject();
+                                groupObject.students = students;
+                                next(err, groupObject);
+                            });
+                        }, next);
+                    }
+                ], next);
             }
         }
     ], function(err, groups) {
