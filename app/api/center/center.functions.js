@@ -2,7 +2,6 @@
 var MemberFunctions = require('../member/member.functions.js'),
     GroupFunctions = require('../group/group.functions.js'),
     Center = require('./center.model.js'),
-    _ = require('lodash'),
     async = require('async');
 
 /**
@@ -18,14 +17,13 @@ exports.getStats = function(teacher, centerId, next) {
         GroupFunctions.getCounter.bind(GroupFunctions, teacher._id, centerId)
     ], function(err, result) {
         var teacherObject = teacher.toObject();
-        if(!err){
+        if (!err) {
             teacherObject.students = result[0];
             teacherObject.groups = result[1];
         }
         next(err, teacherObject);
     });
 };
-
 
 /**
  * Get information center in array

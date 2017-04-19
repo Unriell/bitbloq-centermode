@@ -56,8 +56,6 @@ exports.assign = function(req, res) {
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else {
-            console.log("result");
-            console.log(result);
             res.status(200).send(result[3])
         }
     });

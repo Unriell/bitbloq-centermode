@@ -111,8 +111,6 @@ exports.getAll = function(req, res) {
         search = req.query,
         queryParams = {};
 
-    console.log(req.user._id);
-
     if (search.searchParams && (JSON.parse(search.searchParams)).name) {
         queryParams = {
             name: {
@@ -338,6 +336,7 @@ exports.userIsOwner = function(req, res) {
 exports.delete = function(req, res) {
     var userId = req.user._id,
         exerciseId = req.params.id;
+
     async.waterfall([
         Exercise.findById.bind(Exercise, exerciseId),
         function(exercise, next) {

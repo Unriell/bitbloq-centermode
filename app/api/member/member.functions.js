@@ -62,12 +62,8 @@ exports.addTeacher = function(userId, centerId, next) {
 exports.addAllTeachers = function(users, centerId, next) {
     var userDontExist = [];
     async.map(users, function(user, next) {
-        console.log('user');
-        console.log(user);
         if (user && user._id) {
-            console.log("entro 2??");
             exports.addTeacher(user._id, centerId, function(err) {
-                console.log("entro??");
                 next(err, user);
             });
         } else {

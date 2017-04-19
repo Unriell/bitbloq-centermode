@@ -154,7 +154,7 @@ exports.isHeadmaster = function(req, res) {
             console.log(err);
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
-        } else if (result) {
+        } else if (members.length > 0) {
             res.status(200).json({
                 center: members[0].center
             });
