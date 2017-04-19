@@ -3,29 +3,24 @@ var Assignment = require('./assignment.model.js'),
     TaskFunctions = require('../task/task.functions.js'),
     GroupFunctions = require('../group/group.functions.js'),
     MemberFunctions = require('../member/member.functions.js'),
+    _ = require('lodash'),
     async = require('async');
 
 
 /**
- * Get exercise by its id
- * @param {String} exerciseId
+ * Get exercises by a group
+ * @param {String} groupId
  * @param {Function} next
  */
-exports.getInfo = function(exerciseId, next) {
-    Exercise.findById(exerciseId, next);
-};
-
-
-/**
- * Get groups by exercise
- * @param {String} exerciseId
- * @param {Function} next
- */
-exports.getGroups = function(exerciseId, next) {
-    Exercise.findById(exerciseId)
-        .select('groups teacher')
-        .populate('groups')
-        .exec(next);
+exports.getExercisesByGroup = function(groupId, next) {
+    Assignment.find({
+            group: groupId
+        })
+        .populate('exercise')
+        .select('exercise')
+        .exec(function(err, assignments) {
+            next(err, _.map(assignments, 'exercise'))
+        });
 };
 
 /**

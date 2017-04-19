@@ -2,8 +2,8 @@
 
 var Group = require('./group.model.js'),
     MemberFunctions = require('../member/member.functions.js'),
-    TaskFunction = require('../task/task.functions.js'),
     TaskFunctions = require('../task/task.functions.js'),
+    AssignmentFunctions = require('../assignment/assignment.functions.js'),
     async = require('async'),
     _ = require('lodash'),
     triesCounter;
@@ -71,11 +71,19 @@ exports.getGroup = function(req, res) {
         },
         function(group, users, next) {
             async.map(users, function(student, next) {
-                TaskFunction.getAverageMark(group._id, student, next);
+                TaskFunctions.getAverageMark(group._id, student, next);
             }, function(err, students) {
                 var groupObject = group.toObject();
                 groupObject.students = students;
                 next(err, groupObject);
+            });
+        },
+        function(group, next) {
+            AssignmentFunctions.getExercisesByGroup(group._id, function(err, exercises) {
+                if (exercises) {
+                    group.exercises = exercises;
+                }
+                next(err, group);
             });
         }
     ], function(err, group) {
