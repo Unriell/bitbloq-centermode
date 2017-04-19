@@ -156,7 +156,7 @@ exports.getCenterIdByHeadmaster = function(userId, next) {
         if (member) {
             next(err, member.center);
         } else {
-            next(err);
+            next(err, null);
         }
     });
 };
