@@ -87,13 +87,17 @@ exports.addAllTeachers = function(users, centerId, next) {
 exports.deleteStudent = function(studentId, groupId, next) {
     async.waterfall([
         Member.findOne.bind(Member, {
-            user: userId,
-            center: centerId,
-            role: 'teacher'
+            user: studentId,
+            group: groupId,
+            role: 'student'
         }),
         function(member, next) {
             if (member) {
-                member.delete(next);
+                member.delete(function(err) {
+                    console.log('next');
+                    console.log(next);
+                    next(err);
+                });
             } else {
                 next();
             }

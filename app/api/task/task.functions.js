@@ -90,7 +90,6 @@ exports.delete = function(groupId, studentId, teacherId, next) {
     });
 };
 
-
 /**
  * Delete tasks by exercise
  * @param {String} exerciseId
@@ -131,7 +130,6 @@ exports.deleteByTeacherAndGroups = function(teacherId, groupIds, next) {
             }
         });
 };
-
 
 /**
  * Get user average mark in specific group
@@ -232,7 +230,6 @@ exports.getExercises = function(centerId, teacherId, page, perPage, next) {
         });
 };
 
-
 /**
  * Get exercises count with specific center and teacher
  * @param {String} centerId
@@ -297,4 +294,3 @@ exports.removeTasksByGroupAndEx = function(groupIdArray, exerciseId, next) {
             }
         });
 };
-

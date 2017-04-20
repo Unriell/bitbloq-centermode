@@ -83,7 +83,7 @@ exports.deleteStudent = function(req, res) {
         groupId = req.params.groupId;
     async.parallel([
         MemberFunctions.deleteStudent.bind(MemberFunctions, studentId, groupId),
-        function(updated, next) {
+        function(next) {
             TaskFunctions.delete(groupId, studentId, userId, next);
         }
     ], function(err) {

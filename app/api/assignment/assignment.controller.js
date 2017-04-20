@@ -104,6 +104,57 @@ exports.getByExercise = function(req, res) {
     });
 };
 
+exports.unassign = function(req, res) {
+    var userId = req.user._id,
+        exerciseId = req.params.exerciseId,
+        groupId = req.params.groupId,
+        assignment;
+    async.waterfall([
+            function(next) {
+                Assignment.findOne({
+                        'group': groupId,
+                        'exercise': exerciseId,
+                    })
+                    .populate('group')
+                    .exec(next)
+            },
+            function(found, next) {
+                if (found) {
+                    assignment = found;
+                }
+                MemberFunctions.userIsHeadmaster(userId, assignment.group.center, next);
+            },
+            function(isHeadmaster, next) {
+                if (assignment && assignment.creator.equals(userId)) {
+                    assignment.remove(next);
+                } else {
+                    if (isHeadmaster) {
+                        assignment.remove(next);
+                    } else {
+                        next({
+                            code: 403
+                        })
+                    }
+                }
+            }
+        ],
+        function(err, result) {
+            if (err) {
+                console.log(err);
+                err.code = parseInt(err.code) || 500;
+                res.status(err.code).send(err);
+            } else {
+                if (!result) {
+                    res.sendStatus(404);
+                } else {
+                    res.sendStatus(200);
+                }
+
+            }
+
+        });
+}
+
 /* **********************************
  ******** PRIVATE FUNCTIONS *********
  * **********************************/

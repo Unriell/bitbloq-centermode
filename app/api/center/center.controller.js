@@ -2,9 +2,7 @@
 
 var Center = require('./center.model.js'),
     MemberFunctions = require('../member/member.functions.js'),
-    async = require('async'),
-    _ = require('lodash');
-
+    async = require('async');
 
 /**
  * Create center

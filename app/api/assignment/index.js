@@ -12,5 +12,7 @@ router.get('/exercise/:exerciseId', auth.isAuthenticated(), controller.getByExer
 // PUT
 router.put('/', auth.isAuthenticated(), controller.assign);
 
+//DELETE
+router.delete('/exercise/:exerciseId/group/:groupId', auth.isAuthenticated(), controller.unassign);
 
 module.exports = router;
