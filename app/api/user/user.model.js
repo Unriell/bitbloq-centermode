@@ -91,6 +91,7 @@ var UserSchema = new mongoose.Schema({
     needValidation: {
         type: Boolean
     },
+    properties: {},
     tutor: {
         dni: String,
         firstName: String,
