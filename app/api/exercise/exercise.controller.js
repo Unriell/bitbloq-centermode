@@ -4,6 +4,7 @@ var Exercise = require('./exercise.model.js'),
     UserFunctions = require('../user/user.functions.js'),
     MemberFunctions = require('../member/member.functions.js'),
     TaskFunctions = require('../task/task.functions.js'),
+    AssignmentFunctions = require('../assignment/assignment.functions.js'),
     _ = require('lodash'),
     async = require('async');
 
@@ -126,18 +127,46 @@ exports.getAll = function(req, res) {
         }
     }
 
-    Exercise.find(queryParams)
-        .limit(parseInt(perPage))
-        .skip(parseInt(perPage * page))
-        .exec(function(err, exercises) {
-            if (err) {
-                console.log(err);
-                err.code = parseInt(err.code) || 500;
-                res.status(err.code).send(err);
+    async.waterfall([
+        function(next) {
+            Exercise.find(queryParams)
+                .limit(parseInt(perPage))
+                .skip(parseInt(perPage * page))
+                .exec(next);
+        },
+        function(exercises, next) {
+            var newExercises = [];
+            if (exercises.length > 0) {
+                var exercisesId = _.map(exercises, '_id');
+                AssignmentFunctions.getAssigmentByExercises(exercisesId, function(err, exercisesDates) {
+                    if (exercisesDates) {
+                        exercises.forEach(function(exercise) {
+                            var exerciseObject = exercise.toObject();
+                            if (exercisesDates[exercise._id]) {
+                                exerciseObject.initDate = exercisesDates[exercise._id].initDate;
+                                exerciseObject.endDate = exercisesDates[exercise._id].endDate;
+                            }
+                            newExercises.push(exerciseObject);
+                        });
+                        next(err, newExercises);
+                    } else {
+                        next(err, exercises);
+                    }
+                });
             } else {
-                res.status(200).send(exercises);
+                next(null, exercises);
             }
-        });
+        }
+
+    ], function(err, exercises) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else {
+            res.status(200).send(exercises);
+        }
+    });
 };
 
 /**

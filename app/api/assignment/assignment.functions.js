@@ -3,9 +3,54 @@ var Assignment = require('./assignment.model.js'),
     TaskFunctions = require('../task/task.functions.js'),
     GroupFunctions = require('../group/group.functions.js'),
     MemberFunctions = require('../member/member.functions.js'),
-    _ = require('lodash'),
     async = require('async');
 
+/**
+ * Get exercises by a group
+ * @param {String} groupId
+ * @param {Function} next
+ */
+exports.getAssigmentByExercises = function(exerciseIds, next) {
+    Assignment.find({})
+        .where('exercise').in(exerciseIds)
+        .select('exercise initDate endDate')
+        .exec(function(err, assignments) {
+            if (assignments) {
+                var exercisesDates = [];
+                assignments.forEach(function(assigment) {
+                    if (exercisesDates[assigment.exercise] && exercisesDates[assigment.exercise].endDate) {
+                        var dates = {};
+                        if (!assigment.endDate) {
+                            dates.initDate = exercisesDates[assigment.exercise].initDate;
+                            dates.endDate = exercisesDates[assigment.exercise].endDate;
+                        } else {
+                            var today = new Date(),
+                                assigmentDate = new Date(assigment.endDate);
+                            if (assigmentDate.getTime() > today.getTime() && new Date(exercisesDates[assigment.exercise].endDate).getTime() > assigmentDate.getTime()) {
+                                dates.initDate = assigment.initDate;
+                                dates.endDate = assigment.endDate;
+                            } else {
+                                dates.initDate = exercisesDates[assigment.exercise].initDate;
+                                dates.endDate = exercisesDates[assigment.exercise].endDate;
+                            }
+                        }
+                        exercisesDates[assigment.exercise] = {
+                            'initDate': dates.initDate,
+                            'endDate': dates.endDate
+                        }
+                    } else {
+                        exercisesDates[assigment.exercise] = {
+                            'initDate': assigment.initDate,
+                            'endDate': assigment.endDate
+                        }
+                    }
+                });
+                next(err, exercisesDates);
+            } else {
+                next(err);
+            }
+        });
+};
 
 /**
  * Get exercises by a group
@@ -17,9 +62,16 @@ exports.getExercisesByGroup = function(groupId, next) {
             group: groupId
         })
         .populate('exercise')
-        .select('exercise')
+        .select('exercise initDate endDate')
         .exec(function(err, assignments) {
-            next(err, _.map(assignments, 'exercise'))
+            var exercises = [];
+            assignments.forEach(function(assignment) {
+                var exerciseObject = assignment.exercise.toObject();
+                exerciseObject.initDate = assignment.initDate;
+                exerciseObject.endDate = assignment.endDate;
+                exercises.push(exerciseObject);
+            });
+            next(err, exercises);
         });
 };
 
