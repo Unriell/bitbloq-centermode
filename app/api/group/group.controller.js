@@ -151,7 +151,12 @@ exports.getAllGroups = function(req, res) {
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else {
-            res.status(200).send(_.remove(groups, null));
+            var resultGroups = _.remove(groups, null),
+                orderedGroups=  _.filter(resultGroups, function(item){
+                return item.status !== 'closed';
+            });
+            orderedGroups= _.concat(orderedGroups, _.filter(resultGroups, {'status': 'closed'}));
+            res.status(200).send(orderedGroups);
         }
     });
 };
