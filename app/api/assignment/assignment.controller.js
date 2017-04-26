@@ -22,7 +22,6 @@ exports.assign = function(req, res) {
     var userId = req.user._id,
         groupsToAssign = req.body.assign,
         groupsToRemove = req.body.remove;
-
     async.parallel([
         function(next) {
             TaskFunctions.removeTasksByGroupAndEx(groupsToRemove.groupIds, groupsToRemove.exerciseId, next);
@@ -113,7 +112,7 @@ exports.unassign = function(req, res) {
             function(next) {
                 Assignment.findOne({
                         'group': groupId,
-                        'exercise': exerciseId,
+                        'exercise': exerciseId
                     })
                     .populate('group')
                     .exec(next)
@@ -153,7 +152,7 @@ exports.unassign = function(req, res) {
             }
 
         });
-}
+};
 
 /* **********************************
  ******** PRIVATE FUNCTIONS *********
@@ -166,13 +165,27 @@ exports.unassign = function(req, res) {
  * @param {Function} next
  */
 function createAssignment(assignment, userId, next) {
-    assignment.creator = userId;
-    assignment.endDate = assignment.endDate || undefined;
-    assignment.initDate = assignment.initDate || undefined;
-    Assignment.update({
+    Assignment.find({
         group: assignment.group,
         exercise: assignment.exercise
-    }, assignment, {
-        upsert: true
-    }, next);
+    }).exec(function(err, result) {
+        if (err) {
+            next(err);
+        } else {
+            assignment.creator = userId;
+            assignment.endDate = assignment.endDate || undefined;
+            assignment.initDate = assignment.initDate || undefined;
+            if (result && result.length > 0) {
+                Assignment.update({
+                    group: assignment.group,
+                    exercise: assignment.exercise
+                }, assignment, {
+                    upsert: true
+                }, next);
+            } else {
+                var newAssignment = new Assignment(assignment);
+                newAssignment.save(next);
+            }
+        }
+    });
 }
