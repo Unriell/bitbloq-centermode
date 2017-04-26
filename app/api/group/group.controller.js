@@ -125,10 +125,14 @@ exports.getAllGroups = function(req, res) {
             if (isStudent) {
                 MemberFunctions.getGroups(userId, next);
             } else {
+                var queryParams = {
+                    teacher: userId
+                };
+                if(req.query.withoutClosed){
+                    queryParams.status = {$ne: 'closed'};
+                }
                 async.waterfall([
-                    Group.find.bind(Group, {
-                        teacher: userId
-                    }),
+                    Group.find.bind(Group, queryParams),
                     function(groups, next) {
                         async.map(groups, function(group, next) {
                             MemberFunctions.getStudentsByGroup(group._id, function(err, students) {
