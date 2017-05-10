@@ -7,7 +7,7 @@ var Assignment = require('./assignment.model.js'),
 
 /**
  * Get exercises by a group
- * @param {String} groupId
+ * @param {String} exerciseIds
  * @param {Function} next
  */
 exports.getAssigmentByExercises = function(exerciseIds, next) {
@@ -64,12 +64,14 @@ exports.getExercisesByGroup = function(groupId, next) {
         .populate('exercise')
         .select('exercise initDate endDate')
         .exec(function(err, assignments) {
-            var exercises = [];
+                var exercises = [];
             assignments.forEach(function(assignment) {
-                var exerciseObject = assignment.exercise.toObject();
-                exerciseObject.initDate = assignment.initDate;
-                exerciseObject.endDate = assignment.endDate;
-                exercises.push(exerciseObject);
+                if (assignment.exercise) {
+                    var exerciseObject = assignment.exercise.toObject();
+                    exerciseObject.initDate = assignment.initDate;
+                    exerciseObject.endDate = assignment.endDate;
+                    exercises.push(exerciseObject);
+                }
             });
             next(err, exercises);
         });
@@ -148,4 +150,27 @@ exports.createTasks = function(assignment, userId, next) {
     ], function(err, newTask) {
         next(err, newTask[0]);
     });
+};
+
+
+/**
+ * assignment is removed by an exercise
+ * @param {String} exerciseId
+ * @param {Function} next
+ */
+exports.removeByExercise = function(exerciseId, next) {
+    async.waterfall([
+        function(next) {
+            Assignment.find({
+                    'exercise': exerciseId
+                })
+                .populate('group')
+                .exec(next)
+        },
+        function(assignments, next) {
+            assignments.forEach(function(assignment) {
+                assignment.delete();
+            });
+            next();
+        }], next);
 };

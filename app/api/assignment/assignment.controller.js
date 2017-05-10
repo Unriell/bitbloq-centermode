@@ -125,10 +125,10 @@ exports.unassign = function(req, res) {
             },
             function(isHeadmaster, next) {
                 if (assignment && assignment.creator.equals(userId)) {
-                    assignment.remove(next);
+                    assignment.delete(next);
                 } else {
                     if (isHeadmaster) {
-                        assignment.remove(next);
+                        assignment.delete(next);
                     } else {
                         next({
                             code: 403

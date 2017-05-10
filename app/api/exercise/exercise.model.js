@@ -1,6 +1,7 @@
 'use strict';
 
-var mongoose = require('mongoose');
+var mongoose = require('mongoose'),
+    AssignmentFunctions = require('../assignment/assignment.functions.js');
 
 var ExerciseSchema = new mongoose.Schema({
 
@@ -93,12 +94,19 @@ ExerciseSchema.methods = {
     /**
      * delete - change deleted attribute to true
      *
-     * @param {String} next
+     * @param {Function} next
      * @api public
      */
     delete: function(next) {
+        var exerciseId = this._id;
         this.deleted = true;
-        this.save(next);
+        this.save(function(err){
+            if(!err) {
+                AssignmentFunctions.removeByExercise(exerciseId, next);
+            } else {
+                next(err);
+            }
+        });
     }
 
 };
