@@ -164,7 +164,27 @@ exports.removeByExercise = function(exerciseId, next) {
             Assignment.find({
                     'exercise': exerciseId
                 })
-                .populate('group')
+                .exec(next)
+        },
+        function(assignments, next) {
+            assignments.forEach(function(assignment) {
+                assignment.delete();
+            });
+            next();
+        }], next);
+};
+
+/**
+ * assignment is removed by an group
+ * @param {String} groupId
+ * @param {Function} next
+ */
+exports.removeByGroup = function(groupId, next) {
+    async.waterfall([
+        function(next) {
+            Assignment.find({
+                    'group': groupId
+                })
                 .exec(next)
         },
         function(assignments, next) {

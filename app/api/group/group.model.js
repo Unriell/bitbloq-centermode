@@ -1,7 +1,8 @@
 'use strict';
 
 var mongoose = require('mongoose'),
-    MemberFunctions = require('../member/member.functions.js');
+    MemberFunctions = require('../member/member.functions.js'),
+    AssignmentFunctions = require('../assignment/assignment.functions.js');
 
 var GroupSchema = new mongoose.Schema({
     name: {
@@ -82,11 +83,18 @@ GroupSchema.methods = {
     /**
      * delete - change deleted attribute to true
      *
-     * @param {String} next
+     * @param {Funcion} next
      * @api public
      */
     delete: function(next) {
-        this.update({deleted: true}, next);
+        var groupId = this._id;
+        this.update({deleted: true}, function(err){
+            if(!err) {
+                AssignmentFunctions.removeByGroup(groupId, next);
+            } else {
+                next(err);
+            }
+        });
     }
 };
 
