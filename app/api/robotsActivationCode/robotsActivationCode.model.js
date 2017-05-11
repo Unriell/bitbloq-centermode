@@ -1,9 +1,8 @@
 'use strict';
 
-var mongoose = require('mongoose'),
-    CodeFunctions = require('./makeblock.functions.js');
+var mongoose = require('mongoose');
 
-var makeblockSchema = new mongoose.Schema({
+var robotsActivationCodeSchema = new mongoose.Schema({
     code: {
         type: String,
         trim: true,
@@ -21,12 +20,18 @@ var makeblockSchema = new mongoose.Schema({
             trim: true
         },
         date: Date
+    },
+    reason: {
+        type: String
+    },
+    reporter: {
+        type: String
     }
 }, {
     timestamps: true
 });
 
-makeblockSchema.pre('save', function(next) {
+robotsActivationCodeSchema.pre('save', function(next) {
     var self = this;
     this.constructor.find({
         code: self.code
@@ -39,4 +44,4 @@ makeblockSchema.pre('save', function(next) {
     });
 });
 
-module.exports = mongoose.model('CenterMode-Makeblock', makeblockSchema);
+module.exports = mongoose.model('robots-activationCode', robotsActivationCodeSchema);

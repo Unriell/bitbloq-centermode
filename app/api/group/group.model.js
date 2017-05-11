@@ -1,7 +1,8 @@
 'use strict';
 
 var mongoose = require('mongoose'),
-    UserFunctions = require('../user/user.functions.js');
+    MemberFunctions = require('../member/member.functions.js'),
+    AssignmentFunctions = require('../assignment/assignment.functions.js');
 
 var GroupSchema = new mongoose.Schema({
     name: {
@@ -31,17 +32,30 @@ var GroupSchema = new mongoose.Schema({
     },
     center: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Center',
+        ref: 'CenterMode-Center',
         trim: false,
         required: true
     },
-    students: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-    }]
+    deleted: Boolean
 }, {
     timestamps: true
 });
+
+
+/**
+ * Pre hook
+ */
+
+function findNotDeletedMiddleware(next) {
+    this.where('deleted').in([false, undefined, null]);
+    next();
+}
+
+GroupSchema.pre('find', findNotDeletedMiddleware);
+GroupSchema.pre('findOne', findNotDeletedMiddleware);
+GroupSchema.pre('findOneAndUpdate', findNotDeletedMiddleware);
+GroupSchema.pre('count', findNotDeletedMiddleware);
+
 
 /**
  * Methods
@@ -56,20 +70,31 @@ GroupSchema.methods = {
      * @param {Function} next
      * @api public
      */
-
     userCanUpdate: function(userId, next) {
         if (String(userId) === String(this.creator) || String(userId) == String(this.teacher)) {
             next(null, true);
         } else {
             this.timesViewed++;
-            UserFunctions.userIsHeadmaster(userId, this.center, function(err, centerId) {
-                if (centerId) {
-                    next(null, true);
-                } else {
-                    next(err, false);
-                }
-            });
+            MemberFunctions.userIsHeadmaster(userId, this.center, next);
         }
+    },
+
+
+    /**
+     * delete - change deleted attribute to true
+     *
+     * @param {Funcion} next
+     * @api public
+     */
+    delete: function(next) {
+        var groupId = this._id;
+        this.update({deleted: true}, function(err){
+            if(!err) {
+                AssignmentFunctions.removeByGroup(groupId, next);
+            } else {
+                next(err);
+            }
+        });
     }
 };
 
@@ -80,16 +105,15 @@ GroupSchema
     .pre('save', function(next) {
         var group = this;
         //accessKey seleccionar solo
-        this.constructor.findOne({}, 'accessId', {
-            sort: {
-                'createdAt': -1
-            }
-        }, function(err, lastGroup) {
+        this.constructor.aggregate([
+            { $sort : { createdAt : -1 } },
+            {$limit: 1}
+        ], function(err, lastGroups) {
             var lastAccessId;
-            if (!lastGroup) {
+            if (lastGroups.length === 0) {
                 lastAccessId = '000000';
             } else {
-                lastAccessId = lastGroup.accessId;
+                lastAccessId = lastGroups[0].accessId;
             }
             var accessId = ((parseInt(lastAccessId, 36) + 1).toString(36)) + '';
             group.accessId = accessId.length >= 6 ? accessId : new Array(6 - accessId.length + 1).join('0') + accessId;

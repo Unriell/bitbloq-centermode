@@ -1,17 +1,15 @@
 'use strict';
 var Task = require('./task.model.js'),
-    ExerciseFunction = require('../exercise/exercise.functions.js'),
+    GroupFunction = require('../group/group.functions.js'),
     _ = require('lodash'),
     mongoose = require('mongoose'),
-    Group = require('../group/group.model.js'),
     async = require('async');
-
-var maxPerPage = 10;
 
 /**
  * Create task if user doesn't have this task
  * @param {Object} taskData
  * @param {String} studentId
+ * @param {String} groupName
  * @param {Function} next
  */
 exports.checkAndCreateTask = function(taskData, studentId, groupName, next) {
@@ -53,7 +51,7 @@ exports.checkAndCreateTask = function(taskData, studentId, groupName, next) {
                             'name': groupName
                         });
                     } else {
-                        Group.findById(taskSaved.group, function(err, group) {
+                        GroupFunction.get(taskSaved.group, function(err, group) {
                             var groupTask = {
                                 '_id': group._id,
                                 'initDate': taskSaved.initDate,
@@ -71,7 +69,9 @@ exports.checkAndCreateTask = function(taskData, studentId, groupName, next) {
 
 /**
  * Delete tasks
+ * @param {String} groupId
  * @param {String} studentId
+ * @param {String} teacherId
  * @param {Function} next
  */
 exports.delete = function(groupId, studentId, teacherId, next) {
@@ -79,19 +79,56 @@ exports.delete = function(groupId, studentId, teacherId, next) {
         group: groupId,
         student: studentId,
         teacher: teacherId
-    }).remove(next);
+    }).exec(function(err, tasks) {
+        if (tasks.length > 0) {
+            async.map(tasks, function(task, callback) {
+                task.delete(callback);
+            }, next);
+        } else {
+            next(err);
+        }
+    });
 };
-
 
 /**
  * Delete tasks by exercise
- * @param {String} studentId
+ * @param {String} exerciseId
  * @param {Function} next
  */
 exports.deleteByExercise = function(exerciseId, next) {
     Task.find({
         exercise: exerciseId
-    }).remove(next);
+    }, function(err, tasks) {
+        if (tasks.length > 0) {
+            async.map(tasks, function(task, callback) {
+                task.delete(callback);
+            }, next);
+        } else {
+            next(err);
+        }
+    });
+};
+
+/**
+ * Delete tasks by teacher an group array
+ * @param {String} teacherId
+ * @param {Array} groupIds
+ * @param {Function} next
+ */
+exports.deleteByTeacherAndGroups = function(teacherId, groupIds, next) {
+    Task.find({
+            teacher: teacherId
+        })
+        .where('group').in(groupIds)
+        .exec(function(err, tasks) {
+            if (tasks && tasks.length > 0) {
+                async.map(tasks, function(task, callback) {
+                    task.delete(callback);
+                }, next);
+            } else {
+                next(err);
+            }
+        });
 };
 
 /**
@@ -165,6 +202,8 @@ exports.getGroups = function(exerciseId, teacherId, next) {
  * Get exercises with specific center and teacher
  * @param {String} centerId
  * @param {String} teacherId
+ * @param {Number} page
+ * @param {Number} perPage
  * @param {Function} next
  * @return {Array} exercises
  */
@@ -190,7 +229,6 @@ exports.getExercises = function(centerId, teacherId, page, perPage, next) {
             next(err, exercises);
         });
 };
-
 
 /**
  * Get exercises count with specific center and teacher
@@ -244,32 +282,15 @@ exports.removeTasksByGroupAndEx = function(groupIdArray, exerciseId, next) {
             exercise: exerciseId
         })
         .where('group').in(groupIdArray)
-        .remove(next);
-};
-
-/**
- * Create default tasks
- * @param {String} groupId
- * @param {String} studentId
- * @param {Function} next
- * @return {Array} tasks
- */
-exports.createTaskByGroup = function(group, studentId, next) {
-    ExerciseFunction.getExerciseByGroup(group._id, function(err, exercises) {
-        if (exercises) {
-            async.map(exercises, function(exercise, next) {
-                var task = {
-                    exercise: exercise._id,
-                    group: group._id,
-                    creator: group.creator,
-                    teacher: group.teacher,
-                    initDate: group.initDate,
-                    endDate: group.endDate
-                };
-                exports.checkAndCreateTask(task, studentId, group.name, next);
-            }, next);
-        } else {
-            next(err);
-        }
-    });
+        .exec(function(err, tasks) {
+            if (err) {
+                next(err);
+            } else {
+                async.map(tasks, function(task, callBack) {
+                    task.delete(callBack);
+                }, function(err) {
+                    next(err, tasks);
+                });
+            }
+        });
 };

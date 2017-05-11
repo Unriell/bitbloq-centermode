@@ -1,6 +1,7 @@
 'use strict';
 var Task = require('./task.model.js'),
     UserFunctions = require('../user/user.functions.js'),
+    MemberFunctions = require('../member/member.functions.js'),
     ProjectFunction = require('../project/project.functions.js'),
     TaskFunction = require('./task.functions.js'),
     GroupFunction = require('../group/group.functions.js'),
@@ -67,22 +68,29 @@ exports.cloneToProject = function(req, res) {
  * @param res
  */
 exports.delete = function(req, res) {
-    Task.find({
+    async.waterfall([
+        Task.findOne.bind(Task, {
             _id: req.params.id,
             teacher: req.user._id
-        })
-        .remove()
-        .exec(function(err, data) {
-            if (err) {
-                console.log(err);
-                err.code = parseInt(err.code) || 500;
-                res.status(err.code).send(err);
-            } else if (!data) {
-                res.sendStatus(404);
+        }),
+        function(task, next) {
+            if (task) {
+                task.delete(next);
             } else {
-                res.sendStatus(200);
+                next();
             }
-        });
+        }
+    ], function(err, data) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else if (!data) {
+            res.sendStatus(404);
+        } else {
+            res.sendStatus(200);
+        }
+    });
 };
 
 /**
@@ -271,7 +279,6 @@ exports.getTasksByStudent = function(req, res) {
                 res.status(err.code).send(err);
             } else {
                 if (tasks.length > 0) {
-                    console.log(tasks);
                     var taskList = [],
                         student = tasks[0].student.toObject();
                     student.average = TaskFunction.calculateAverageMark(tasks);
@@ -358,11 +365,11 @@ exports.mark = function(req, res) {
             if (String(task.owner) == userId || String(task.teacher) == userId) {
                 next(null, task);
             } else {
-                UserFunctions.userIsHeadmaster(userId, task.group.center, function(err, centerId) {
-                    if (!centerId) {
+                MemberFunctions.userIsHeadmaster(userId, task.group.center, function(err, isHeadmaster) {
+                    if (!isHeadmaster) {
                         next({
-                            code: 401,
-                            message: 'Unauthorized'
+                            code: 403,
+                            message: 'Forbidden'
                         });
                     } else {
                         next(err, task);
@@ -375,7 +382,7 @@ exports.mark = function(req, res) {
             var updateTask = {
                 remark: markData.remark
             };
-            if(markData.mark){
+            if (markData.mark) {
                 updateTask.mark = markData.mark;
                 updateTask.status = 'corrected';
             }
@@ -488,14 +495,14 @@ exports.userIsHeadmasterByTask = function(req, res) {
                 res.status(err.code).send(err);
             } else {
                 if (task && task.group && task.group.center) {
-                    UserFunctions.userIsHeadmaster(userId, task.group.center, function(err, centerId) {
-                        if (centerId) {
-                            res.status(204).set({
-                                'headmaster': true
-                            }).send();
+                    MemberFunctions.userIsHeadmaster(userId, task.group.center, function(err, isHeadmaster) {
+                        if (err) {
+                            console.log(err);
+                            err.code = parseInt(err.code) || 500;
+                            res.status(err.code).send(err);
                         } else {
                             res.status(204).set({
-                                'headmaster': false
+                                'headmaster': isHeadmaster
                             }).send();
                         }
                     });

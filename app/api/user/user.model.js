@@ -91,6 +91,7 @@ var UserSchema = new mongoose.Schema({
     needValidation: {
         type: Boolean
     },
+    properties: {},
     tutor: {
         dni: String,
         firstName: String,
@@ -101,13 +102,7 @@ var UserSchema = new mongoose.Schema({
             result: Boolean
         }
     },
-    anonymous: String,
-    studentMode: {
-        type: Boolean,
-        default: false
-    },
-    makeblock: {},
-    centers: {} // CenterId : {date, role: headmaster | teacher | student}
+    anonymous: String
 }, {
     timestamps: true
 });
@@ -158,43 +153,7 @@ UserSchema
             'hasBeenWarnedAboutChangeBloqsToCode': this.hasBeenWarnedAboutChangeBloqsToCode,
             'hasFirstComponent': this.hasFirstComponent,
             'takeTour': this.takeTour,
-            'hasBeenValidated': this.hasBeenValidated,
-            'centers': this.centers
-        };
-    });
-
-// Information for the owner
-UserSchema
-    .virtual('teacherProfile')
-    .get(function() {
-        return {
-            '_id': this._id,
-            'firstName': this.firstName,
-            'lastName': this.lastName,
-            'username': this.username,
-            'email': this.email,
-            'role': this.role,
-            'centers': this.centers
-        };
-    });
-
-// Non-sensitive info we'll be putting in the token
-UserSchema
-    .virtual('token')
-    .get(function() {
-        return {
-            '_id': this._id,
-            'role': this.role
-        };
-    });
-
-// Public tutor information
-UserSchema
-    .virtual('tutorProfile')
-    .get(function() {
-        return {
-            'hasBeenValidated': this.hasBeenValidated,
-            'tutor': this.tutor
+            'hasBeenValidated': this.hasBeenValidated
         };
     });
 
@@ -202,21 +161,10 @@ UserSchema
  * Validations
  */
 
-// Validate empty email
-UserSchema
-    .path('email')
-    .validate(function(email) {
-        //TODO esto podría ir en atributo en Schema o meterlo abajo....
-
-        return email.length;
-    }, 'Email cannot be blank');
-
 // Validate empty password
 UserSchema
     .path('password')
     .validate(function(password) {
-        //TODO esto podría ir en atributo en Schema....
-
         return password.length;
     }, 'Password cannot be blank');
 
@@ -237,16 +185,12 @@ UserSchema
                 }
             }]
         });
-        return this.constructor.findOne(query).then(function(user) {
-            if (user) {
-                if (self.id === user.id) {
-                    return respond(true);
-                }
-                return respond(false);
+        return this.constructor.findOne(query, function(err, user) {
+            var result = false;
+            if (!user || (user && self.id === user.id)) {
+                result = true;
             }
-            return respond(true);
-        }).catch(function(err) {
-            throw err;
+            return respond(result);
         });
     }, 'The specified email address is already in use.');
 
@@ -259,13 +203,11 @@ UserSchema
         this.constructor.findOne({
             username: value
         }, function(err, user) {
-            if (user) {
-                if (self.id === user.id) {
-                    return respond(true);
-                }
-                return respond(false);
+            var result = false;
+            if (!user || (user && self.id === user.id)) {
+                result = true;
             }
-            return respond(true);
+            return respond(result);
         })
 
     }, 'The specified username is already in use.');
@@ -314,8 +256,8 @@ UserSchema
             next();
         } else {
             next({
-                code: 401,
-                message: 'Unauthorized'
+                code: 404,
+                message: 'Not Found'
             });
         }
     });
@@ -366,7 +308,6 @@ UserSchema.methods = {
     /**
      * check if user is validated
      *
-     * @param {Object} user
      * @return {Boolean}
      * @api public
      */
@@ -426,38 +367,6 @@ UserSchema.methods = {
                 that.save(next);
             }
         });
-    },
-
-    isHeadmaster: function(centerId) {
-        return (this.centers && this.centers[centerId] && this.centers[centerId].role === 'headmaster');
-    },
-
-    isStudent: function() {
-        return this.studentMode;
-    },
-
-    getheadmasterCenter: function() {
-        var centerId;
-        if (this.centers) {
-            _.forEach(this.centers, function(center, key) {
-                if (center.role === 'headmaster') {
-                    centerId = key;
-                }
-            });
-        }
-        return centerId;
-    },
-
-    getLastCenterByTeacher: function() {
-        var centerId;
-        if (this.centers) {
-            _.forEach(this.centers, function(center, key) {
-                if (center.role === 'teacher') {
-                    centerId = key;
-                }
-            });
-        }
-        return centerId;
     }
 };
 

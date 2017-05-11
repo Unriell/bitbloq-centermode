@@ -1,6 +1,8 @@
 'use strict';
-var GroupFunctions = require('../group/group.functions.js'),
-    Center = require('./center.model.js');
+var MemberFunctions = require('../member/member.functions.js'),
+    GroupFunctions = require('../group/group.functions.js'),
+    Center = require('./center.model.js'),
+    async = require('async');
 
 /**
  * Get teacher  stats.
@@ -10,39 +12,27 @@ var GroupFunctions = require('../group/group.functions.js'),
  * @return {Object} teacher
  */
 exports.getStats = function(teacher, centerId, next) {
-    GroupFunctions.getGroups(teacher, centerId, function(err, groups) {
-        var teacherObject = teacher;
-        teacherObject.students = 0;
-        if (groups) {
-            teacherObject.groups = groups.length;
+    async.parallel([
+        MemberFunctions.getStudentsCounter.bind(MemberFunctions, teacher._id, centerId),
+        GroupFunctions.getCounter.bind(GroupFunctions, teacher._id, centerId)
+    ], function(err, result) {
+        var teacherObject = teacher.toObject();
+        if (!err) {
+            teacherObject.students = result[0];
+            teacherObject.groups = result[1];
         }
-        groups.forEach(function(group) {
-            teacherObject.students = teacherObject.students + group.students.length;
-        });
         next(err, teacherObject);
     });
 };
 
-exports.teacherGetDateByCenterId = function(teachers, centerId) {
-    var teacherArray = [];
-    teachers.forEach(function(teacher) {
-        var teacherObject = teacher.toObject();
-        teacherObject.dateCreated = teacherObject.centers[centerId].date;
-        delete teacherObject.centers;
-        teacherArray.push(teacherObject);
-    });
-    return teacherArray;
-};
-
-
 /**
  * Get information center in array
- * @param {Array} center ids
+ * @param {Array} centerIds
  * @param {Function} next
  * @return {Object} center
  */
-exports.getCentersInArray = function(ids, next) {
+exports.getCentersInArray = function(centerIds, next) {
     Center.find()
-        .where('_id').in(ids)
+        .where('_id').in(centerIds)
         .exec(next);
 };

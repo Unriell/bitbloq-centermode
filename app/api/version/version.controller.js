@@ -15,7 +15,7 @@ exports.getAll = function(req, res) {
         .limit(parseInt(pageSize))
         .skip(parseInt(pageSize * page))
         .sort({
-            _updateAt: 'asc'
+            updatedAt: 'asc'
         })
         .exec(function(err, projects) {
             if (err) {

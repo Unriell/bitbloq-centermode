@@ -11,13 +11,15 @@ var router = express.Router();
 module.exports = function(app) {
 
     // Insert routes below
+    router.use('/assignment', require('./api/assignment/index'));
     router.use('/center', require('./api/center/index'));
     router.use('/exercise', require('./api/exercise/index'));
+    router.use('/member', require('./api/member/index'));
     router.use('/task', require('./api/task/index'));
     router.use('/group', require('./api/group/index'));
-    router.use('/makeblock', require('./api/makeblock/index'));
+    router.use('/third-party-robots', require('./api/robotsActivationCode/index'));
     router.use('/version', require('./api/version/index'));
-    router.use('/user', require('./api/user/index'));
+    router.use('/user-robots', require('./api/userrobots/index'));
 
     // Set a prefix for all calls
     app.use('/centerMode/v1', router);

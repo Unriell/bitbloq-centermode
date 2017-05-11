@@ -2,54 +2,13 @@
 
 var Exercise = require('./exercise.model.js'),
     UserFunctions = require('../user/user.functions.js'),
-    GroupFunctions = require('../group/group.functions.js'),
+    MemberFunctions = require('../member/member.functions.js'),
     TaskFunctions = require('../task/task.functions.js'),
-    ImageFunctions = require('../image/image.functions.js'),
+    AssignmentFunctions = require('../assignment/assignment.functions.js'),
     _ = require('lodash'),
     async = require('async');
 
 var maxPerPage = 10;
-
-/**
- * An exercise is assigned to group
- * @param {Object} group
- * @param {String} userId
- * @param {Object} exercise
- * @param {Function} next
- */
-function assignGroup(group, userId, exercise, next) {
-    async.waterfall([
-        function(next) {
-            GroupFunctions.getStudents(group._id, userId, next);
-        },
-        function(students, next) {
-            var task = {
-                exercise: exercise._id,
-                group: group._id,
-                creator: userId,
-                teacher: userId,
-                initDate: group.date.initDate,
-                endDate: group.date.endDate
-            };
-            if (students.length > 0) {
-                async.map(students, function(studentId, next) {
-                    TaskFunctions.checkAndCreateTask(task, studentId, null, next);
-                }, next);
-            } else {
-                GroupFunctions.get(group._id, function(err, result) {
-                    next(err, [{
-                        _id: group._id,
-                        name: result.name,
-                        initDate: group.date.initDate,
-                        endDate: group.date.endDate
-                    }]);
-                });
-            }
-        }
-    ], function(err, newTask) {
-        next(err, newTask[0]);
-    });
-}
 
 function clearExercise(exercise) {
     delete exercise._id;
@@ -61,52 +20,6 @@ function clearExercise(exercise) {
 }
 
 /**
- * An exercise is assigned to group
- * @param {Object} req
- * @params {String} req.params.exerciseId
- * @params {Object} req.body.assign
- * @params {Array} req.body.remove
- * @param res
- */
-exports.assignGroups = function(req, res) {
-    var exerciseId = req.params.exerciseId,
-        userId = req.user._id,
-        groupsToAssign = req.body.assign,
-        groupsToRemove = req.body.remove;
-    Exercise.findById(exerciseId, function(err, exercise) {
-        if (err) {
-            console.log(err);
-            err.code = parseInt(err.code) || 500;
-            res.status(err.code).send(err);
-        } else {
-            async.parallel([
-                function(next) {
-                    TaskFunctions.removeTasksByGroupAndEx(groupsToRemove, exerciseId, next);
-                },
-                function(next) {
-                    exercise.update({
-                        groups: groupsToAssign
-                    }, next);
-                },
-                function(next) {
-                    async.map(groupsToAssign, function(group, next) {
-                        assignGroup(group, userId, exercise, next)
-                    }, next);
-                }
-            ], function(err, result) {
-                if (err) {
-                    console.log(err);
-                    err.code = parseInt(err.code) || 500;
-                    res.status(err.code).send(err);
-                } else {
-                    res.status(200).send(result[2])
-                }
-            });
-        }
-    });
-};
-
-/**
  * Clone an exercise
  * @param req
  * @param res
@@ -115,6 +28,7 @@ exports.clone = function(req, res) {
     var userId = req.user._id,
         exerciseId = req.body.exerciseId,
         newName = req.body.name;
+
     async.waterfall([
         Exercise.findById.bind(Exercise, exerciseId),
         function(exercise, next) {
@@ -124,7 +38,6 @@ exports.clone = function(req, res) {
                 exerciseObject.name = newName;
                 exerciseObject.creator = userId;
                 exerciseObject.teacher = userId;
-                exerciseObject.groups = [];
                 var newExercise = new Exercise(exerciseObject);
                 newExercise.save(next);
             } else {
@@ -200,8 +113,6 @@ exports.getAll = function(req, res) {
         search = req.query,
         queryParams = {};
 
-    console.log(req.user._id);
-
     if (search.searchParams && (JSON.parse(search.searchParams)).name) {
         queryParams = {
             name: {
@@ -216,18 +127,46 @@ exports.getAll = function(req, res) {
         }
     }
 
-    Exercise.find(queryParams)
-        .limit(parseInt(perPage))
-        .skip(parseInt(perPage * page))
-        .exec(function(err, exercises) {
-            if (err) {
-                console.log(err);
-                err.code = parseInt(err.code) || 500;
-                res.status(err.code).send(err);
+    async.waterfall([
+        function(next) {
+            Exercise.find(queryParams)
+                .limit(parseInt(perPage))
+                .skip(parseInt(perPage * page))
+                .exec(next);
+        },
+        function(exercises, next) {
+            var newExercises = [];
+            if (exercises.length > 0) {
+                var exercisesId = _.map(exercises, '_id');
+                AssignmentFunctions.getAssigmentByExercises(exercisesId, function(err, exercisesDates) {
+                    if (exercisesDates) {
+                        exercises.forEach(function(exercise) {
+                            var exerciseObject = exercise.toObject();
+                            if (exercisesDates[exercise._id]) {
+                                exerciseObject.initDate = exercisesDates[exercise._id].initDate;
+                                exerciseObject.endDate = exercisesDates[exercise._id].endDate;
+                            }
+                            newExercises.push(exerciseObject);
+                        });
+                        next(err, newExercises);
+                    } else {
+                        next(err, exercises);
+                    }
+                });
             } else {
-                res.status(200).send(exercises);
+                next(null, exercises);
             }
-        });
+        }
+
+    ], function(err, exercises) {
+        if (err) {
+            console.log(err);
+            err.code = parseInt(err.code) || 500;
+            res.status(err.code).send(err);
+        } else {
+            res.status(200).send(exercises);
+        }
+    });
 };
 
 /**
@@ -275,7 +214,7 @@ exports.getCountByTeacher = function(req, res) {
     var userId = req.user._id,
         teacherId = req.params.teacherId;
     async.waterfall([
-        UserFunctions.getCenterIdbyheadmaster.bind(UserFunctions, userId),
+        MemberFunctions.getCenterIdByHeadmaster.bind(UserFunctions, userId),
         function(centerId, next) {
             if (!centerId) {
                 next({
@@ -283,7 +222,7 @@ exports.getCountByTeacher = function(req, res) {
                     message: 'Unauthorized'
                 });
             } else {
-                UserFunctions.getTeacher(teacherId, centerId, function(err, teacher) {
+                MemberFunctions.getTeacher(teacherId, centerId, function(err, teacher) {
                     if (!teacher) {
                         next({
                             code: 404,
@@ -322,7 +261,7 @@ exports.getByTeacher = function(req, res) {
         userId = req.user._id,
         teacherId = req.params.teacherId;
     async.waterfall([
-        UserFunctions.getCenterIdbyheadmaster.bind(UserFunctions, userId),
+        MemberFunctions.getCenterIdByHeadmaster.bind(UserFunctions, userId),
         function(centerId, next) {
             if (!centerId) {
                 next({
@@ -330,7 +269,7 @@ exports.getByTeacher = function(req, res) {
                     message: 'Unauthorized'
                 });
             } else {
-                UserFunctions.getTeacher(teacherId, centerId, function(err, teacher) {
+                MemberFunctions.getTeacher(teacherId, centerId, function(err, teacher) {
                     if (!teacher) {
                         next({
                             code: 404,
@@ -427,13 +366,14 @@ exports.userIsOwner = function(req, res) {
 exports.delete = function(req, res) {
     var userId = req.user._id,
         exerciseId = req.params.id;
+
     async.waterfall([
         Exercise.findById.bind(Exercise, exerciseId),
         function(exercise, next) {
             if (exercise) {
                 if (exercise.isOwner(userId)) {
                     async.parallel([
-                        Exercise.findByIdAndRemove.bind(Exercise, exerciseId),
+                        exercise.delete.bind(exercise),
                         TaskFunctions.deleteByExercise.bind(TaskFunctions, exerciseId)
                     ], next);
                 } else {
@@ -448,13 +388,7 @@ exports.delete = function(req, res) {
                     message: 'Exercise not found'
                 });
             }
-        },
-        function(exercise, next) {
-            ImageFunctions.delete('exercise', exerciseId, function() {
-                next();
-            });
         }
-
     ], function(err) {
         if (err) {
             console.log(err);

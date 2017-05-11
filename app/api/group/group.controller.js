@@ -1,9 +1,9 @@
 'use strict';
 
 var Group = require('./group.model.js'),
-    UserFunctions = require('../user/user.functions.js'),
-    ExerciseFunction = require('../exercise/exercise.functions.js'),
-    TaskFunction = require('../task/task.functions.js'),
+    MemberFunctions = require('../member/member.functions.js'),
+    TaskFunctions = require('../task/task.functions.js'),
+    AssignmentFunctions = require('../assignment/assignment.functions.js'),
     async = require('async'),
     _ = require('lodash'),
     triesCounter;
@@ -43,11 +43,7 @@ exports.getGroup = function(req, res) {
     var userId = req.user._id,
         groupId = req.params.id;
     async.waterfall([
-        function(next) {
-            Group.findById(groupId)
-                .populate('students', 'firstName lastName username email')
-                .exec(next);
-        },
+        Group.findById.bind(Group, groupId),
         function(group, next) {
             if (group.creator === userId) {
                 next(null, group);
@@ -55,9 +51,12 @@ exports.getGroup = function(req, res) {
                 if (String(group.teacher) === String(userId) || String(group.creator) === String(userId)) {
                     next(null, group);
                 } else {
-                    UserFunctions.userIsHeadmaster(userId, group.center, function(err, centerId) {
+                    MemberFunctions.userIsHeadmaster(userId, group.center, function(err, centerId) {
                         if (!centerId) {
-                            next(401);
+                            next({
+                                code: 403,
+                                message: 'Forbidden'
+                            });
                         } else {
                             next(err, group);
                         }
@@ -66,13 +65,26 @@ exports.getGroup = function(req, res) {
             }
         },
         function(group, next) {
-            async.map(group.students, function(student, next) {
-                TaskFunction.getAverageMark(group._id, student, next);
+            MemberFunctions.getStudentsByGroup(group._id, function(err, users) {
+                next(err, group, users);
+            });
+        },
+        function(group, users, next) {
+            async.map(users, function(student, next) {
+                TaskFunctions.getAverageMark(group._id, student, next);
             }, function(err, students) {
                 var groupObject = group.toObject();
                 groupObject.students = students;
                 next(err, groupObject);
-            })
+            });
+        },
+        function(group, next) {
+            AssignmentFunctions.getExercisesByGroup(group._id, function(err, exercises) {
+                if (exercises) {
+                    group.exercises = exercises;
+                }
+                next(err, group);
+            });
         }
     ], function(err, group) {
         if (err) {
@@ -103,23 +115,34 @@ exports.getAllGroups = function(req, res) {
                         next(null, false);
                         break;
                     default:
-                        UserFunctions.userIsStudent(userId, next);
+                        MemberFunctions.userIsStudent(userId, next);
                 }
             } else {
-                UserFunctions.userIsStudent(userId, next);
+                MemberFunctions.userIsStudent(userId, next);
             }
         },
         function(isStudent, next) {
             if (isStudent) {
-                Group.find({
-                    students: {
-                        $in: [userId]
-                    }
-                }, next);
+                MemberFunctions.getGroups(userId, next);
             } else {
-                Group.find({
+                var queryParams = {
                     teacher: userId
-                }, next);
+                };
+                if(req.query.withoutClosed){
+                    queryParams.status = {$ne: 'closed'};
+                }
+                async.waterfall([
+                    Group.find.bind(Group, queryParams),
+                    function(groups, next) {
+                        async.map(groups, function(group, next) {
+                            MemberFunctions.getStudentsByGroup(group._id, function(err, students) {
+                                var groupObject = group.toObject();
+                                groupObject.students = students;
+                                next(err, groupObject);
+                            });
+                        }, next);
+                    }
+                ], next);
             }
         }
     ], function(err, groups) {
@@ -128,7 +151,12 @@ exports.getAllGroups = function(req, res) {
             err.code = parseInt(err.code) || 500;
             res.status(err.code).send(err);
         } else {
-            res.status(200).send(groups);
+            var resultGroups = _.remove(groups, null),
+                orderedGroups=  _.filter(resultGroups, function(item){
+                return item.status !== 'closed';
+            });
+            orderedGroups= _.concat(orderedGroups, _.filter(resultGroups, {'status': 'closed'}));
+            res.status(200).send(orderedGroups);
         }
     });
 };
@@ -142,7 +170,7 @@ exports.getGroups = function(req, res) {
     var userId = req.user._id,
         centerId = req.params.centerId;
     async.waterfall([
-        UserFunctions.userIsStudent.bind(UserFunctions, userId),
+        MemberFunctions.userIsStudent.bind(MemberFunctions, userId),
         function(isStudent, next) {
             if (isStudent) {
                 Group.find({
@@ -170,61 +198,6 @@ exports.getGroups = function(req, res) {
 };
 
 /**
- * Get groups by an exercise
- * @param req
- * @param res
- */
-exports.getGroupsByExercise = function(req, res) {
-    var userId = req.user._id,
-        exerciseId = req.params.exerciseId;
-    async.waterfall([
-        ExerciseFunction.getGroups.bind(ExerciseFunction, exerciseId),
-        function(exercise, next) {
-            if (exercise) {
-                if (String(exercise.teacher) == userId) {
-                    next(null, {
-                        exercise: exercise
-                    });
-                } else {
-                    //check if user is headmaster
-                    UserFunctions.getCenterIdbyheadmaster(userId, function(err, centerId) {
-                        if (!centerId) {
-                            next({
-                                code: 401,
-                                message: 'Unauthorized'
-                            });
-                        } else {
-                            next(err, {
-                                exercise: exercise,
-                                centerId: centerId
-                            });
-                        }
-                    });
-                }
-            } else {
-                next({
-                    code: 404,
-                    message: 'Not Found'
-                });
-            }
-        },
-        function(result, next) {
-            async.map(result.exercise.groups, function(group, next) {
-                _getGroupByCenter(group._id, result.centerId, userId, group.date, next)
-            }, next);
-        }
-    ], function(err, myGroups) {
-        if (err) {
-            console.log(err);
-            err.code = parseInt(err.code) || 500;
-            res.status(err.code).send(err);
-        } else {
-            res.status(200).send(myGroups);
-        }
-    });
-};
-
-/**
  * Get student group by its teacher if user role is head master
  * @param req
  * @param res
@@ -233,7 +206,7 @@ exports.getGroupByHeadmaster = function(req, res) {
     var userId = req.user._id,
         teacherId = req.params.teacherId;
     async.waterfall([
-        UserFunctions.getCenterIdbyheadmaster.bind(UserFunctions, userId),
+        MemberFunctions.getCenterIdByHeadmaster.bind(MemberFunctions, userId),
         function(centerId, next) {
             Group.find({
                 teacher: teacherId,
@@ -297,59 +270,29 @@ exports.deleteGroup = function(req, res) {
     async.waterfall([
         Group.findById.bind(Group, groupId),
         function(group, next) {
-            group.userCanUpdate(userId, function(err, canUpdate) {
-                if (err) {
-                    next(err);
-                } else if (!canUpdate) {
-                    next({
-                        code: 401,
-                        message: 'Unauthorized'
-                    });
-                } else {
-                    group.remove(next);
-                }
-            });
-        }
-    ], function(err) {
-        if (err) {
-            console.log(err);
-            err.code = parseInt(err.code) || 500;
-            res.status(err.code).send(err);
-        } else {
-            res.sendStatus(200);
-        }
-    });
-};
-
-/**
- * Delete a student if user is group teacher
- * @param req
- * @param res
- */
-exports.deleteStudent = function(req, res) {
-    var userId = req.user._id,
-        groupId = req.params.groupId,
-        studentId = req.params.studentId;
-    async.waterfall([
-        Group.findOne.bind(Group, {
-            _id: groupId,
-            teacher: userId
-        }),
-        function(group, next) {
             if (group) {
-                _.remove(group.students, function(item) {
-                    return String(item) === studentId;
+                group.userCanUpdate(userId, function(err, canUpdate) {
+                    next(err, group, canUpdate);
                 });
-                group.update(group, next);
             } else {
                 next({
                     code: 404,
-                    message: 'Not Found'
+                    message: 'Exercise not found'
                 });
             }
         },
-        function(updated, next) {
-            TaskFunction.delete(groupId, studentId, userId, next);
+        function(group, canUpdate, next) {
+            if (canUpdate) {
+                async.parallel([
+                    group.delete.bind(group),
+                    TaskFunctions.deleteByTeacherAndGroups.bind(TaskFunctions, userId, [groupId])
+                ], next);
+            } else {
+                next({
+                    code: 403,
+                    message: 'Forbidden'
+                });
+            }
         }
     ], function(err) {
         if (err) {
@@ -362,56 +305,10 @@ exports.deleteStudent = function(req, res) {
     });
 };
 
-/**
- * Register a student in a group
- * @param req
- * @param res
- */
-exports.registerInGroup = function(req, res) {
-    var userId = req.user._id,
-        groupId = req.params.id;
 
-    async.waterfall([
-        Group.findOne.bind(Group, {
-            accessId: groupId,
-            status: 'open'
-        }),
-        function(group, next) {
-            if (group) {
-                group.students = group.students || [];
-                if (group.students.indexOf(userId) === -1) {
-                    group.students.push(userId);
-                    group.update(group, function(err) {
-                        if (err) {
-                            next(err);
-                        } else {
-                            //Generate old tasks to student
-                            TaskFunction.createTaskByGroup(group, userId, next());
-                        }
-                    });
-                } else {
-                    next();
-                }
-            } else {
-                next({
-                    code: 401,
-                    message: 'Unauthorized'
-                });
-            }
-
-
-        }
-    ], function(err, result) {
-        if (err) {
-            console.log(err);
-            err.code = parseInt(err.code) || 500;
-            res.status(err.code).send(err);
-        } else {
-
-            res.sendStatus(200);
-        }
-    });
-};
+/*********************
+ * Private functions *
+ *********************/
 
 function createGroup(group, groupData, recursive, triesCounter, next) {
 
@@ -431,21 +328,4 @@ function createGroup(group, groupData, recursive, triesCounter, next) {
             next(err, result);
         }
     });
-}
-
-function _getGroupByCenter(groupId, centerId, userId, calendar, next) {
-    Group.findById(groupId)
-        .or([{center: centerId}, {teacher: userId}])
-        .exec(function(err, result) {
-            if (result) {
-                var groupObject = result.toObject();
-                if (calendar) {
-                    groupObject.initDate = calendar.initDate;
-                    groupObject.endDate = result.endDate;
-                }
-                next(err, groupObject);
-            } else {
-                next(err);
-            }
-        });
 }

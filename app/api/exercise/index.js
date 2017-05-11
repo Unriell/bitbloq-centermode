@@ -20,7 +20,6 @@ router.post('/', auth.isAuthenticated(), controller.create);
 
 
 // PUT
-router.put('/:exerciseId/assign', auth.isAuthenticated(), controller.assignGroups);
 router.put('/:id', auth.isAuthenticated(), controller.update);
 
 

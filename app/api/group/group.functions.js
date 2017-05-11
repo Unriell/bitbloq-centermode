@@ -1,6 +1,7 @@
 'use strict';
 var Group = require('./group.model.js'),
-    UserFunctions = require('../user/user.functions.js'),
+    MemberFunctions = require('../member/member.functions.js'),
+    _ = require('lodash'),
     async = require('async');
 
 
@@ -14,22 +15,43 @@ var Group = require('./group.model.js'),
 exports.deleteGroups = function(teacherId, centerId, next) {
     async.waterfall([
         function(callBack) {
-            UserFunctions.getMyRoleInCenter(teacherId, centerId, callBack);
+            MemberFunctions.getMyRolesInCenter(teacherId, centerId, callBack);
         },
-        function(role, callBack) {
-            if (role === 'teacher' || role === 'headmaster') {
-                Group.remove({
-                    teacher: teacherId,
-                    center: centerId
-                }, callBack);
+        function(roles, callBack) {
+            if (roles.indexOf('teacher') > -1 || roles.indexOf('headmaster') > -1) {
+                Group.find({
+                        teacher: teacherId,
+                        center: centerId
+                    })
+                    .select('_id')
+                    .exec(callBack);
             } else {
                 callBack({
                     code: 401,
                     message: 'Unauthorized'
                 });
             }
+        },
+        function(groups, callBack) {
+            async.map(groups, function(group, next) {
+                group.delete(next);
+            }, function(err) {
+                callBack(err, groups);
+            });
         }
     ], next);
+};
+
+/**
+ * Get all groups of teacher in a center
+ * @param {String} accessId
+ * @param {Function} next
+ */
+exports.getOpenGroup = function(accessId, next) {
+    Group.findOne({
+        accessId: accessId,
+        status: 'open'
+    }, next);
 };
 
 /**
@@ -37,7 +59,6 @@ exports.deleteGroups = function(teacherId, centerId, next) {
  * @param {String} teacherId
  * @param {String} centerId
  * @param {Function} next
- * @return {Object} user.owner
  */
 exports.getGroups = function(teacherId, centerId, next) {
     Group.find({
@@ -46,12 +67,40 @@ exports.getGroups = function(teacherId, centerId, next) {
     }, next);
 };
 
+
 /**
- * Get user role all groups of teacher in a center
+ * Get group ids by teacher in a center
  * @param {String} teacherId
  * @param {String} centerId
  * @param {Function} next
- * @return {Object} user.owner
+ */
+exports.getGroupIdsByTeacherAndCenter = function(teacherId, centerId, next) {
+    Group.find({
+        teacher: teacherId,
+        center: centerId
+    }, function(err, groups){
+        next(err, _.map(groups, '_id'));
+    });
+};
+
+/**
+ * Get group counter of groups with a determinate teacher in a center
+ * @param {String} teacherId
+ * @param {String} centerId
+ * @param {Function} next
+ */
+exports.getCounter = function(teacherId, centerId, next) {
+    Group.find({
+        teacher: teacherId,
+        center: centerId
+    }).count(next);
+};
+
+/**
+ * Get user role all groups of teacher in a center
+ * @param {String} groupId
+ * @param {String} userId
+ * @param {Function} next
  */
 exports.getStudents = function(groupId, userId, next) {
     Group.findById(groupId, function(err, group) {
@@ -61,9 +110,12 @@ exports.getStudents = function(groupId, userId, next) {
             if (String(group.teacher) === String(userId)) {
                 next(null, group.students);
             } else {
-                UserFunctions.userIsHeadmaster(userId, group.center, function(err, centerId) {
-                    if (!centerId) {
-                        next(401);
+                MemberFunctions.userIsHeadmaster(userId, group.center, function(err, isHeadmaster) {
+                    if (!isHeadmaster) {
+                        next({
+                            code: 403,
+                            message: 'Forbidden'
+                        });
                     } else {
                         next(err, group.students);
                     }
