@@ -26,7 +26,7 @@ exports.createCenter = function(req, res) {
         ], function(err, result) {
             if (err) {
                 console.log(err);
-                err.code = parseInt(err.code) || 500;
+                err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                 res.status(err.code).send(err);
             } else if (result) {
                 res.sendStatus(200);
@@ -62,7 +62,7 @@ exports.getMyCenter = function(req, res) {
     MemberFunctions.getCenterInfoByHeadmaster(userId, function(err, center) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             if (center) {
@@ -84,7 +84,7 @@ exports.getMyCenters = function(req, res) {
     MemberFunctions.getMyCentersAsTeacher(userId, function(err, centers) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).send(centers);

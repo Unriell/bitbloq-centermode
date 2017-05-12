@@ -9,7 +9,7 @@ var router = express.Router();
 router.post('/', function(req, res, next) {
     passport.authenticate('local', function(err, user, info) {
         if (err) {
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             return res.status(err.code).json({
                 message: 'Something went wrong, please try again.'
             });

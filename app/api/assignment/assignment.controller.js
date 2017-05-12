@@ -52,7 +52,7 @@ exports.assign = function(req, res) {
     ], function(err, result) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).send(result[3])
@@ -95,7 +95,7 @@ exports.getByExercise = function(req, res) {
     ], function(err, groups) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).send(groups);
@@ -140,7 +140,7 @@ exports.unassign = function(req, res) {
         function(err, result) {
             if (err) {
                 console.log(err);
-                err.code = parseInt(err.code) || 500;
+                err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                 res.status(err.code).send(err);
             } else {
                 if (!result) {

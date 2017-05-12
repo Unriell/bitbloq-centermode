@@ -21,7 +21,7 @@ exports.createGroup = function(req, res) {
     createGroup(newGroup, group, true, triesCounter, function(err, result) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             if (err.code === 11000) {
                 err.code = 409;
             }
@@ -89,7 +89,7 @@ exports.getGroup = function(req, res) {
     ], function(err, group) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).send(group);
@@ -148,7 +148,7 @@ exports.getAllGroups = function(req, res) {
     ], function(err, groups) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             var resultGroups = _.remove(groups, null),
@@ -189,7 +189,7 @@ exports.getGroups = function(req, res) {
     ], function(err, groups) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).send(groups);
@@ -216,7 +216,7 @@ exports.getGroupByHeadmaster = function(req, res) {
     ], function(err, groups) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).send(groups);
@@ -251,7 +251,7 @@ exports.updateGroup = function(req, res) {
     ], function(err) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.sendStatus(200);
@@ -297,7 +297,7 @@ exports.deleteGroup = function(req, res) {
     ], function(err) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.sendStatus(200);

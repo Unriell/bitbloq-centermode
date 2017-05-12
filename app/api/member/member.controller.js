@@ -27,7 +27,7 @@ exports.addTeacher = function(req, res) {
     ], function(err, result) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else if (!result) {
             res.sendStatus(304);
@@ -38,7 +38,7 @@ exports.addTeacher = function(req, res) {
                 MemberFunctions.addAllTeachers(result[1], centerId, function(err, teachers) {
                     if (err) {
                         console.log(err);
-                        err.code = parseInt(err.code) || 500;
+                        err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                         res.status(err.code).send(err);
                     } else {
                         res.status(200).send(teachers);
@@ -64,7 +64,7 @@ exports.activateStudentMode = function(req, res) {
     newStudent.save(function(err) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.sendStatus(200);
@@ -89,7 +89,7 @@ exports.deleteStudent = function(req, res) {
     ], function(err) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.sendStatus(200);
@@ -110,7 +110,7 @@ exports.deleteTeacher = function(req, res) {
         MemberFunctions.userIsHeadmaster(userId, centerId, function(err, isHeadmaster) {
             if (err) {
                 console.log(err);
-                err.code = parseInt(err.code) || 500;
+                err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                 res.status(err.code).send(err);
             } else if (isHeadmaster) {
                 async.waterfall([
@@ -122,7 +122,7 @@ exports.deleteTeacher = function(req, res) {
                 ], function(err, result) {
                     if (err) {
                         console.log(err);
-                        err.code = parseInt(err.code) || 500;
+                        err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                         res.status(err.code).send(err);
                     } else if (!result) {
                         res.sendStatus(304);
@@ -152,7 +152,7 @@ exports.isHeadmaster = function(req, res) {
     }, function(err, members) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else if (members.length > 0) {
             res.status(200).json({
@@ -178,7 +178,7 @@ exports.getMyRole = function(req, res) {
     }, function(err, members) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else if (members.length > 0) {
             var roles = _.map(members, 'role'),
@@ -223,7 +223,7 @@ exports.getTeacher = function(req, res) {
     ], function(err, teacher) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else if (!teacher) {
             res.sendStatus(404);
@@ -263,7 +263,7 @@ exports.getTeachers = function(req, res) {
     ], function(err, teachers) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else if (!teachers) {
             res.sendStatus(304);
@@ -303,7 +303,7 @@ exports.registerInGroup = function(req, res) {
     ], function(err) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.sendStatus(200);

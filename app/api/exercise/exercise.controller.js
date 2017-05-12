@@ -47,7 +47,7 @@ exports.clone = function(req, res) {
     ], function(err, newExercise) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).send(newExercise._id);
@@ -68,7 +68,7 @@ exports.create = function(req, res) {
     newExercise.save(function(err, exercise) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).json(exercise._id);
@@ -88,7 +88,7 @@ exports.get = function(req, res) {
         .exec(function(err, exercise) {
             if (err) {
                 console.log(err);
-                err.code = parseInt(err.code) || 500;
+                err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                 res.status(err.code).send(err);
             } else if (!exercise) {
                 res.sendStatus(404);
@@ -161,7 +161,7 @@ exports.getAll = function(req, res) {
     ], function(err, exercises) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).send(exercises);
@@ -195,7 +195,7 @@ exports.getAllCount = function(req, res) {
     Exercise.count(queryParams, function(err, counter) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).json({
@@ -240,7 +240,7 @@ exports.getCountByTeacher = function(req, res) {
     ], function(err, counter) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).json({
@@ -287,7 +287,7 @@ exports.getByTeacher = function(req, res) {
     ], function(err, exercises) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).send(exercises);
@@ -304,7 +304,7 @@ exports.update = function(req, res) {
     Exercise.findById(req.params.id, function(err, exercise) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             if (exercise.isOwner(req.user._id)) {
@@ -313,7 +313,7 @@ exports.update = function(req, res) {
                 exercise.save(function(err) {
                     if (err) {
                         console.log(err);
-                        err.code = parseInt(err.code) || 500;
+                        err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                         res.status(err.code).send(err);
                     } else {
                         res.sendStatus(200);
@@ -337,7 +337,7 @@ exports.userIsOwner = function(req, res) {
     Exercise.findById(exerciseId, function(err, exercise) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             if (exercise) {
@@ -392,7 +392,7 @@ exports.delete = function(req, res) {
     ], function(err) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(204).end();
