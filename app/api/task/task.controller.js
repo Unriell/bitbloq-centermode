@@ -54,7 +54,7 @@ exports.cloneToProject = function(req, res) {
     ], function(err, project) {
         if (err) {
             console.log(err);
-            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).send(project._id);
@@ -83,7 +83,7 @@ exports.delete = function(req, res) {
     ], function(err, data) {
         if (err) {
             console.log(err);
-            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else if (!data) {
             res.sendStatus(404);
@@ -104,7 +104,7 @@ exports.get = function(req, res) {
         .exec(function(err, task) {
             if (err) {
                 console.log(err);
-                err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+                err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                 res.status(err.code).send(err);
             } else if (!task) {
                 res.sendStatus(404);
@@ -152,7 +152,7 @@ exports.getMyTasks = function(req, res) {
         .exec(function(err, tasks) {
             if (err) {
                 console.log(err);
-                err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+                err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                 res.status(err.code).send(err);
             } else {
                 res.status(200).send(tasks);
@@ -182,7 +182,7 @@ exports.getMyTasksCount = function(req, res) {
     }, function(err, counter) {
         if (err) {
             console.log(err);
-            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).json({
@@ -219,7 +219,7 @@ exports.getTasksByExercise = function(req, res) {
         .exec(function(err, tasks) {
             if (err) {
                 console.log(err);
-                err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+                err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                 res.status(err.code).send(err);
             } else {
                 res.status(200).send(tasks);
@@ -245,7 +245,7 @@ exports.getTasksByExerciseCount = function(req, res) {
     }, function(err, counter) {
         if (err) {
             console.log(err);
-            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).json({
@@ -275,7 +275,7 @@ exports.getTasksByStudent = function(req, res) {
         .exec(function(err, tasks) {
             if (err) {
                 console.log(err);
-                err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+                err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                 res.status(err.code).send(err);
             } else {
                 if (tasks.length > 0) {
@@ -301,7 +301,7 @@ exports.getTasksByStudent = function(req, res) {
                     ], function(err, result) {
                         if (err) {
                             console.log(err);
-                            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+                            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                             res.status(err.code).send(err);
                         } else {
                             res.status(200).json({
@@ -336,7 +336,7 @@ exports.getTasksByGroup = function(req, res) {
         .exec(function(err, tasks) {
             if (err) {
                 console.log(err);
-                err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+                err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                 res.status(err.code).send(err);
             } else {
                 res.status(200).send(tasks);
@@ -391,7 +391,7 @@ exports.mark = function(req, res) {
     ], function(err, result) {
         if (err) {
             console.log(err);
-            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).send(result);
@@ -413,7 +413,7 @@ exports.sendTask = function(req, res) {
     }, function(err, task) {
         if (err) {
             console.log(err);
-            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else if (!task) {
             res.sendStatus(404);
@@ -428,7 +428,7 @@ exports.sendTask = function(req, res) {
                     }, function(err, response) {
                         if (err) {
                             console.log(err);
-                            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+                            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                             res.status(err.code).send(err);
                         } else if (response && response.nModified === 0) {
                             res.sendStatus(404);
@@ -455,7 +455,7 @@ exports.update = function(req, res) {
     Task.findById(req.params.id, function(err, task) {
         if (err) {
             console.log(err);
-            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else if (task) {
             if (String(task.student) === String(req.user._id)) {
@@ -463,7 +463,7 @@ exports.update = function(req, res) {
                 task.save(function(err) {
                     if (err) {
                         console.log(err);
-                        err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+                        err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                         res.status(err.code).send(err);
                     } else {
                         res.sendStatus(200);
@@ -491,14 +491,14 @@ exports.userIsHeadmasterByTask = function(req, res) {
         .exec(function(err, task) {
             if (err) {
                 console.log(err);
-                err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+                err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                 res.status(err.code).send(err);
             } else {
                 if (task && task.group && task.group.center) {
                     MemberFunctions.userIsHeadmaster(userId, task.group.center, function(err, isHeadmaster) {
                         if (err) {
                             console.log(err);
-                            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+                            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                             res.status(err.code).send(err);
                         } else {
                             res.status(204).set({

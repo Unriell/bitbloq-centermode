@@ -46,7 +46,7 @@ exports.generateCodes = function(req, res) {
         console.log(codesGenerated);
         if (err) {
             console.log(err);
-            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).json(codesGenerated);
@@ -62,7 +62,7 @@ exports.getCodesByRobot = function(req, res) {
     }, ['robot', 'code', 'used'], function(err, codes) {
         if (err) {
             console.log(err);
-            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).json(codes);
@@ -78,7 +78,7 @@ exports.getUnusedCodesByRobot = function(req, res) {
     }, ['robot', 'code', 'used'], function(err, codes) {
         if (err) {
             console.log(err);
-            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).json(codes);
@@ -96,7 +96,7 @@ exports.getUsedCodesByRobot = function(req, res) {
     }, ['robot', 'code', 'used'], function(err, codes) {
         if (err) {
             console.log(err);
-            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).json(codes);
@@ -121,7 +121,7 @@ exports.activateRobot = function(req, res) {
     }, function(err, codeResult) {
         if (err) {
             console.log(err);
-            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             if (codeResult) {
@@ -143,7 +143,7 @@ exports.activateRobot = function(req, res) {
                     ], function(err) {
                         if (err) {
                             console.log(err);
-                            err.code = (err.code && err.code.match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+                            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                             res.status(err.code).send(err);
                         } else {
                             UserRobotsFunctions.getUserRobots(userId, function(error, result) {
