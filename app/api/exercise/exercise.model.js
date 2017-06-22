@@ -7,8 +7,7 @@ var ExerciseSchema = new mongoose.Schema({
 
     name: {
         type: String,
-        trim: true,
-        required: true
+        trim: true
     },
     description: {
         type: String,
