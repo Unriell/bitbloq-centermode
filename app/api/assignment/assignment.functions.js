@@ -3,6 +3,8 @@ var Assignment = require('./assignment.model.js'),
     TaskFunctions = require('../task/task.functions.js'),
     GroupFunctions = require('../group/group.functions.js'),
     MemberFunctions = require('../member/member.functions.js'),
+    mongoose = require('mongoose'),
+    _ = require('lodash'),
     async = require('async');
 
 /**
@@ -73,6 +75,36 @@ exports.getExercisesByGroup = function(groupId, next) {
                     exercises.push(exerciseObject);
                 }
             });
+            next(err, exercises);
+        });
+};
+
+/**
+ * Get exercises with specific center and teacher
+ * @param {String} centerId
+ * @param {String} teacherId
+ * @param {Function} next
+ * @return {Array} exercises
+ */
+exports.getExercisesByCenterTeacher = function(centerId, teacherId, next) {
+    Assignment.find({})
+        .select('exercise group')
+        .populate('exercise')
+        .populate({
+            path: 'group',
+            match: {
+                'teacher': teacherId,
+                'center': centerId
+            }
+        })
+        .exec(function(err, assignments) {
+            var exercises = [];
+            assignments.forEach(function(assignment) {
+                if(assignment.group) {
+                    exercises.push(assignment.exercise);
+                }
+            });
+            exercises= _.uniqBy(exercises,'_id');
             next(err, exercises);
         });
 };

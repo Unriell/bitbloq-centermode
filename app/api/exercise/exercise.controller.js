@@ -256,10 +256,11 @@ exports.getCountByTeacher = function(req, res) {
  * @param res
  */
 exports.getByTeacher = function(req, res) {
-    var page = req.query.page - 1 || 0,
-        perPage = (req.query.pageSize && (req.query.pageSize <= maxPerPage)) ? req.query.pageSize : maxPerPage,
-        userId = req.user._id,
+    var userId = req.user._id,
         teacherId = req.params.teacherId;
+    //page = req.query.page - 1 || 0,
+    //perPage = (req.query.pageSize && (req.query.pageSize <= maxPerPage)) ? req.query.pageSize : maxPerPage,
+
     async.waterfall([
         MemberFunctions.getCenterIdByHeadmaster.bind(UserFunctions, userId),
         function(centerId, next) {
@@ -282,7 +283,7 @@ exports.getByTeacher = function(req, res) {
             }
         },
         function(teacher, centerId, next) {
-            TaskFunctions.getExercises(centerId, teacher._id, page, perPage, next);
+            AssignmentFunctions.getExercisesByCenterTeacher(centerId, teacher._id, next);
         }
     ], function(err, exercises) {
         if (err) {
