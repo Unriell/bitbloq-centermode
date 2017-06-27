@@ -75,7 +75,13 @@ exports.getByExercise = function(req, res) {
             Assignment.find({
                     exercise: exerciseId
                 })
-                .populate('group')
+                .populate({
+                    path: 'group',
+                    populate: {
+                        path: 'center',
+                        select: 'name activatedRobots -_id'
+                    }
+                })
                 .or([{
                     'group.center': mongoose.Schema.Types.ObjectId(centerId)
                 }, {

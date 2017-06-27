@@ -101,6 +101,13 @@ exports.delete = function(req, res) {
 exports.get = function(req, res) {
     Task.findById(req.params.id)
         .populate('exercise', 'name description teacher selectedBloqs hardwareTags software hardware defaultTheme useBitbloqConnect bitbloqConnectBT')
+        .populate({
+            path: 'group',
+            populate: {
+                path: 'center',
+                select: 'name activatedRobots -_id'
+            }
+        })
         .exec(function(err, task) {
             if (err) {
                 console.log(err);
