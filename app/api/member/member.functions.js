@@ -198,7 +198,13 @@ exports.getGroups = function(userId, next) {
                 $exists: true
             }
         })
-        .populate('group')
+        .populate({
+            path: 'group',
+            populate: {
+                path: 'center',
+                select: 'name activatedRobots -_id'
+            }
+        })
         .exec(function(err, members) {
             if (members.length > 0) {
                 var groups = _.map(members, 'group');
