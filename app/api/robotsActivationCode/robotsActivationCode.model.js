@@ -19,6 +19,10 @@ var robotsActivationCodeSchema = new mongoose.Schema({
             type: String,
             trim: true
         },
+        center: {
+            type: String,
+            trim: true
+        },
         date: Date
     },
     reason: {

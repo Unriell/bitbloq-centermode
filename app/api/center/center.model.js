@@ -22,11 +22,11 @@ var CenterSchema = new mongoose.Schema({
         trim: false,
         required: true
     },
+    activatedRobots: [],
     deleted: Boolean
 }, {
     timestamps: true
 });
-
 
 /**
  * Pre hook
@@ -42,12 +42,26 @@ CenterSchema.pre('findOne', findNotDeletedMiddleware);
 CenterSchema.pre('findOneAndUpdate', findNotDeletedMiddleware);
 CenterSchema.pre('count', findNotDeletedMiddleware);
 
-
 /**
  * Methods
  */
 
 CenterSchema.methods = {
+
+    /**
+     * isOwner - check if an user is owner of exercise
+     *
+     * @param {String} userId
+     * @return {Boolean}
+     * @api public
+     */
+    isOwner: function(userId) {
+        var owner = false;
+        if (String(this.creator) === String(userId)) {
+            owner = true;
+        }
+        return owner;
+    },
 
     /**
      * delete - change deleted attribute to true
@@ -60,6 +74,5 @@ CenterSchema.methods = {
         this.save(next);
     }
 };
-
 
 module.exports = mongoose.model('CenterMode-Center', CenterSchema);

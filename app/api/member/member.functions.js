@@ -94,8 +94,6 @@ exports.deleteStudent = function(studentId, groupId, next) {
         function(member, next) {
             if (member) {
                 member.delete(function(err) {
-                    console.log('next');
-                    console.log(next);
                     next(err);
                 });
             } else {

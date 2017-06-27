@@ -3,6 +3,7 @@
 var Code = require('./robotsActivationCode.model.js'),
     CodeFunctions = require('./robotsActivationCode.functions.js'),
     UserRobotsFunctions = require('../userrobots/userrobots.functions.js'),
+    CenterFunctions = require('../center/center.functions.js'),
     async = require('async'),
     _ = require('lodash');
 
@@ -108,6 +109,7 @@ exports.activateRobot = function(req, res) {
     var code = req.body.code,
         robot = req.body.robot,
         userId = req.user._id,
+        centerId = req.body.centerId,
         codeFormatted;
 
     // TESTING: userId = '5750561d404d59be2534af47';
@@ -125,36 +127,48 @@ exports.activateRobot = function(req, res) {
             res.status(err.code).send(err);
         } else {
             if (codeResult) {
-                if (codeResult && codeResult.used.user) {
+                if (codeResult && (codeResult.used.user || codeResult.used.center)) {
                     res.sendStatus(409);
                 } else {
                     async.parallel([
                         function(next) {
-                            codeResult.update({
-                                used: {
+                            var infoUsed = {};
+                            if (centerId) {
+                                infoUsed = {
+                                    center: centerId,
+                                    date: new Date()
+                                };
+                            } else {
+                                infoUsed = {
                                     user: userId,
                                     date: new Date()
-                                }
+                                };
+                            }
+                            codeResult.update({
+                                used: infoUsed
                             }, next);
                         },
                         function(next) {
-                            UserRobotsFunctions.addUserRobot(userId, robot, next);
+                            if (centerId) {
+                                CenterFunctions.addCenterRobot(centerId, robot, next);
+                            } else {
+                                UserRobotsFunctions.addUserRobot(userId, robot, next);
+                            }
+                        },
+                        function(next) {
+                            if (centerId) {
+                                CenterFunctions.getCenterById(centerId, next);
+                            } else {
+                                UserRobotsFunctions.getUserRobots(userId, next);
+                            }
                         }
-                    ], function(err) {
+                    ], function(err, result) {
                         if (err) {
                             console.log(err);
                             err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                             res.status(err.code).send(err);
                         } else {
-                            UserRobotsFunctions.getUserRobots(userId, function(error, result) {
-                                if (error) {
-                                    console.log(error);
-                                    error.code = parseInt(error.code) || 500;
-                                    res.status(error.code).send(error);
-                                } else {
-                                    res.status(200).json(result);
-                                }
-                            });
+                            res.status(200).json(result[2]);
                         }
                     });
                 }

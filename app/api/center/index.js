@@ -13,4 +13,7 @@ router.get('/teacher/me', auth.isAuthenticated(), controller.getMyCenters);
 // POST
 router.post('/', auth.isAuthenticated(), controller.createCenter);
 
+//PUT
+router.put('/', auth.isAuthenticated(), controller.updateCenter);
+
 module.exports = router;

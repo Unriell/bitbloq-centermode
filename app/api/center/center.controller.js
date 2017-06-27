@@ -91,3 +91,33 @@ exports.getMyCenters = function(req, res) {
         }
     });
 };
+
+/**
+ * Update a center
+ * @param req
+ * @param res
+ */
+exports.updateCenter = function(req, res) {
+    var centerId = req.body._id;
+    Center.findById(centerId, function(err, center) {
+        if (err) {
+            console.log(err);
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+            res.status(err.code).send(err);
+        } else {
+            if (center.isOwner(req.user._id)) {
+                center.update(req.body, function(err) {
+                    if (err) {
+                        console.log(err);
+                        err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+                        res.status(err.code).send(err);
+                    } else {
+                        res.sendStatus(200);
+                    }
+                });
+            } else {
+                res.sendStatus(401);
+            }
+        }
+    });
+};

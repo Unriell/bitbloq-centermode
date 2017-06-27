@@ -36,3 +36,19 @@ exports.getCentersInArray = function(centerIds, next) {
         .where('_id').in(centerIds)
         .exec(next);
 };
+
+exports.getCenterById = function(centerId, next) {
+    Center.findById(centerId, next);
+}
+
+exports.addCenterRobot = function(centerId, robot, next) {
+    Center.update({
+            _id: centerId
+        }, {
+            $addToSet: {
+                activatedRobots: robot.split('-')[0]
+            }
+        },
+        next
+    );
+}
