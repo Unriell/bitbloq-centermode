@@ -3,6 +3,8 @@ var Member = require('./member.model.js'),
     GroupFunctions = require('../group/group.functions'),
     async = require('async'),
     mongoose = require('mongoose'),
+    mailer = require('../../components/mailer'),
+    config = require('../../res/config.js'),
     _ = require('lodash');
 
 /**
@@ -63,8 +65,23 @@ exports.addAllTeachers = function(users, centerId, next) {
     var userDontExist = [];
     async.map(users, function(user, next) {
         if (user && user._id) {
-            exports.addTeacher(user._id, centerId, function(err) {
-                next(err, user);
+            var locals = {
+                email: user.email,
+                subject: 'Únete a mi centro',
+                center: centerId,
+                addTeacherUrl: config.client_domain + '/#/center-mode/add-teacher/...',
+            };
+
+            mailer.sendOne('addTeacher', locals, function(err) {
+                if (err) {
+                    console.log(err);
+                    err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+                    res.status(err.code).send(err);
+                } else {
+                    exports.addTeacher(user._id, centerId, function(err) {
+                        next(err, user);
+                    });
+                }
             });
         } else {
             userDontExist.push(user.email);

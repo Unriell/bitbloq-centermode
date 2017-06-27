@@ -1,0 +1,20 @@
+<img src="http://storage.googleapis.com/bitbloq/mail-images/logobit.png" alt="Bitbloq logo">
+<h1>Únete al centro</h1>
+<p>
+    Hola <br>
+    estás recibiendo este correo porque parece que el director del centro {{=it.center}} quiere que formes parte de su grupo de profesores. <br>
+    Para unirte a este centro haz click en el siguiente botón:
+</p>
+<br>
+<div class="mailer__container--button">
+    <a class="mailer__button" href="{{=it.addTeacherUrl}}">Unirme al centro</a>
+</div>
+<br>
+<p>
+    o bien, corta y pega el siguiente enlace en la barra de direcciones de tu navegador:
+</p>
+    <a class="url-link" href="{{=it.addTeacherUrl}}">{{=it.addTeacherUrl}}</a>
+<p>
+    Un saludo, <br>
+    <i>el equipo de</i> Bitbloq.
+</p>
