@@ -39,7 +39,7 @@ exports.getCentersInArray = function(centerIds, next) {
 
 exports.getCenterById = function(centerId, next) {
     Center.findById(centerId, next);
-}
+};
 
 exports.addCenterRobot = function(centerId, robot, next) {
     Center.update({
@@ -51,4 +51,4 @@ exports.addCenterRobot = function(centerId, robot, next) {
         },
         next
     );
-}
+};

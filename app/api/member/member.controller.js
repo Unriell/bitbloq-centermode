@@ -7,6 +7,7 @@ var Member = require('./member.model.js'),
     GroupFunctions = require('../group/group.functions.js'),
     TaskFunctions = require('../task/task.functions.js'),
     AssignmentFunction = require('../assignment/assignment.functions.js'),
+    ConfirmationTokenFunctions = require('../teacherConfirmation/token.functions'),
     async = require('async'),
     _ = require('lodash');
 
@@ -50,23 +51,43 @@ exports.addTeacher = function(req, res) {
 };
 
 /**
- * Add a member in a center like teachers
- * @param {String} users
- * @param {String} centerId
- * @param {Function} next
+ * A teacher confirm his integration with a center
+ * @param req
+ * @param req.user
+ * @param req.body.token
+ * @param res
  */
 exports.confirmTeacher = function(req, res) {
-    var userId = req.user._id,
-        confirmationToken = req.body.token;
-
-    //comprobar que hay token con ese teacherId y ese centerId
-
-    if (token) {
-        exports.addTeacher(user._id, centerId, function(err) {
-            next(err, user);
+    var userId = req.user._id;
+    if (req.body.token) {
+        async.waterfall([
+            ConfirmationTokenFunctions.getInfo.bind(ConfirmationTokenFunctions, req.body.token),
+            function(token, next) {
+                if (token && userId == token.teacherId) {
+                    MemberFunctions.addTeacher(token.teacherId, token.centerId, function(err) {
+                        next(err, token);
+                    });
+                } else {
+                    next({
+                        code: 403,
+                        message: 'Forbidden'
+                    });
+                }
+            },
+            function(token, next) {
+                CenterFunctions.getCenterById(token.centerId, next);
+            }
+        ], function(err, center) {
+            if (err) {
+                console.log(err);
+                err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+                res.status(err.code).send(err);
+            } else {
+                res.status(200).send(center.name);
+            }
         });
     } else {
-        res.sendStatus(404);
+        res.sendStatus(400);
     }
 };
 

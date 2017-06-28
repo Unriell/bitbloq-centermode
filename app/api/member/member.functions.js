@@ -66,12 +66,12 @@ exports.sendConfirmationAllTeachers = function(users, centerId, next) {
     var userDontExist = [];
     async.map(users, function(user, next) {
         if (user && user._id) {
-            ConfirmationTokenFunctions.createToken(user._id, centerId, function(err, token){
-                if(err){
+            ConfirmationTokenFunctions.createToken(user._id, centerId, function(err, token) {
+                if (err) {
                     next(err);
                 }
                 var locals = {
-                    email: 'laura.delrio@bq.com',
+                    email: user.email,
                     subject: 'Únete a mi centro',
                     center: centerId,
                     addTeacherUrl: config.client_domain + '/#/center-mode/add-teacher/' + token,

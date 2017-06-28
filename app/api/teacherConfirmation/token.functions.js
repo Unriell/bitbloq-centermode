@@ -1,5 +1,6 @@
 'use strict';
-var ConformationToken = require('./token.model.js');
+var config = require('../../res/config.js'),
+    jwt = require('jsonwebtoken');
 
 /**
  * Create confirmation token
@@ -8,10 +9,21 @@ var ConformationToken = require('./token.model.js');
  * @param {Function} next
  */
 exports.createToken = function(teacherId, centerId, next) {
-    var token = new ConformationToken();
-    token.generateToken(teacherId, centerId);
+    var token = jwt.sign({
+        _id: this._id,
+        teacherId: teacherId,
+        centerId: centerId
+    }, config.secrets.session, {});
 
-    token.save(function(err){
-        next(err, token.token);
-    });
+    next(null, token);
+};
+
+
+/**
+ * Get confirmation token
+ * @param {String} token
+ * @param {Function} next
+ */
+exports.getInfo = function(token, next){
+    jwt.verify(token, config.secrets.session, next);
 };
