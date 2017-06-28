@@ -76,7 +76,7 @@ exports.addAllTeachers = function(users, centerId, next) {
                 if (err) {
                     console.log(err);
                     err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
-                    res.status(err.code).send(err);
+                    next(err);
                 } else {
                     exports.addTeacher(user._id, centerId, function(err) {
                         next(err, user);

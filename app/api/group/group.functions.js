@@ -4,7 +4,6 @@ var Group = require('./group.model.js'),
     _ = require('lodash'),
     async = require('async');
 
-
 /**
  * Delete all groups of teacher in a center
  * @param {String} teacherId
@@ -67,7 +66,6 @@ exports.getGroups = function(teacherId, centerId, next) {
     }, next);
 };
 
-
 /**
  * Get group ids by teacher in a center
  * @param {String} teacherId
@@ -78,7 +76,7 @@ exports.getGroupIdsByTeacherAndCenter = function(teacherId, centerId, next) {
     Group.find({
         teacher: teacherId,
         center: centerId
-    }, function(err, groups){
+    }, function(err, groups) {
         next(err, _.map(groups, '_id'));
     });
 };
@@ -130,7 +128,6 @@ exports.getStudents = function(groupId, userId, next) {
     });
 };
 
-
 /**
  * Get group name
  * @param {String} groupId
@@ -139,6 +136,7 @@ exports.getStudents = function(groupId, userId, next) {
  */
 exports.get = function(groupId, next) {
     Group.findById(groupId)
-        .select('name')
+        .select('name center')
+        .populate('center', 'activatedRobots')
         .exec(next);
 };

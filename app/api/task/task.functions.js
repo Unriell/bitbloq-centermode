@@ -14,57 +14,62 @@ var Task = require('./task.model.js'),
  */
 exports.checkAndCreateTask = function(taskData, studentId, groupName, next) {
     Task.findOne({
-        exercise: taskData.exercise,
-        group: taskData.group,
-        student: studentId
-    }).populate('group', 'name center').exec(function(err, task) {
-        if (task) {
-            //already a task
-            var taskObject = task.toObject();
-            taskObject.initDate = taskData.initDate;
-            taskObject.endDate = taskData.endDate;
-            task.update(taskObject, function(err) {
-                if (!err) {
-                    var groupTask = {
-                        '_id': task.group._id,
-                        'initDate': taskObject.initDate,
-                        'endDate': taskObject.endDate,
-                        'name': task.group.name
-                    };
-                    next(err, groupTask);
-                } else {
-                    next(err, {});
-                }
-            });
-        } else {
-            taskData.student = studentId;
-            var newTask = new Task(taskData);
-            newTask.save(function(err, taskSaved) {
-                if (err) {
-                    next(err);
-                } else {
-                    if (groupName) {
-                        next(err, {
-                            '_id': taskSaved.group,
-                            'initDate': taskSaved.initDate,
-                            'endDate': taskSaved.endDate,
-                            'name': groupName
-                        });
+            exercise: taskData.exercise,
+            group: taskData.group,
+            student: studentId
+        })
+        .populate('group', 'name center')
+        .populate({
+            path: 'group',
+            populate: {
+                path: 'center',
+                select: 'name activatedRobots -_id'
+            }
+        }).exec(function(err, task) {
+            if (task) {
+                //already a task
+                var taskObject = task.toObject();
+                taskObject.initDate = taskData.initDate;
+                taskObject.endDate = taskData.endDate;
+                task.update(taskObject, function(err) {
+                    if (!err) {
+                        var groupTask = {
+                            '_id': task.group._id,
+                            'initDate': taskObject.initDate,
+                            'endDate': taskObject.endDate,
+                            'name': task.group.name,
+                            'center': {
+                                'activatedRobots': task.group.activatedRobots
+                            }
+                        };
+                        next(err, groupTask);
+                    } else {
+                        next(err, {});
+                    }
+                });
+            } else {
+                taskData.student = studentId;
+                var newTask = new Task(taskData);
+                newTask.save(function(err, taskSaved) {
+                    if (err) {
+                        next(err);
                     } else {
                         GroupFunction.get(taskSaved.group, function(err, group) {
                             var groupTask = {
                                 '_id': group._id,
                                 'initDate': taskSaved.initDate,
                                 'endDate': taskSaved.endDate,
-                                'name': group.name
+                                'name': group.name,
+                                'center': {
+                                    'activatedRobots': group.center.activatedRobots
+                                }
                             };
                             next(err, groupTask);
                         });
                     }
-                }
-            });
-        }
-    });
+                });
+            }
+        });
 };
 
 /**

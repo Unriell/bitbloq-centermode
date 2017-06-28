@@ -18,6 +18,7 @@ exports.generateCodes = function(req, res) {
         robots = req.body.robots,
         reason,
         reporter,
+        type = req.body.type,
         codes = [];
 
     if (req.body.reason) {
@@ -37,7 +38,8 @@ exports.generateCodes = function(req, res) {
                 'robot': robot,
                 'code': CodeFunctions.generateCode(),
                 'reason': reason,
-                'reporter': reporter
+                'reporter': reporter,
+                'type': type
             });
         }
     });
@@ -110,17 +112,22 @@ exports.activateRobot = function(req, res) {
         robot = req.body.robot,
         userId = req.user._id,
         centerId = req.body.centerId,
+        type = req.body.type,
         codeFormatted;
 
     // TESTING: userId = '5750561d404d59be2534af47';
     if (code) {
         codeFormatted = CodeFunctions.formatCode(code);
     }
-
-    Code.findOne({
+    var query = {
         'code': codeFormatted,
         'robot': robot
-    }, function(err, codeResult) {
+    };
+
+    if (type && type === 'center') {
+        query.type = type;
+    }
+    Code.findOne(query, function(err, codeResult) {
         if (err) {
             console.log(err);
             err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;

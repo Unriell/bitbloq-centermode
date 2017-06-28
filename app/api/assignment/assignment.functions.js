@@ -66,7 +66,7 @@ exports.getExercisesByGroup = function(groupId, next) {
         .populate('exercise')
         .select('exercise initDate endDate')
         .exec(function(err, assignments) {
-                var exercises = [];
+            var exercises = [];
             assignments.forEach(function(assignment) {
                 if (assignment.exercise) {
                     var exerciseObject = assignment.exercise.toObject();
@@ -100,11 +100,11 @@ exports.getExercisesByCenterTeacher = function(centerId, teacherId, next) {
         .exec(function(err, assignments) {
             var exercises = [];
             assignments.forEach(function(assignment) {
-                if(assignment.group) {
+                if (assignment.group) {
                     exercises.push(assignment.exercise);
                 }
             });
-            exercises= _.uniqBy(exercises,'_id');
+            exercises = _.uniqBy(exercises, '_id');
             next(err, exercises);
         });
 };
@@ -174,7 +174,10 @@ exports.createTasks = function(assignment, userId, next) {
                         _id: assignment.group,
                         name: result.name,
                         initDate: assignment.initDate,
-                        endDate: assignment.endDate
+                        endDate: assignment.endDate,
+                        center: {
+                            activatedRobots: result.center.activatedRobots
+                        }
                     }]);
                 });
             }
@@ -183,7 +186,6 @@ exports.createTasks = function(assignment, userId, next) {
         next(err, newTask[0]);
     });
 };
-
 
 /**
  * assignment is removed by an exercise
@@ -203,7 +205,8 @@ exports.removeByExercise = function(exerciseId, next) {
                 assignment.delete();
             });
             next();
-        }], next);
+        }
+    ], next);
 };
 
 /**
@@ -224,5 +227,6 @@ exports.removeByGroup = function(groupId, next) {
                 assignment.delete();
             });
             next();
-        }], next);
+        }
+    ], next);
 };

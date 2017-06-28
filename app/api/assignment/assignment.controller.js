@@ -172,26 +172,34 @@ exports.unassign = function(req, res) {
  */
 function createAssignment(assignment, userId, next) {
     Assignment.find({
-        group: assignment.group,
-        exercise: assignment.exercise
-    }).exec(function(err, result) {
-        if (err) {
-            next(err);
-        } else {
-            assignment.creator = userId;
-            assignment.endDate = assignment.endDate || undefined;
-            assignment.initDate = assignment.initDate || undefined;
-            if (result && result.length > 0) {
-                Assignment.update({
-                    group: assignment.group,
-                    exercise: assignment.exercise
-                }, assignment, {
-                    upsert: true
-                }, next);
-            } else {
-                var newAssignment = new Assignment(assignment);
-                newAssignment.save(next);
+            group: assignment.group,
+            exercise: assignment.exercise
+        })
+        .populate({
+            path: 'group',
+            populate: {
+                path: 'center',
+                select: 'name activatedRobots -_id'
             }
-        }
-    });
+        })
+        .exec(function(err, result) {
+            if (err) {
+                next(err);
+            } else {
+                assignment.creator = userId;
+                assignment.endDate = assignment.endDate || undefined;
+                assignment.initDate = assignment.initDate || undefined;
+                if (result && result.length > 0) {
+                    Assignment.update({
+                        group: assignment.group,
+                        exercise: assignment.exercise
+                    }, assignment, {
+                        upsert: true
+                    }, next);
+                } else {
+                    var newAssignment = new Assignment(assignment);
+                    newAssignment.save(next);
+                }
+            }
+        });
 }

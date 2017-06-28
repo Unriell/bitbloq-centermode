@@ -33,7 +33,8 @@ var ExerciseSchema = new mongoose.Schema({
         board: String,
         components: [],
         connections: [],
-        robot: String
+        robot: String,
+        showRobotImage: String
     },
     code: String,
     software: {
@@ -53,7 +54,6 @@ var ExerciseSchema = new mongoose.Schema({
     timestamps: true
 });
 
-
 /**
  * Pre hook
  */
@@ -67,7 +67,6 @@ ExerciseSchema.pre('find', findNotDeletedMiddleware);
 ExerciseSchema.pre('findOne', findNotDeletedMiddleware);
 ExerciseSchema.pre('findOneAndUpdate', findNotDeletedMiddleware);
 ExerciseSchema.pre('count', findNotDeletedMiddleware);
-
 
 /**
  * Methods
@@ -99,8 +98,8 @@ ExerciseSchema.methods = {
     delete: function(next) {
         var exerciseId = this._id;
         this.deleted = true;
-        this.save(function(err){
-            if(!err) {
+        this.save(function(err) {
+            if (!err) {
                 AssignmentFunctions.removeByExercise(exerciseId, next);
             } else {
                 next(err);
