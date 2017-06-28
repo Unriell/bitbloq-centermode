@@ -35,7 +35,7 @@ exports.addTeacher = function(req, res) {
             if (!result[0]) {
                 res.sendStatus(403);
             } else {
-                MemberFunctions.addAllTeachers(result[1], centerId, function(err, teachers) {
+                MemberFunctions.sendConfirmationAllTeachers(result[1], centerId, function(err, teachers) {
                     if (err) {
                         console.log(err);
                         err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
@@ -48,6 +48,28 @@ exports.addTeacher = function(req, res) {
         }
     });
 };
+
+/**
+ * Add a member in a center like teachers
+ * @param {String} users
+ * @param {String} centerId
+ * @param {Function} next
+ */
+exports.confirmTeacher = function(req, res) {
+    var userId = req.user._id,
+        confirmationToken = req.body.token;
+
+    //comprobar que hay token con ese teacherId y ese centerId
+
+    if (token) {
+        exports.addTeacher(user._id, centerId, function(err) {
+            next(err, user);
+        });
+    } else {
+        res.sendStatus(404);
+    }
+};
+
 
 /**
  * Activate student mode

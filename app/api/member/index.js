@@ -16,6 +16,7 @@ router.get('/teachers/center/:centerId', auth.isAuthenticated(), controller.getT
 
 // POST
 router.post('/teacher', auth.isAuthenticated(), controller.addTeacher);
+router.post('/confirm-teacher', auth.isAuthenticated(), controller.confirmTeacher);
 router.post('/student', auth.isAuthenticated(), controller.registerInGroup);
 router.post('/activate', auth.isAuthenticated(), controller.activateStudentMode);
 

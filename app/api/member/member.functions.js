@@ -1,6 +1,7 @@
 'use strict';
 var Member = require('./member.model.js'),
     GroupFunctions = require('../group/group.functions'),
+    ConfirmationTokenFunctions = require('../teacherConfirmation/token.functions'),
     async = require('async'),
     mongoose = require('mongoose'),
     mailer = require('../../components/mailer'),
@@ -56,32 +57,34 @@ exports.addTeacher = function(userId, centerId, next) {
 };
 
 /**
- * Add members in a center like teachers
+ * Send confirmation email to teachers
  * @param {String} users
  * @param {String} centerId
  * @param {Function} next
  */
-exports.addAllTeachers = function(users, centerId, next) {
+exports.sendConfirmationAllTeachers = function(users, centerId, next) {
     var userDontExist = [];
     async.map(users, function(user, next) {
         if (user && user._id) {
-            var locals = {
-                email: user.email,
-                subject: 'Únete a mi centro',
-                center: centerId,
-                addTeacherUrl: config.client_domain + '/#/center-mode/add-teacher/...',
-            };
-
-            mailer.sendOne('addTeacher', locals, function(err) {
-                if (err) {
-                    console.log(err);
-                    err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+            ConfirmationTokenFunctions.createToken(user._id, centerId, function(err, token){
+                if(err){
                     next(err);
-                } else {
-                    exports.addTeacher(user._id, centerId, function(err) {
-                        next(err, user);
-                    });
                 }
+                var locals = {
+                    email: 'laura.delrio@bq.com',
+                    subject: 'Únete a mi centro',
+                    center: centerId,
+                    addTeacherUrl: config.client_domain + '/#/center-mode/add-teacher/' + token,
+                };
+
+                mailer.sendOne('addTeacher', locals, function(err) {
+                    if (err) {
+                        userDontExist.push(user.email);
+                        next(err);
+                    } else {
+                        next(null, user);
+                    }
+                });
             });
         } else {
             userDontExist.push(user.email);
@@ -89,8 +92,8 @@ exports.addAllTeachers = function(users, centerId, next) {
         }
     }, function(err, completedMembers) {
         next(err, {
-            teachersAdded: _.without(completedMembers, undefined),
-            teachersNotAdded: !_.isEmpty(userDontExist) ? userDontExist : undefined
+            teachersWaitingConfirmation: _.without(completedMembers, undefined),
+            teachersWithError: !_.isEmpty(userDontExist) ? userDontExist : undefined
         });
     });
 };
