@@ -1,6 +1,7 @@
 'use strict';
 var Member = require('./member.model.js'),
     GroupFunctions = require('../group/group.functions'),
+    CenterFunctions = require('../center/center.functions'),
     ConfirmationTokenFunctions = require('../teacherConfirmation/token.functions'),
     async = require('async'),
     mongoose = require('mongoose'),
@@ -74,7 +75,7 @@ exports.sendConfirmationAllTeachers = function(users, centerId, next) {
                     email: user.email,
                     subject: 'Únete a mi centro',
                     center: centerId,
-                    addTeacherUrl: config.client_domain + '/#/center-mode/add-teacher/' + token,
+                    addTeacherUrl: config.client_domain + '/#/center-mode/add-teacher/' + token
                 };
 
                 mailer.sendOne('addTeacher', locals, function(err) {
@@ -82,7 +83,10 @@ exports.sendConfirmationAllTeachers = function(users, centerId, next) {
                         userDontExist.push(user.email);
                         next(err);
                     } else {
-                        next(null, user);
+                        CenterFunctions.addNotConfirmedTeacher(centerId, user._id, function(err, center) {
+                            var result = center ? user : undefined;
+                            next(err, result);
+                        });
                     }
                 });
             });
@@ -158,6 +162,7 @@ exports.getAllTeachers = function(centerId, next) {
             role: 'teacher'
         })
         .populate('user', '_id username firstName lastName email')
+        .lean()
         .sort({
             createdAt: 'desc'
         })

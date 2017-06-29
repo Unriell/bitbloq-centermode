@@ -293,12 +293,23 @@ exports.getTeachers = function(req, res) {
                     message: 'Forbidden'
                 });
             } else {
-                MemberFunctions.getAllTeachers(centerId, function(err, members) {
-                    next(err, members, centerId);
-                });
+                CenterFunctions.getNotConfirmedTeacher(centerId, next);
             }
         },
-        function(members, centerId, next) {
+        function(notConfirmedTeachers, next) {
+            var users = [];
+            _.forEach(notConfirmedTeachers, function(teacher) {
+                teacher.notConfirmed = true;
+                users.push({user: teacher});
+            });
+            MemberFunctions.getAllTeachers(centerId, function(err, members) {
+                if (members) {
+                    users = _.concat(members, users);
+                }
+                next(err, users);
+            });
+        },
+        function(members, next) {
             async.map(members, function(member, next) {
                 CenterFunctions.getStats(member.user, centerId, next);
             }, next);

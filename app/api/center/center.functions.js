@@ -16,12 +16,11 @@ exports.getStats = function(teacher, centerId, next) {
         MemberFunctions.getStudentsCounter.bind(MemberFunctions, teacher._id, centerId),
         GroupFunctions.getCounter.bind(GroupFunctions, teacher._id, centerId)
     ], function(err, result) {
-        var teacherObject = teacher.toObject();
         if (!err) {
-            teacherObject.students = result[0];
-            teacherObject.groups = result[1];
+            teacher.students = result[0];
+            teacher.groups = result[1];
         }
-        next(err, teacherObject);
+        next(err, teacher);
     });
 };
 
@@ -51,4 +50,33 @@ exports.addCenterRobot = function(centerId, robot, next) {
         },
         next
     );
+};
+
+exports.addNotConfirmedTeacher = function(centerId, teacherId, next) {
+    Center.findById(centerId, function(err, center) {
+        if (err) {
+            next(err);
+        } else {
+            if (center.notConfirmedTeacher.indexOf(teacherId) === -1) {
+                center.notConfirmedTeacher.push(teacherId);
+                center.save(next);
+            } else {
+                next();
+            }
+        }
+    });
+};
+
+exports.getNotConfirmedTeacher = function(centerId, next) {
+    Center.findById(centerId)
+        .select('notConfirmedTeacher')
+        .populate('notConfirmedTeacher', '_id username firstName lastName email')
+        .lean()
+        .exec(function(err, center) {
+            if (center) {
+                next(err, center.notConfirmedTeacher);
+            } else {
+                next(err);
+            }
+        });
 };

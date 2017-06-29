@@ -23,6 +23,11 @@ var CenterSchema = new mongoose.Schema({
         required: true
     },
     activatedRobots: [],
+    notConfirmedTeacher: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        trim: false
+    }],
     deleted: Boolean
 }, {
     timestamps: true
