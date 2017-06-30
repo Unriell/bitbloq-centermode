@@ -91,7 +91,7 @@ exports.deleteNotConfirmedTeacher = function(centerId, teacherId, next) {
                 center.notConfirmedTeacher.splice(index, 1);
                 center.save(next);
             } else {
-                next();
+                next(null, center);
             }
         }
     });
