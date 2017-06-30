@@ -75,7 +75,7 @@ exports.confirmTeacher = function(req, res) {
                 }
             },
             function(token, next) {
-                CenterFunctions.getCenterById(token.centerId, next);
+                CenterFunctions.deleteNotConfirmedTeacher(token.centerId, token.teacherId, next);
             }
         ], function(err, center) {
             if (err) {

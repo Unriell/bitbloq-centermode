@@ -80,3 +80,19 @@ exports.getNotConfirmedTeacher = function(centerId, next) {
             }
         });
 };
+
+exports.deleteNotConfirmedTeacher = function(centerId, teacherId, next) {
+    Center.findById(centerId, function(err, center) {
+        if (err) {
+            next(err);
+        } else {
+            var index = center.notConfirmedTeacher.indexOf(teacherId);
+            if (index !== -1) {
+                center.notConfirmedTeacher.splice(index, 1);
+                center.save(next);
+            } else {
+                next();
+            }
+        }
+    });
+};
