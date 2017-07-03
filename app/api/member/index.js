@@ -26,6 +26,7 @@ router.put('/send-invitation', auth.isAuthenticated(), controller.sendInvitation
 // DELETE
 router.delete('/teacher/:teacherId/center/:centerId', auth.isAuthenticated(), controller.deleteTeacher);
 router.delete('/student/:studentId/group/:groupId', auth.isAuthenticated(), controller.deleteStudent);
+router.delete('/invitation/teacher/:teacherId/center/:centerId', auth.isAuthenticated(), controller.deleteInvitation);
 
 
 module.exports = router;

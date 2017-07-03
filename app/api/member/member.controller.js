@@ -159,6 +159,42 @@ exports.activateStudentMode = function(req, res) {
 };
 
 /**
+ * Delete a teacher invitation if user is head master
+ * @param req
+ * @param req.params.teacherId
+ * @param req.params.centerId
+ * @param res
+ */
+exports.deleteInvitation = function(req, res) {
+    var userId = req.user._id,
+        teacherId = req.params.teacherId,
+        centerId = req.params.centerId;
+    async.waterfall([
+        function(next) {
+            MemberFunctions.userIsHeadmaster(userId, centerId, next);
+        },
+        function(isHeadmaster, next) {
+            if (isHeadmaster) {
+                CenterFunctions.deleteNotConfirmedTeacher(centerId, teacherId, next);
+            } else {
+                next({
+                    code: 403,
+                    message: 'Forbidden'
+                });
+            }
+        }
+    ], function(err) {
+        if (err) {
+            console.log(err);
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+            res.status(err.code).send(err);
+        } else {
+            res.sendStatus(200);
+        }
+    });
+};
+
+/**
  * Delete a student if user is group teacher
  * @param req
  * @param res
