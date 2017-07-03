@@ -91,6 +91,49 @@ exports.confirmTeacher = function(req, res) {
     }
 };
 
+/**
+ * An invitation is resent
+ * @param req
+ * @param req.user
+ * @param req.body.teacherId
+ * @param req.body.centerId
+ * @param res
+ */
+exports.sendInvitation = function(req, res) {
+    var teacherId = req.body.teacherId,
+        centerId = req.body.centerId;
+    if (teacherId && centerId) {
+        async.waterfall([
+            function(next) {
+                CenterFunctions.isNotConfirmedTeacher(centerId, teacherId, next);
+            },
+            function(isNotConfirmedTeacher, next) {
+                if (isNotConfirmedTeacher) {
+                    UserFunctions.getUserById(teacherId, next);
+                } else {
+                    next({
+                        code: 404,
+                        message: 'Not Found'
+                    });
+                }
+            },
+            function(teacher, next) {
+                MemberFunctions.sendConfirmationAllTeachers([teacher], centerId, next);
+            }
+        ], function(err, teachers) {
+            if (err) {
+                console.log(err);
+                err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+                res.status(err.code).send(err);
+            } else {
+                res.status(200).send(teachers);
+            }
+        });
+    } else {
+        res.sendStatus(400);
+    }
+};
+
 
 /**
  * Activate student mode

@@ -59,7 +59,7 @@ exports.addTeacher = function(userId, centerId, next) {
 
 /**
  * Send confirmation email to teachers
- * @param {String} users
+ * @param {Array} users
  * @param {String} centerId
  * @param {Function} next
  */
@@ -67,17 +67,20 @@ exports.sendConfirmationAllTeachers = function(users, centerId, next) {
     var userDontExist = [];
     async.map(users, function(user, next) {
         if (user && user._id) {
-            ConfirmationTokenFunctions.createToken(user._id, centerId, function(err, token) {
-                if (err) {
-                    next(err);
+            async.parallel([
+                CenterFunctions.getCenterById.bind(CenterFunctions, centerId),
+                function(callback) {
+                    ConfirmationTokenFunctions.createToken(user._id, centerId, callback);
                 }
-                var locals = {
-                    email: user.email,
-                    subject: 'Únete a mi centro',
-                    center: centerId,
-                    addTeacherUrl: config.client_domain + '/#/center-mode/add-teacher/' + token
-                };
-
+            ], function(err, result) {
+                var center = result[0],
+                    token = result[1],
+                    locals = {
+                        email: user.email,
+                        subject: 'El centro ' + center.name + ' te invita como profesor de Bitbloq',
+                        center: center.name,
+                        addTeacherUrl: config.client_domain + '/#/center-mode/add-teacher/' + token
+                    };
                 mailer.sendOne('addTeacher', locals, function(err) {
                     if (err) {
                         userDontExist.push(user.email);

@@ -81,6 +81,23 @@ exports.getNotConfirmedTeacher = function(centerId, next) {
         });
 };
 
+
+exports.isNotConfirmedTeacher = function(centerId, teacherId, next) {
+    Center.findById(centerId)
+        .select('notConfirmedTeacher')
+        .exec(function(err, center) {
+            if (center) {
+                if (center.notConfirmedTeacher && center.notConfirmedTeacher.indexOf(teacherId) > -1) {
+                    next(err, true);
+                } else {
+                    next(err, false);
+                }
+            } else {
+                next(err, false);
+            }
+        });
+};
+
 exports.deleteNotConfirmedTeacher = function(centerId, teacherId, next) {
     Center.findById(centerId, function(err, center) {
         if (err) {
