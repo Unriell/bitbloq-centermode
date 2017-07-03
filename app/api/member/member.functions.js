@@ -71,27 +71,35 @@ exports.sendConfirmationAllTeachers = function(users, centerId, next) {
                 CenterFunctions.getCenterById.bind(CenterFunctions, centerId),
                 function(callback) {
                     ConfirmationTokenFunctions.createToken(user._id, centerId, callback);
+                },
+                function(callback) {
+                    _getTeacherInCenter(user._id, centerId, callback);
                 }
             ], function(err, result) {
                 var center = result[0],
                     token = result[1],
-                    locals = {
+                    teacher = result[2];
+                if (!teacher) {
+                    var locals = {
                         email: user.email,
                         subject: 'El centro ' + center.name + ' te invita como profesor de Bitbloq',
                         center: center.name,
                         addTeacherUrl: config.client_domain + '/#/center-mode/add-teacher/' + token
                     };
-                mailer.sendOne('addTeacher', locals, function(err) {
-                    if (err) {
-                        userDontExist.push(user.email);
-                        next(err);
-                    } else {
-                        CenterFunctions.addNotConfirmedTeacher(centerId, user._id, function(err, center) {
-                            var result = center ? user : undefined;
-                            next(err, result);
-                        });
-                    }
-                });
+                    mailer.sendOne('addTeacher', locals, function(err) {
+                        if (err) {
+                            userDontExist.push(user.email);
+                            next(err);
+                        } else {
+                            CenterFunctions.addNotConfirmedTeacher(centerId, user._id, function(err, center) {
+                                var result = center ? user : undefined;
+                                next(err, result);
+                            });
+                        }
+                    });
+                } else {
+                    next();
+                }
             });
         } else {
             userDontExist.push(user.email);
@@ -432,4 +440,22 @@ function _addStaff(userId, centerId, type, next) {
             }
         }
     ], next);
+}
+
+/**
+ * Get a teacher in a center
+ * @param {String} teacherId
+ * @param {String} centerId
+ * @param {Function} next
+ * @return {Array} members
+ */
+function _getTeacherInCenter(teacherId, centerId, next) {
+    Member.findOne({
+            user: teacherId,
+            center: centerId,
+            role: 'teacher'
+        })
+        .populate('user', '_id username firstName lastName email')
+        .lean()
+        .exec(next);
 }
