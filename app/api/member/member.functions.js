@@ -395,7 +395,7 @@ exports.userIsHeadmaster = function(userId, centerId, next) {
         center: centerId,
         role: 'headmaster'
     }, function(err, members) {
-        next(err, members.length > 0);
+        next(err, members ? members.length > 0 : false);
     });
 };
 
