@@ -19,6 +19,7 @@ exports.createGroup = function(req, res) {
     var group = req.body;
     group.creator = req.user._id;
     var newGroup = new Group(group);
+    newGroup.color = GroupFunctions.getRandomColor();
     triesCounter = 0;
     createGroup(newGroup, group, true, triesCounter, function(err, result) {
         if (err) {

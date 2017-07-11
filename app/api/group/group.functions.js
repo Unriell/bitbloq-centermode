@@ -146,3 +146,8 @@ exports.get = function(groupId, next) {
         .populate('center', 'activatedRobots')
         .exec(next);
 };
+
+exports.getRandomColor = function() {
+    var randomGroupColors = ['#82ad3a', '#3b91ad', '#ad3867', '#6e37b8', '#c03838', '#3d9980'];
+    return randomGroupColors[Math.floor(Math.random() * randomGroupColors.length)];
+}
