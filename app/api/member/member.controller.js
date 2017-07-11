@@ -363,10 +363,6 @@ exports.getTeachers = function(req, res) {
     var userId = req.user._id,
         centerId = req.params.centerId;
 
-    console.log('userId');
-    console.log(userId);
-    console.log('centerId');
-    console.log(centerId);
     async.waterfall([
         MemberFunctions.userIsHeadmaster.bind(MemberFunctions, userId, centerId),
         function(isHeadmaster, next) {

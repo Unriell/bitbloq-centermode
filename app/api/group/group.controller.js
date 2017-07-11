@@ -156,12 +156,14 @@ exports.getAllGroups = function(req, res) {
             err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
-            var orderedGroups = groups;
-            /*  var resultGroups = _.remove(groups, null),
-                  orderedGroups=  _.filter(resultGroups, function(item){
-                  return item.status !== 'closed';
-              });
-              orderedGroups= _.concat(orderedGroups, _.filter(resultGroups, {'status': 'closed'}));*/
+            //  var orderedGroups = groups;
+            var resultGroups = _.remove(groups, null),
+                orderedGroups = _.filter(resultGroups, function(item) {
+                    return item.status !== 'closed';
+                });
+            orderedGroups = _.concat(orderedGroups, _.filter(resultGroups, {
+                'status': 'closed'
+            }));
             res.status(200).send(orderedGroups);
         }
     });
@@ -181,9 +183,6 @@ exports.getGroups = function(req, res) {
         queryParams = {},
         sortParams = {},
         query;
-
-    console.log('req.query');
-    console.log(req.query);
 
     if (req.query.sortParams) {
         sortParams = JSON.parse(req.query.sortParams);
@@ -217,8 +216,6 @@ exports.getGroups = function(req, res) {
                     center: centerId
                 }, queryParams);
 
-                console.log('sortParams');
-                console.log(sortParams);
                 Group.find(query).limit(parseInt(perPage))
                     .skip(parseInt(perPage * page))
                     .sort(sortParams)
@@ -228,8 +225,6 @@ exports.getGroups = function(req, res) {
                     teacher: userId,
                     center: centerId
                 }, queryParams);
-                console.log('sortParams');
-                console.log(sortParams);
 
                 Group.find(query).limit(parseInt(perPage))
                     .skip(parseInt(perPage * page))

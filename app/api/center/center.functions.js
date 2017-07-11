@@ -14,14 +14,12 @@ var MemberFunctions = require('../member/member.functions.js'),
 exports.getStats = function(teacher, centerId, next) {
     async.parallel([
         MemberFunctions.getStudentsCounter.bind(MemberFunctions, teacher._id, centerId),
-        GroupFunctions.getCounter.bind(GroupFunctions, teacher._id, centerId)
+        GroupFunctions.getCounter.bind(GroupFunctions, teacher._id, centerId, {})
     ], function(err, result) {
         if (!err) {
             teacher.students = result[0];
             teacher.groups = result[1];
         }
-        console.log('teacher');
-        console.log(teacher);
         next(err, teacher);
     });
 };

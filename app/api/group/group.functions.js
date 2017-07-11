@@ -92,9 +92,11 @@ exports.getCounter = function(teacherId, centerId, query, next) {
         teacher: teacherId,
         center: centerId
     };
+
     if (query) {
         counterQuery = _.extend(counterQuery, query);
     }
+
     Group.find(counterQuery).count(next);
 };
 
