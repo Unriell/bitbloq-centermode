@@ -20,6 +20,8 @@ exports.getStats = function(teacher, centerId, next) {
             teacher.students = result[0];
             teacher.groups = result[1];
         }
+        console.log('teacher');
+        console.log(teacher);
         next(err, teacher);
     });
 };
@@ -80,7 +82,6 @@ exports.getNotConfirmedTeacher = function(centerId, next) {
             }
         });
 };
-
 
 exports.isNotConfirmedTeacher = function(centerId, teacherId, next) {
     Center.findById(centerId)

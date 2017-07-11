@@ -5,7 +5,9 @@ var Group = require('./group.model.js'),
     TaskFunctions = require('../task/task.functions.js'),
     AssignmentFunctions = require('../assignment/assignment.functions.js'),
     async = require('async'),
+    GroupFunctions = require('./group.functions.js'),
     _ = require('lodash'),
+    maxPerPage = 9,
     triesCounter;
 
 /**
@@ -128,10 +130,13 @@ exports.getAllGroups = function(req, res) {
                 var queryParams = {
                     teacher: userId
                 };
-                if(req.query.withoutClosed){
-                    queryParams.status = {$ne: 'closed'};
+                if (req.query.withoutClosed) {
+                    queryParams.status = {
+                        $ne: 'closed'
+                    };
                 }
                 async.waterfall([
+                    //now paginate
                     Group.find.bind(Group, queryParams),
                     function(groups, next) {
                         async.map(groups, function(group, next) {
@@ -151,11 +156,12 @@ exports.getAllGroups = function(req, res) {
             err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
-            var resultGroups = _.remove(groups, null),
-                orderedGroups=  _.filter(resultGroups, function(item){
-                return item.status !== 'closed';
-            });
-            orderedGroups= _.concat(orderedGroups, _.filter(resultGroups, {'status': 'closed'}));
+            var orderedGroups = groups;
+            /*  var resultGroups = _.remove(groups, null),
+                  orderedGroups=  _.filter(resultGroups, function(item){
+                  return item.status !== 'closed';
+              });
+              orderedGroups= _.concat(orderedGroups, _.filter(resultGroups, {'status': 'closed'}));*/
             res.status(200).send(orderedGroups);
         }
     });
@@ -168,23 +174,85 @@ exports.getAllGroups = function(req, res) {
  */
 exports.getGroups = function(req, res) {
     var userId = req.user._id,
-        centerId = req.params.centerId;
+        centerId = req.params.centerId,
+        page = req.query.page - 1 || 0,
+        perPage = (req.query.pageSize && (req.query.pageSize <= maxPerPage)) ? req.query.pageSize : maxPerPage,
+        search = req.query,
+        queryParams = {},
+        sortParams = {},
+        query;
+
+    console.log('req.query');
+    console.log(req.query);
+
+    if (req.query.sortParams) {
+        sortParams = JSON.parse(req.query.sortParams);
+    }
+
+    if (req.query.name) {
+        sortParams.name = req.query.name;
+    }
+
+    if (search.searchParams) {
+        queryParams = {
+            name: {
+                $regex: search.searchParams,
+                $options: 'i'
+            }
+        };
+    }
+
+    if (req.query.statusParams) {
+        queryParams = _.extend(queryParams, JSON.parse(req.query.statusParams));
+    }
+
     async.waterfall([
         MemberFunctions.userIsStudent.bind(MemberFunctions, userId),
         function(isStudent, next) {
             if (isStudent) {
-                Group.find({
+                query = _.extend({
                     students: {
                         $in: [userId]
                     },
                     center: centerId
-                }, next);
+                }, queryParams);
+
+                console.log('sortParams');
+                console.log(sortParams);
+                Group.find(query).limit(parseInt(perPage))
+                    .skip(parseInt(perPage * page))
+                    .sort(sortParams)
+                    .exec(next);
             } else {
-                Group.find({
+                query = _.extend({
                     teacher: userId,
                     center: centerId
-                }, next);
+                }, queryParams);
+                console.log('sortParams');
+                console.log(sortParams);
+
+                Group.find(query).limit(parseInt(perPage))
+                    .skip(parseInt(perPage * page))
+                    .sort(sortParams)
+                    .exec(next);
             }
+        },
+        function(groups, next) {
+            async.map(groups, function(group, next) {
+                MemberFunctions.getStudentsByGroup(group._id, function(err, students) {
+                    var groupObject = group.toObject();
+                    groupObject.students = students;
+                    next(err, groupObject);
+                });
+            }, next);
+        },
+        function(finalGroups, next) {
+            GroupFunctions.getCounter(userId, centerId, query, function(err, counter) {
+                next(err, {
+                    'groups': finalGroups,
+                    'counter': counter
+                });
+            });
         }
     ], function(err, groups) {
         if (err) {
@@ -192,6 +260,7 @@ exports.getGroups = function(req, res) {
             err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
+
             res.status(200).send(groups);
         }
     });
@@ -304,7 +373,6 @@ exports.deleteGroup = function(req, res) {
         }
     });
 };
-
 
 /*********************
  * Private functions *

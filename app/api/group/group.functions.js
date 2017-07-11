@@ -87,11 +87,15 @@ exports.getGroupIdsByTeacherAndCenter = function(teacherId, centerId, next) {
  * @param {String} centerId
  * @param {Function} next
  */
-exports.getCounter = function(teacherId, centerId, next) {
-    Group.find({
+exports.getCounter = function(teacherId, centerId, query, next) {
+    var counterQuery = {
         teacher: teacherId,
         center: centerId
-    }).count(next);
+    };
+    if (query) {
+        counterQuery = _.extend(counterQuery, query);
+    }
+    Group.find(counterQuery).count(next);
 };
 
 /**

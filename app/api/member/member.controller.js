@@ -134,7 +134,6 @@ exports.sendInvitation = function(req, res) {
     }
 };
 
-
 /**
  * Activate student mode
  * @param req
@@ -363,6 +362,11 @@ exports.getTeacher = function(req, res) {
 exports.getTeachers = function(req, res) {
     var userId = req.user._id,
         centerId = req.params.centerId;
+
+    console.log('userId');
+    console.log(userId);
+    console.log('centerId');
+    console.log(centerId);
     async.waterfall([
         MemberFunctions.userIsHeadmaster.bind(MemberFunctions, userId, centerId),
         function(isHeadmaster, next) {
@@ -379,9 +383,12 @@ exports.getTeachers = function(req, res) {
             var users = [];
             _.forEach(notConfirmedTeachers, function(teacher) {
                 teacher.notConfirmed = true;
-                users.push({user: teacher});
+                users.push({
+                    user: teacher
+                });
             });
             MemberFunctions.getAllTeachers(centerId, function(err, members) {
+
                 if (members) {
                     users = _.concat(members, users);
                 }
