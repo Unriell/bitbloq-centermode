@@ -370,6 +370,20 @@ exports.deleteGroup = function(req, res) {
     });
 };
 
+exports.getGroupsByExercise = function(req, res) {
+    var exerciseId = req.params.id,
+        userId = req.user._id;
+    TaskFunctions.getGroups(exerciseId, userId, function(err, groups) {
+        if (err) {
+            console.log(err);
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+            res.status(err.code).send(err);
+        } else {
+            res.status(200).send(groups);
+        }
+    })
+};
+
 /*********************
  * Private functions *
  *********************/
