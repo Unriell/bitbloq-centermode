@@ -135,14 +135,16 @@ exports.get = function(req, res) {
  * @param req
  * @param res
  */
-exports.getMyTasks = function(req, res) {
+exports.getMyTasksInGroup = function(req, res) {
     var userId = req.user._id,
         now = Date.now(),
+        groupId = req.params.groupId,
         page = req.query.page - 1 || 0,
         perPage = (req.query.pageSize && (req.query.pageSize <= maxPerPage)) ? req.query.pageSize : maxPerPage;
-    Task.find({
-            student: userId
 
+    Task.find({
+            student: userId,
+            group: groupId
         })
         .or([{
             initDate: {
@@ -172,11 +174,13 @@ exports.getMyTasks = function(req, res) {
  * @param req
  * @param res
  */
-exports.getMyTasksCount = function(req, res) {
+exports.getMyTasksInGroupCount = function(req, res) {
     var userId = req.user._id,
+        groupId = req.params.groupId,
         now = Date.now();
     Task.count({
         student: userId,
+        group: groupId,
         $or: [{
             initDate: {
                 $lt: now
