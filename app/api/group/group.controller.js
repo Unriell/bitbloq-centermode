@@ -109,19 +109,15 @@ exports.getAllGroups = function(req, res) {
     var userId = req.user._id;
     async.waterfall([
         function(next) {
-            if (req.query.role) {
-                switch (req.query.role) {
-                    case 'student':
-                        next(null, true);
-                        break;
-                    case 'teacher':
-                        next(null, false);
-                        break;
-                    default:
-                        MemberFunctions.userIsStudent(userId, next);
-                }
-            } else {
-                MemberFunctions.userIsStudent(userId, next);
+            switch (req.query.role) {
+                case 'student':
+                    next(null, true);
+                    break;
+                case 'teacher':
+                    next(null, false);
+                    break;
+                default:
+                    MemberFunctions.userIsStudent(userId, null, next);
             }
         },
         function(isStudent, next) {
@@ -207,7 +203,9 @@ exports.getGroups = function(req, res) {
     }
 
     async.waterfall([
-        MemberFunctions.userIsStudent.bind(MemberFunctions, userId),
+        function(next) {
+            MemberFunctions.userIsStudent(userId, centerId, next);
+        },
         function(isStudent, next) {
             if (isStudent) {
                 query = _.extend({

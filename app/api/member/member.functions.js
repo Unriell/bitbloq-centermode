@@ -404,11 +404,15 @@ exports.userIsHeadmaster = function(userId, centerId, next) {
  * @param {String} memberId
  * @param {Function} next
  */
-exports.userIsStudent = function(memberId, next) {
-    Member.findOne({
+exports.userIsStudent = function(memberId, centerId, next) {
+    var query = {
         user: memberId,
         role: 'student'
-    }, function(err, member) {
+    };
+    if(centerId) {
+        query.center = centerId;
+    }
+    Member.findOne(query, function(err, member) {
         next(err, !!member);
     });
 };
