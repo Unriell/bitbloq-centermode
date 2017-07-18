@@ -135,14 +135,16 @@ exports.get = function(req, res) {
  * @param req
  * @param res
  */
-exports.getMyTasks = function(req, res) {
+exports.getMyTasksInGroup = function(req, res) {
     var userId = req.user._id,
         now = Date.now(),
+        groupId = req.params.groupId,
         page = req.query.page - 1 || 0,
         perPage = (req.query.pageSize && (req.query.pageSize <= maxPerPage)) ? req.query.pageSize : maxPerPage;
-    Task.find({
-            student: userId
 
+    Task.find({
+            student: userId,
+            group: groupId
         })
         .or([{
             initDate: {
@@ -172,11 +174,13 @@ exports.getMyTasks = function(req, res) {
  * @param req
  * @param res
  */
-exports.getMyTasksCount = function(req, res) {
+exports.getMyTasksInGroupCount = function(req, res) {
     var userId = req.user._id,
+        groupId = req.params.groupId,
         now = Date.now();
     Task.count({
         student: userId,
+        group: groupId,
         $or: [{
             initDate: {
                 $lt: now
@@ -235,6 +239,55 @@ exports.getTasksByExercise = function(req, res) {
 };
 
 /**
+ * Get completed task by exercise and group
+ * @param req
+ * @param res
+ */
+exports.getTasksByExerciseAndGroup = function(req, res) {
+    var page = req.query.page - 1 || 0,
+        perPage = (req.query.pageSize && (req.query.pageSize <= maxPerPage)) ? req.query.pageSize : maxPerPage,
+        userId = req.user._id,
+        exerciseId = req.params.exerciseId,
+        groupId = req.params.groupId,
+        sortParams,
+        query = {
+            exercise: exerciseId,
+            group: groupId,
+            $or: [{
+                creator: userId
+            }, {
+                teacher: userId
+            }]
+        };
+
+    if (req.query.statusParams) {
+        query = _.extend(query, JSON.parse(req.query.statusParams));
+    }
+
+    if (req.query.sortParams) {
+        sortParams = JSON.parse(req.query.sortParams);
+    }
+
+    Task.find(query)
+        .select('exercise student group mark status initDate endDate')
+        .populate('exercise', 'name createdAt')
+        .populate('student', 'firstName lastName username')
+        .populate('group', 'name')
+        .limit(parseInt(perPage))
+        .skip(parseInt(perPage * page))
+        .sort(sortParams)
+        .exec(function(err, tasks) {
+            if (err) {
+                console.log(err);
+                err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+                res.status(err.code).send(err);
+            } else {
+                res.status(200).send(tasks);
+            }
+        });
+};
+
+/**
  * Get count of completed task by exercise
  * @param req
  * @param res
@@ -250,6 +303,46 @@ exports.getTasksByExerciseCount = function(req, res) {
             teacher: userId
         }]
     }, function(err, counter) {
+        if (err) {
+            console.log(err);
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+            res.status(err.code).send(err);
+        } else {
+            res.status(200).json({
+                'count': counter
+            });
+        }
+    });
+};
+
+/**
+ * Get count of completed task by exercise and group
+ * @param req
+ * @param res
+ */
+exports.getTasksByExerciseAndGroupCount = function(req, res) {
+    var userId = req.user._id,
+        exerciseId = req.params.exerciseId,
+        groupId = req.params.groupId,
+        sortParams,
+        query = {
+            exercise: exerciseId,
+            group: groupId,
+            $or: [{
+                creator: userId
+            }, {
+                teacher: userId
+            }]
+        };
+
+    if (req.query.statusParams) {
+        query = _.extend(query, JSON.parse(req.query.statusParams));
+    }
+
+    if (req.query.sortParams) {
+        sortParams = JSON.parse(req.query.sortParams);
+    }
+    Task.count(query, function(err, counter) {
         if (err) {
             console.log(err);
             err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;

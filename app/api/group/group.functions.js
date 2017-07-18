@@ -87,11 +87,17 @@ exports.getGroupIdsByTeacherAndCenter = function(teacherId, centerId, next) {
  * @param {String} centerId
  * @param {Function} next
  */
-exports.getCounter = function(teacherId, centerId, next) {
-    Group.find({
+exports.getCounter = function(teacherId, centerId, query, next) {
+    var counterQuery = {
         teacher: teacherId,
         center: centerId
-    }).count(next);
+    };
+
+    if (query) {
+        counterQuery = _.extend(counterQuery, query);
+    }
+
+    Group.find(counterQuery).count(next);
 };
 
 /**
@@ -140,3 +146,8 @@ exports.get = function(groupId, next) {
         .populate('center', 'activatedRobots')
         .exec(next);
 };
+
+exports.getRandomColor = function() {
+    var randomGroupColors = ['#82ad3a', '#3b91ad', '#ad3867', '#6e37b8', '#c03838', '#3d9980'];
+    return randomGroupColors[Math.floor(Math.random() * randomGroupColors.length)];
+}

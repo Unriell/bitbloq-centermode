@@ -28,6 +28,7 @@ var CenterSchema = new mongoose.Schema({
         ref: 'User',
         trim: false
     }],
+    maxTeachers: Number,
     deleted: Boolean
 }, {
     timestamps: true

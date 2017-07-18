@@ -6,18 +6,20 @@ var express = require('express'),
 
 var router = express.Router();
 
-
 //HEAD
 router.head('/:taskId/headmaster', auth.isAuthenticated(), controller.userIsHeadmasterByTask);
 
 // GET
 router.get('/group/:groupId/student/:studentId', auth.isAuthenticated(), controller.getTasksByStudent);
 router.get('/group/:groupId', auth.isAuthenticated(), controller.getTasksByGroup);
+router.get('/exercise/:exerciseId/group/:groupId/count', auth.isAuthenticated(), controller.getTasksByExerciseAndGroupCount);
 router.get('/exercise/:exerciseId/count', auth.isAuthenticated(), controller.getTasksByExerciseCount);
+router.get('/exercise/:exerciseId/group/:groupId', auth.isAuthenticated(), controller.getTasksByExerciseAndGroup);
 router.get('/exercise/:exerciseId', auth.isAuthenticated(), controller.getTasksByExercise);
-router.get('/count', auth.isAuthenticated(), controller.getMyTasksCount);
 router.get('/:id', auth.isAuthenticated(), controller.get);
-router.get('/', auth.isAuthenticated(), controller.getMyTasks);
+//cambiarlo y meterlo en group groupId pasándole el rol
+router.get('/student/group/:groupId/count', auth.isAuthenticated(), controller.getMyTasksInGroupCount);
+router.get('/student/group/:groupId', auth.isAuthenticated(), controller.getMyTasksInGroup);
 
 //POST
 router.post('/cloneToProject', auth.isAuthenticated(), controller.cloneToProject);

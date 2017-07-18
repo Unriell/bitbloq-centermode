@@ -14,7 +14,7 @@ var MemberFunctions = require('../member/member.functions.js'),
 exports.getStats = function(teacher, centerId, next) {
     async.parallel([
         MemberFunctions.getStudentsCounter.bind(MemberFunctions, teacher._id, centerId),
-        GroupFunctions.getCounter.bind(GroupFunctions, teacher._id, centerId)
+        GroupFunctions.getCounter.bind(GroupFunctions, teacher._id, centerId, {})
     ], function(err, result) {
         if (!err) {
             teacher.students = result[0];
@@ -80,7 +80,6 @@ exports.getNotConfirmedTeacher = function(centerId, next) {
             }
         });
 };
-
 
 exports.isNotConfirmedTeacher = function(centerId, teacherId, next) {
     Center.findById(centerId)
