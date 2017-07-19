@@ -63,16 +63,37 @@ exports.confirmTeacher = function(req, res) {
         async.waterfall([
             ConfirmationTokenFunctions.getInfo.bind(ConfirmationTokenFunctions, req.body.token),
             function(token, next) {
-                if (token && userId == token.teacherId) {
-                    MemberFunctions.addTeacher(token.teacherId, token.centerId, function(err) {
-                        next(err, token);
-                    });
-                } else {
-                    next({
-                        code: 403,
-                        message: 'Forbidden'
-                    });
-                }
+                CenterFunctions.getCenterById(token.centerId, function(err, center) {
+                    next(err, token, center);
+                });
+            },
+            function(token, center, next) {
+                CenterFunctions.getNotConfirmedTeacher(token.centerId, function(err, noConfirmedTeacher) {
+                    if (err) {
+                        next(err);
+                    } else if (token && userId == token.teacherId) {
+                        if (noConfirmedTeacher.indexOf(token.teacherId) > -1) {
+                            next(null, token, center);
+                        } else {
+                            next({
+                                code: 404,
+                                message: 'Not Found',
+                                center: center.name
+                            });
+                        }
+                    } else {
+                        next({
+                            code: 403,
+                            message: 'Forbidden',
+                            center: center.name
+                        });
+                    }
+                });
+            },
+            function(token, center, next) {
+                MemberFunctions.addTeacher(token.teacherId, center, function(err) {
+                    next(err, token);
+                });
             },
             function(token, next) {
                 CenterFunctions.deleteNotConfirmedTeacher(token.centerId, token.teacherId, next);
