@@ -5,7 +5,9 @@ var Assignment = require('./assignment.model.js'),
     AssignmentFunctions = require('./assignment.functions.js'),
     TaskFunctions = require('../task/task.functions.js'),
     mongoose = require('mongoose'),
+    ObjectId = require('mongoose').Types.ObjectId,
     _ = require('lodash'),
+    maxPerPage = 10,
     async = require('async');
 
 /**
@@ -105,6 +107,62 @@ exports.getByExercise = function(req, res) {
             res.status(err.code).send(err);
         } else {
             res.status(200).send(groups);
+        }
+    });
+};
+
+/**
+ * Get assigned groups by a group
+ * @param req
+ * @param {String} req.params.exerciseId
+ * @param res
+ */
+exports.getByGroup = function(req, res) {
+    var groupId = req.params.groupId,
+        page = req.query.page - 1 || 0,
+        perPage = (req.query.pageSize && (req.query.pageSize <= maxPerPage)) ? req.query.pageSize : maxPerPage;
+
+    async.waterfall([
+        function(next) {
+            Assignment.aggregate([{
+                    $match: {
+                        'group': ObjectId(groupId)
+                    }
+                }, {
+                    $group: {
+                        '_id': '$exercise',
+                        'exercise': {
+                            '$first': '$exercise'
+                        }
+                    }
+                }, {
+                    $lookup: {
+                        'from': 'centermode-exercises',
+                        'localField': 'exercise',
+                        'foreignField': '_id',
+                        'as': 'exercise'
+                    }
+                },
+                {
+                    $skip: parseInt(perPage * page)
+                }, {
+                    $limit: parseInt(perPage)
+                }
+            ], next);
+        }
+    ], function(err, exercises) {
+        if (err) {
+            console.log(err);
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+            res.status(err.code).send(err);
+        } else {
+            var exercisesArray = [];
+            _.forEach(exercises, function(exercise) {
+                console.log('exercise');
+                console.log(exercise._id);
+                exercisesArray = exercisesArray.concat(exercise.exercise);
+            });
+            res.status(200).send(exercisesArray);
         }
     });
 };
