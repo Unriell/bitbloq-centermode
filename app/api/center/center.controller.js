@@ -19,7 +19,7 @@ exports.createCenter = function(req, res) {
             newCenter.save.bind(newCenter, center),
             function(savedCenter, updated, next) {
                 async.parallel([
-                    MemberFunctions.addHeadmaster.bind(MemberFunctions, userId, savedCenter._id),
+                    MemberFunctions.addHeadmaster.bind(MemberFunctions, userId, savedCenter),
                     MemberFunctions.addTeacher.bind(MemberFunctions, userId, savedCenter)
                 ], next);
             }

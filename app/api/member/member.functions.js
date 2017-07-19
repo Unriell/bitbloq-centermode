@@ -12,11 +12,11 @@ var Member = require('./member.model.js'),
 /**
  * Add an member in a center like head master
  * @param {String} userId
- * @param {String} centerId
+ * @param {Object} center
  * @param {Function} next
  */
-exports.addHeadmaster = function(userId, centerId, next) {
-    _addStaff(userId, centerId, 'headmaster', next);
+exports.addHeadmaster = function(userId, center, next) {
+    _addStaff(userId, center, 'headmaster', next);
 };
 
 /**
@@ -50,11 +50,11 @@ exports.addStudent = function(userId, groupId, next) {
 /**
  * Add an member in a center like teacher
  * @param {String} userId
- * @param {String} centerId
+ * @param {Object} center
  * @param {Function} next
  */
-exports.addTeacher = function(userId, centerId, next) {
-    _addStaff(userId, centerId, 'teacher', next);
+exports.addTeacher = function(userId, center, next) {
+    _addStaff(userId, center, 'teacher', next);
 };
 
 /**

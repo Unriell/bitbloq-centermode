@@ -383,8 +383,25 @@ exports.getTeacher = function(req, res) {
 exports.getTeachers = function(req, res) {
     var userId = req.user._id,
         centerId = req.params.centerId;
-
     async.waterfall([
+        function(next) {
+            if (!centerId || centerId === 'undefined') {
+                MemberFunctions.getCenterIdByHeadmaster(userId, function(err, newCenterId) {
+                    if(!newCenterId){
+                        next({
+                            code: '404',
+                            message: 'Not Found'
+                        });
+                    } else {
+                        centerId = newCenterId;
+                        next(err);
+                    }
+
+                });
+            } else {
+                next();
+            }
+        },
         MemberFunctions.userIsHeadmaster.bind(MemberFunctions, userId, centerId),
         function(isHeadmaster, next) {
             if (!isHeadmaster) {
