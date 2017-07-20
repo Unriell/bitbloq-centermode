@@ -81,7 +81,7 @@ exports.sendConfirmationAllTeachers = function(users, centerId, next) {
                     teacher = result[2];
                 if (!teacher) {
                     var locals = {
-                        email: 'laura.delrio@bq.com',
+                        email: user.email,
                         subject: 'El centro ' + center.name + ' te invita como profesor de Bitbloq',
                         center: center.name,
                         addTeacherUrl: config.client_domain + '/#/confirm-teacher/' + token
