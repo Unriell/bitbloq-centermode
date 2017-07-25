@@ -72,7 +72,13 @@ exports.confirmTeacher = function(req, res) {
                     if (err) {
                         next(err);
                     } else if (token && userId == token.teacherId) {
-                        if (noConfirmedTeacher.indexOf(token.teacherId) > -1) {
+                        var invitedTeacher = false;
+                        _.forEach(noConfirmedTeacher, function(teacher){
+                            if(String(teacher._id) === token.teacherId){
+                                invitedTeacher = true;
+                            }
+                        });
+                        if (invitedTeacher) {
                             next(null, token, center);
                         } else {
                             next({
