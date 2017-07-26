@@ -108,6 +108,7 @@ exports.get = function(req, res) {
                 select: 'name activatedRobots -_id'
             }
         })
+        .populate('student', 'firstName lastName username')
         .exec(function(err, task) {
             if (err) {
                 console.log(err);
