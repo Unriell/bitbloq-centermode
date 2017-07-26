@@ -26,6 +26,7 @@ router.post('/cloneToProject', auth.isAuthenticated(), controller.cloneToProject
 
 // PUT
 router.put('/:id', auth.isAuthenticated(), controller.update);
+router.put('/:taskId/send-mark', auth.isAuthenticated(), controller.senMark);
 router.put('/:taskId/send', auth.isAuthenticated(), controller.sendTask);
 router.put('/:taskId/mark', auth.isAuthenticated(), controller.mark);
 

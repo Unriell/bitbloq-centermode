@@ -117,7 +117,7 @@ exports.get = function(req, res) {
             } else if (!task) {
                 res.sendStatus(404);
             } else {
-                if (String(task.creator) === String(req.user._id) || String(task.student) === String(req.user._id) || String(task.teacher) === String(req.user._id)) {
+                if (String(task.creator) === String(req.user._id) || String(task.student._id) === String(req.user._id) || String(task.teacher) === String(req.user._id)) {
                     var taskId = task._id,
                         taskObject = task.toObject();
                     _.extend(taskObject, taskObject.exercise);
@@ -485,9 +485,54 @@ exports.mark = function(req, res) {
             };
             if (markData.mark) {
                 updateTask.mark = markData.mark;
-                updateTask.status = 'corrected';
             }
             task.update(updateTask, next);
+        }
+    ], function(err, result) {
+        if (err) {
+            console.log(err);
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+            res.status(err.code).send(err);
+        } else {
+            res.status(200).send(result);
+        }
+    });
+};
+
+/**
+ * Mark a task
+ * @param req
+ * @param res
+ */
+exports.senMark = function(req, res) {
+    var userId = req.user._id,
+        taskId = req.params.taskId;
+    async.waterfall([
+        function(next) {
+            Task.findById(taskId)
+                .populate('group', 'center')
+                .exec(next);
+        },
+        function(task, next) {
+            //  ==  it's correct because I want check only the content, I don't want check the type
+            // If you change == to === this request will be rejected when user is teacher
+            if (String(task.owner) == userId || String(task.teacher) == userId) {
+                next(null, task);
+            } else {
+                MemberFunctions.userIsHeadmaster(userId, task.group.center, function(err, isHeadmaster) {
+                    if (!isHeadmaster) {
+                        next({
+                            code: 403,
+                            message: 'Forbidden'
+                        });
+                    } else {
+                        next(err, task);
+                    }
+                });
+            }
+        },
+        function(task, next) {
+            task.update({status: 'corrected'}, next);
         }
     ], function(err, result) {
         if (err) {
