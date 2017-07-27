@@ -168,48 +168,15 @@ exports.getAll = function(req, res) {
             var exercisesArray = exercises;
             if (req.query.search) {
                 exercisesArray = _.filter(exercisesArray, function(exercise) {
-                    return exercise.name.toLowerCase().indexOf(JSON.parse(req.query.search).$regex) >= 0;
+                    return exercise.name.toLowerCasfgetExercisesCounte().indexOf(JSON.parse(req.query.search).$regex) >= 0;
                 });
             }
             exercisesOrdered = AssignmentFunctions.getExercisesOrdered(exercisesArray, query);
             count = exercisesOrdered.length;
             exercisesPage = exercisesOrdered.slice(page * perPage, (page * perPage) + perPage - 1);
-            res.status(200).send(exercisesPage);
-        }
-    });
-};
-
-/**
- * Get count of my exercises
- * @param req
- * @param res
- */
-
-exports.getAllCount = function(req, res) {
-    var search = req.query,
-        queryParams = {};
-
-    if (search.name) {
-        queryParams = {
-            name: {
-                $regex: search.name,
-                $options: 'i'
-            },
-            teacher: req.user._id
-        };
-    } else {
-        queryParams = {
-            teacher: req.user._id
-        };
-    }
-    Exercise.count(queryParams, function(err, counter) {
-        if (err) {
-            console.log(err);
-            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
-            res.status(err.code).send(err);
-        } else {
-            res.status(200).json({
-                'count': counter
+            res.status(200).send({
+                'exercises': exercisesPage,
+                'count': count
             });
         }
     });
