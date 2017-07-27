@@ -3,7 +3,7 @@ var Assignment = require('./assignment.model.js'),
     TaskFunctions = require('../task/task.functions.js'),
     GroupFunctions = require('../group/group.functions.js'),
     MemberFunctions = require('../member/member.functions.js'),
-    mongoose = require('mongoose'),
+    ObjectId = require('mongoose').Types.ObjectId,
     _ = require('lodash'),
     async = require('async');
 
@@ -12,8 +12,11 @@ var Assignment = require('./assignment.model.js'),
  * @param {String} exerciseIds
  * @param {Function} next
  */
-exports.getAssigmentByExercises = function(exerciseIds, next) {
-    Assignment.find({})
+exports.getAssigmentByExercises = function(exerciseIds, groupId, next) {
+    var query = groupId ? {
+        group: groupId
+    } : {};
+    Assignment.find(query)
         .where('exercise').in(exerciseIds)
         .select('exercise initDate endDate')
         .exec(function(err, assignments) {
@@ -123,7 +126,10 @@ exports.getDateByGroupAndExercise = function(groupId, exerciseId, next) {
         })
         .select('exercise initDate endDate')
         .exec(function(err, assignment) {
-            next(err, {initDate: assignment.initDate, endDate: assignment.endDate});
+            next(err, {
+                initDate: assignment.initDate,
+                endDate: assignment.endDate
+            });
         });
 };
 
@@ -248,3 +254,103 @@ exports.removeByGroup = function(groupId, next) {
         }
     ], next);
 };
+
+/**
+ * get exercises count in group
+ * @param {String} groupId
+ * @param {Function} next
+ */
+
+exports.getExercisesCountInGroup = function(groupId, next) {
+    Assignment.aggregate([{
+            $match: {
+                'group': ObjectId(groupId),
+                'deleted': {
+                    $ne: true
+                }
+            }
+        }, {
+            $group: {
+                '_id': '$exercise',
+                'exercise': {
+                    '$first': '$exercise'
+                }
+            }
+        }, {
+            $lookup: {
+                'from': 'centermode-exercises',
+                'localField': 'exercise',
+                'foreignField': '_id',
+                'as': 'exercise'
+            }
+        },
+        {
+            $count: 'count'
+        }
+
+    ], next);
+};
+
+exports.getExercisesOrdered = function(exercisesArray, query) {
+    var exercisesOrdered = [];
+    if (query.updatedAt) {
+        exercisesOrdered = getExercisesByUpdated(exercisesArray, query.updatedAt);
+    } else if (query.name) {
+        exercisesOrdered = getExercisesByName(exercisesArray, query.name);
+    } else if (query.initDate) {
+        exercisesOrdered = getExercisesByInitDate(exercisesArray, query.initDate);
+    } else {
+        exercisesOrdered = exercisesArray;
+    }
+
+    if (query.status) {
+        exercisesOrdered = filterExercisesByStatus(exercisesOrdered, query.status);
+    }
+    return exercisesOrdered;
+}
+
+function getExercisesByUpdated(exercisesArray, order) {
+    return _.orderBy(exercisesArray, 'updatedAt', order);
+}
+
+function getExercisesByName(exercisesArray, order) {
+    return _.orderBy(exercisesArray, function(exercise) {
+        return exercise.name.toLowerCase();
+    }, order);
+}
+
+function getExercisesByInitDate(exercisesArray, order) {
+    return _.orderBy(exercisesArray, 'initDate', order);
+}
+
+function filterExercisesByStatus(exercisesArray, status) {
+    var exercisesOpen = [],
+        exercisesUnlimited = [],
+        exercisesClosed = [],
+        exercisesFiltered = [];
+    _.forEach(exercisesArray, function(exercise) {
+        if (!exercise.endDate) {
+            exercisesUnlimited.push(exercise);
+        } else if (Date(exercise.endDate) > Date.now()) {
+            if (Date(exercise.initDate) < Date.now()) {
+                exercisesOpen.push(exercise);
+            } else {
+                exercisesClosed.push(exercise);
+            }
+        }
+    });
+    switch (status) {
+        case 'open':
+            exercisesFiltered = exercisesOpen;
+            break;
+        case 'closed':
+            exercisesFiltered = exercisesClosed;
+            break;
+        case 'withoutDate':
+            exercisesFiltered = exercisesUnlimited;
+            break;
+    }
+
+    return exercisesFiltered;
+
+}

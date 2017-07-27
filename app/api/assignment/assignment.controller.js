@@ -117,17 +117,23 @@ exports.getByExercise = function(req, res) {
  * @param {String} req.params.exerciseId
  * @param res
  */
+
 exports.getByGroup = function(req, res) {
     var groupId = req.params.groupId,
         page = req.query.page - 1 || 0,
-        perPage = (req.query.pageSize && (req.query.pageSize <= maxPerPage)) ? req.query.pageSize : maxPerPage;
+        perPage = (req.query.pageSize && (req.query.pageSize <= maxPerPage)) ? req.query.pageSize : maxPerPage,
+        query = req.query || {},
+        searchQuery = {
+            'group': ObjectId(groupId),
+            'deleted': {
+                $ne: true
+            }
+        };
 
     async.waterfall([
-        function(next) {
-            Assignment.aggregate([{
-                    $match: {
-                        'group': ObjectId(groupId)
-                    }
+            function(next) {
+                Assignment.aggregate([{
+                    $match: searchQuery
                 }, {
                     $group: {
                         '_id': '$exercise',
@@ -141,30 +147,66 @@ exports.getByGroup = function(req, res) {
                         'localField': 'exercise',
                         'foreignField': '_id',
                         'as': 'exercise'
-                    }
-                },
-                {
-                    $skip: parseInt(perPage * page)
-                }, {
-                    $limit: parseInt(perPage)
+                    },
+                }], next);
+            },
+            function(exercises, next) {
+                var exercisesArray = [];
+                _.forEach(exercises, function(exercise) {
+                    exercisesArray = exercisesArray.concat(exercise.exercise);
+                });
+                if (req.query.search) {
+                    exercisesArray = _.filter(exercisesArray, function(exercise) {
+                        return exercise.name.toLowerCase().indexOf(JSON.parse(req.query.search).$regex) >= 0;
+                    });
                 }
-            ], next);
-        }
-    ], function(err, exercises) {
-        if (err) {
-            console.log(err);
-            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
-            res.status(err.code).send(err);
-        } else {
-            var exercisesArray = [];
-            _.forEach(exercises, function(exercise) {
-                console.log('exercise');
-                console.log(exercise._id);
-                exercisesArray = exercisesArray.concat(exercise.exercise);
-            });
-            res.status(200).send(exercisesArray);
-        }
-    });
+                if (exercisesArray.length > 0) {
+                    var exercisesId = _.map(exercisesArray, '_id');
+                    AssignmentFunctions.getAssigmentByExercises(exercisesId, groupId, function(err, exercisesDates) {
+                        if (err) {
+                            next(err, null);
+                        } else {
+                            var newExercises = [];
+                            if (exercisesDates) {
+                                exercisesArray.forEach(function(exercise) {
+                                    var exerciseObject = exercise;
+                                    if (exercisesDates[exercise._id]) {
+                                        exerciseObject.initDate = exercisesDates[exercise._id].initDate;
+                                        exerciseObject.endDate = exercisesDates[exercise._id].endDate;
+                                    }
+                                    newExercises.push(exerciseObject);
+                                });
+                                next(err, newExercises);
+                            } else {
+                                next(err, exercisesArray);
+                            }
+                        }
+                    });
+                } else {
+                    next(null, {});
+                }
+            }
+        ],
+        function(err, response) {
+            if (err) {
+                console.log(err);
+                err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+                res.status(err.code).send(err);
+            } else {
+                var exercisesPage = [],
+                    exercisesOrdered,
+                    count;
+
+                exercisesOrdered = AssignmentFunctions.getExercisesOrdered(response, query);
+                count = exercisesOrdered.length;
+                exercisesPage = exercisesOrdered.slice(page * perPage, (page * perPage) + perPage - 1);
+
+                res.status(200).send({
+                    'exercises': exercisesPage,
+                    'count': count
+                });
+            }
+        })
 };
 
 exports.unassign = function(req, res) {
