@@ -5,6 +5,7 @@ var Task = require('./task.model.js'),
     ProjectFunction = require('../project/project.functions.js'),
     TaskFunction = require('./task.functions.js'),
     GroupFunction = require('../group/group.functions.js'),
+    AssignmentFunction = require('../assignment/assignment.functions.js'),
     async = require('async'),
     _ = require('lodash');
 
@@ -138,7 +139,6 @@ exports.get = function(req, res) {
  */
 exports.getMyTasksInGroup = function(req, res) {
     var userId = req.user._id,
-        now = Date.now(),
         groupId = req.params.groupId,
         page = req.query.page - 1 || 0,
         perPage = (req.query.pageSize && (req.query.pageSize <= maxPerPage)) ? req.query.pageSize : maxPerPage;
@@ -147,15 +147,6 @@ exports.getMyTasksInGroup = function(req, res) {
             student: userId,
             group: groupId
         })
-        .or([{
-            initDate: {
-                $lt: now
-            }
-        }, {
-            initDate: now
-        }, {
-            initDate: null
-        }])
         .populate('exercise', 'name')
         .limit(parseInt(perPage))
         .skip(parseInt(perPage * page))
@@ -177,20 +168,10 @@ exports.getMyTasksInGroup = function(req, res) {
  */
 exports.getMyTasksInGroupCount = function(req, res) {
     var userId = req.user._id,
-        groupId = req.params.groupId,
-        now = Date.now();
+        groupId = req.params.groupId;
     Task.count({
         student: userId,
-        group: groupId,
-        $or: [{
-            initDate: {
-                $lt: now
-            }
-        }, {
-            initDate: now
-        }, {
-            initDate: null
-        }]
+        group: groupId
     }, function(err, counter) {
         if (err) {
             console.log(err);
@@ -222,7 +203,7 @@ exports.getTasksByExercise = function(req, res) {
                 teacher: userId
             }]
         })
-        .select('exercise student group mark status initDate endDate')
+        .select('exercise student group mark status')
         .populate('exercise', 'name createdAt')
         .populate('student', 'firstName lastName username')
         .populate('group', 'name')
@@ -270,7 +251,7 @@ exports.getTasksByExerciseAndGroup = function(req, res) {
     }
 
     Task.find(query)
-        .select('exercise student group mark status initDate endDate')
+        .select('exercise student group mark status')
         .populate('exercise', 'name createdAt')
         .populate('student', 'firstName lastName username')
         .populate('group', 'name')
@@ -278,6 +259,7 @@ exports.getTasksByExerciseAndGroup = function(req, res) {
         .skip(parseInt(perPage * page))
         .sort(sortParams)
         .exec(function(err, tasks) {
+            console.log(tasks);
             if (err) {
                 console.log(err);
                 err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
@@ -369,7 +351,7 @@ exports.getTasksByStudent = function(req, res) {
             student: studentId,
             group: groupId
         })
-        .select('exercise student group mark status initDate endDate')
+        .select('exercise student group mark status')
         .populate('exercise', 'name createdAt')
         .populate('student', 'firstName lastName username')
         .populate('group', 'name')
@@ -553,10 +535,22 @@ exports.senMark = function(req, res) {
 exports.sendTask = function(req, res) {
     var userId = req.user._id,
         taskId = req.params.taskId;
-    Task.findOne({
-        _id: taskId,
-        student: userId
-    }, function(err, task) {
+    async.waterfall([
+        Task.findOne.bind(Task, {
+            _id: taskId,
+            student: userId
+        }),
+        function(task, next){
+            AssignmentFunction.getDateByGroupAndExercise(task.group,  task.exercise, function(err, date){
+                var taskObject = task.toObject();
+                if(!err) {
+                    taskObject.initDate = date.initDate;
+                    taskObject.endDate = date.endDate;
+                }
+                next(err, taskObject)
+            });
+        }
+    ],function(){
         if (err) {
             console.log(err);
             err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
@@ -564,7 +558,6 @@ exports.sendTask = function(req, res) {
         } else if (!task) {
             res.sendStatus(404);
         } else {
-            //task exist
             var now = new Date();
             if (!task.initDate || now - task.initDate.getTime() > 0) {
                 if (!task.endDate || now - task.endDate.getTime() <= 0) {

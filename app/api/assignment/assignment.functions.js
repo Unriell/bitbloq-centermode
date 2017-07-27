@@ -110,6 +110,24 @@ exports.getExercisesByCenterTeacher = function(centerId, teacherId, next) {
 };
 
 /**
+ * Get assignment date
+ * @param {String} groupId
+ * @param {String} exerciseId
+ * @param {Function} next
+ * @return {Array} date
+ */
+exports.getDateByGroupAndExercise = function(groupId, exerciseId, next) {
+    Assignment.find({
+            group: groupId,
+            exercice: exerciseId
+        })
+        .select('exercise initDate endDate')
+        .exec(function(err, assignment) {
+            next(err, {initDate: assignment.initDate, endDate: assignment.endDate});
+        });
+};
+
+/**
  * create assigned tasks by a groupId
  * @param {String} groupId
  * @param {String} studentId
