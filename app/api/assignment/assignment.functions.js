@@ -327,18 +327,27 @@ function filterExercisesByStatus(exercisesArray, status) {
     var exercisesOpen = [],
         exercisesUnlimited = [],
         exercisesClosed = [],
-        exercisesFiltered = [];
+        exercisesFiltered = [],
+        today, assigmentEndDate, assigmentInitDate;
     _.forEach(exercisesArray, function(exercise) {
+        today = new Date(),
+            assigmentEndDate = new Date(exercise.endDate),
+            assigmentInitDate = new Date(exercise.initDate);
+        console.log(today);
+        console.log(assigmentInitDate);
+        console.log(assigmentEndDate);
+        console.log(assigmentEndDate.getTime());
+        console.log(today.getTime());
+        console.log(assigmentEndDate.getTime() > today.getTime());
         if (!exercise.endDate) {
             exercisesUnlimited.push(exercise);
-        } else if (Date(exercise.endDate) > Date.now()) {
-            if (Date(exercise.initDate) < Date.now()) {
-                exercisesOpen.push(exercise);
-            } else {
-                exercisesClosed.push(exercise);
-            }
+        } else if (assigmentEndDate.getTime() > today.getTime() && assigmentInitDate.getTime() < today.getTime()) {
+            exercisesOpen.push(exercise);
+        } else if (today.getTime() > assigmentEndDate.getTime()) {
+            exercisesClosed.push(exercise);
         }
     });
+
     switch (status) {
         case 'open':
             exercisesFiltered = exercisesOpen;
