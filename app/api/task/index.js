@@ -18,7 +18,6 @@ router.get('/exercise/:exerciseId/group/:groupId', auth.isAuthenticated(), contr
 router.get('/exercise/:exerciseId', auth.isAuthenticated(), controller.getTasksByExercise);
 router.get('/:id', auth.isAuthenticated(), controller.get);
 //cambiarlo y meterlo en group groupId pasándole el rol
-router.get('/student/group/:groupId/count', auth.isAuthenticated(), controller.getMyTasksInGroupCount);
 router.get('/student/group/:groupId', auth.isAuthenticated(), controller.getMyTasksInGroup);
 
 //POST

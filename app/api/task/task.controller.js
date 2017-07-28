@@ -143,46 +143,35 @@ exports.getMyTasksInGroup = function(req, res) {
         page = req.query.page - 1 || 0,
         perPage = (req.query.pageSize && (req.query.pageSize <= maxPerPage)) ? req.query.pageSize : maxPerPage;
 
-    Task.find({
-            student: userId,
-            group: groupId
-        })
-        .populate('exercise', 'name')
-        .limit(parseInt(perPage))
-        .skip(parseInt(perPage * page))
-        .exec(function(err, tasks) {
-            if (err) {
-                console.log(err);
-                err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
-                res.status(err.code).send(err);
-            } else {
-                res.status(200).send(tasks);
-            }
-        });
-};
-
-/**
- * Get my tasks count
- * @param req
- * @param res
- */
-exports.getMyTasksInGroupCount = function(req, res) {
-    var userId = req.user._id,
-        groupId = req.params.groupId;
-    Task.count({
-        student: userId,
-        group: groupId
-    }, function(err, counter) {
+    async.parallel([
+        function(next) {
+            Task.find({
+                    student: userId,
+                    group: groupId
+                })
+                .populate('exercise', 'name')
+                .limit(parseInt(perPage))
+                .skip(parseInt(perPage * page))
+                .exec(next);
+        },
+        function(next) {
+            Task.count({
+                student: userId,
+                group: groupId
+            }, next);
+        }
+    ], function(err, response) {
         if (err) {
             console.log(err);
             err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
-            res.status(200).json({
-                'count': counter
+            res.status(200).send({
+                'tasks': response[0],
+                'count': response[1]
             });
         }
-    });
+    })
 };
 
 /**
