@@ -514,7 +514,9 @@ exports.senMark = function(req, res) {
             }
         },
         function(task, next) {
-            task.update({status: 'corrected'}, next);
+            task.update({
+                status: 'corrected'
+            }, next);
         }
     ], function(err, result) {
         if (err) {
@@ -540,17 +542,17 @@ exports.sendTask = function(req, res) {
             _id: taskId,
             student: userId
         }),
-        function(task, next){
-            AssignmentFunction.getDateByGroupAndExercise(task.group,  task.exercise, function(err, date){
+        function(task, next) {
+            AssignmentFunction.getDateByGroupAndExercise(task.group, task.exercise, function(err, date) {
                 var taskObject = task.toObject();
-                if(!err) {
+                if (!err) {
                     taskObject.initDate = date.initDate;
                     taskObject.endDate = date.endDate;
                 }
                 next(err, taskObject)
             });
         }
-    ],function(){
+    ], function(err, task) {
         if (err) {
             console.log(err);
             err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
