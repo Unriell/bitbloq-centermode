@@ -333,12 +333,6 @@ function filterExercisesByStatus(exercisesArray, status) {
         today = new Date(),
             assigmentEndDate = new Date(exercise.endDate),
             assigmentInitDate = new Date(exercise.initDate);
-        console.log(today);
-        console.log(assigmentInitDate);
-        console.log(assigmentEndDate);
-        console.log(assigmentEndDate.getTime());
-        console.log(today.getTime());
-        console.log(assigmentEndDate.getTime() > today.getTime());
         if (!exercise.endDate) {
             exercisesUnlimited.push(exercise);
         } else if (assigmentEndDate.getTime() > today.getTime() && assigmentInitDate.getTime() < today.getTime()) {
