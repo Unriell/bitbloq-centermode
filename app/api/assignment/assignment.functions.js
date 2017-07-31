@@ -5,7 +5,8 @@ var Assignment = require('./assignment.model.js'),
     MemberFunctions = require('../member/member.functions.js'),
     ObjectId = require('mongoose').Types.ObjectId,
     _ = require('lodash'),
-    async = require('async');
+    async = require('async'),
+    perPage = 10;
 
 /**
  * Get exercises by a group
@@ -62,12 +63,14 @@ exports.getAssigmentByExercises = function(exerciseIds, groupId, next) {
  * @param {String} groupId
  * @param {Function} next
  */
-exports.getExercisesByGroup = function(groupId, next) {
+exports.getExercisesByGroup = function(groupId, page, next) {
     Assignment.find({
             group: groupId
         })
         .populate('exercise')
         .select('exercise initDate endDate')
+        .limit(parseInt(perPage))
+        .skip(parseInt(perPage * page))
         .exec(function(err, assignments) {
             var exercises = [];
             assignments.forEach(function(assignment) {
@@ -82,6 +85,12 @@ exports.getExercisesByGroup = function(groupId, next) {
         });
 };
 
+exports.getExercisesByGroupCount = function(groupId, next) {
+    Assignment.count({
+            group: groupId
+        })
+        .exec(next);
+}
 /**
  * Get exercises with specific center and teacher
  * @param {String} centerId

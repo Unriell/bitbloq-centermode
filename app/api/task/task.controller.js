@@ -333,9 +333,11 @@ exports.getTasksByExerciseAndGroupCount = function(req, res) {
  * @param res
  */
 exports.getTasksByStudent = function(req, res) {
-    var userId = req.user._id,
-        groupId = req.params.groupId,
-        studentId = req.params.studentId;
+    var groupId = req.params.groupId,
+        studentId = req.params.studentId,
+        page = req.query.page - 1 || 0,
+        perPage = (req.query.pageSize && (req.query.pageSize <= maxPerPage)) ? req.query.pageSize : maxPerPage;
+
     Task.find({
             student: studentId,
             group: groupId
@@ -344,6 +346,8 @@ exports.getTasksByStudent = function(req, res) {
         .populate('exercise', 'name createdAt')
         .populate('student', 'firstName lastName username')
         .populate('group', 'name')
+        .limit(parseInt(perPage))
+        .skip(parseInt(perPage * page))
         .exec(function(err, tasks) {
             if (err) {
                 console.log(err);
@@ -361,11 +365,21 @@ exports.getTasksByStudent = function(req, res) {
                         taskObject._id = taskId;
                         taskList.push(taskObject);
                     });
-                    res.status(200).json({
-                        tasks: taskList,
-                        group: tasks[0].group,
-                        student: student
+                    getTasksByStudentCount(studentId, groupId, function(err, count) {
+                        if (err) {
+                            console.log(err);
+                            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+                            res.status(err.code).send(err);
+                        } else {
+                            res.status(200).json({
+                                tasks: taskList,
+                                group: tasks[0].group,
+                                student: student,
+                                count: count
+                            });
+                        }
                     });
+
                 } else {
                     async.parallel([
                         GroupFunction.get.bind(GroupFunction, groupId),
@@ -379,7 +393,8 @@ exports.getTasksByStudent = function(req, res) {
                             res.status(200).json({
                                 tasks: tasks,
                                 group: result[0],
-                                student: result[1]
+                                student: result[1],
+                                count: 0
                             });
                         }
                     });
@@ -387,6 +402,13 @@ exports.getTasksByStudent = function(req, res) {
             }
         });
 };
+
+function getTasksByStudentCount(studentId, groupId, next) {
+    Task.count({
+        student: studentId,
+        group: groupId
+    }, next);
+}
 
 /**
  * Get tasks by group
