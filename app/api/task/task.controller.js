@@ -575,8 +575,12 @@ exports.sendTask = function(req, res) {
             if (!task.initDate || now - task.initDate.getTime() > 0) {
                 if (!task.endDate || now - task.endDate.getTime() <= 0) {
                     //can deliver
-                    task.update({
-                        status: 'delivered'
+                    Task.update({
+                        _id: task._id
+                    }, {
+                        $set: {
+                            status: 'delivered'
+                        }
                     }, function(err, response) {
                         if (err) {
                             console.log(err);
