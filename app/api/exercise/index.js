@@ -9,22 +9,17 @@ var router = express.Router();
 // GET
 router.get('/teacher/:teacherId/count', auth.isAuthenticated(), controller.getCountByTeacher);
 router.get('/teacher/:teacherId', auth.isAuthenticated(), controller.getByTeacher);
-router.get('/count', auth.isAuthenticated(), controller.getAllCount);
 router.get('/:id', auth.isAuthenticated(), controller.get);
 router.get('/', auth.isAuthenticated(), controller.getAll);
-
 
 // POST
 router.post('/clone', auth.isAuthenticated(), controller.clone);
 router.post('/', auth.isAuthenticated(), controller.create);
 
-
 // PUT
 router.put('/:id', auth.isAuthenticated(), controller.update);
 
-
 // DELETE
 router.delete('/:id', auth.isAuthenticated(), controller.delete);
-
 
 module.exports = router;

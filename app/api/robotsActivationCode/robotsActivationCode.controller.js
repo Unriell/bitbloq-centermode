@@ -14,7 +14,7 @@ var Code = require('./robotsActivationCode.model.js'),
  */
 
 exports.generateCodes = function(req, res) {
-    var number = req.body.number,
+    var number = parseInt(req.body.number) || 1,
         robots = req.body.robots,
         reason,
         reporter,
@@ -45,8 +45,6 @@ exports.generateCodes = function(req, res) {
     });
 
     Code.create(codes, function(err, codesGenerated) {
-        console.log('codes');
-        console.log(codesGenerated);
         if (err) {
             console.log(err);
             err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
@@ -54,7 +52,7 @@ exports.generateCodes = function(req, res) {
         } else {
             res.status(200).json(codesGenerated);
         }
-    })
+    });
 
 };
 
@@ -78,7 +76,7 @@ exports.getUnusedCodesByRobot = function(req, res) {
     Code.find({
         'robot': robot,
         'used': null
-    }, ['robot', 'code', 'used'], function(err, codes) {
+    }, ['-_id', 'robot', 'code', 'used', 'type', 'reason', 'reporter'],  function(err, codes) {
         if (err) {
             console.log(err);
             err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
@@ -96,7 +94,7 @@ exports.getUsedCodesByRobot = function(req, res) {
         'used': {
             $ne: null
         }
-    }, ['robot', 'code', 'used'], function(err, codes) {
+    }, ['robot', 'code', 'type', 'used'], function(err, codes) {
         if (err) {
             console.log(err);
             err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;

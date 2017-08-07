@@ -12,11 +12,11 @@ var Member = require('./member.model.js'),
 /**
  * Add an member in a center like head master
  * @param {String} userId
- * @param {String} centerId
+ * @param {Object} center
  * @param {Function} next
  */
-exports.addHeadmaster = function(userId, centerId, next) {
-    _addStaff(userId, centerId, 'headmaster', next);
+exports.addHeadmaster = function(userId, center, next) {
+    _addStaff(userId, center, 'headmaster', next);
 };
 
 /**
@@ -50,11 +50,11 @@ exports.addStudent = function(userId, groupId, next) {
 /**
  * Add an member in a center like teacher
  * @param {String} userId
- * @param {String} centerId
+ * @param {Object} center
  * @param {Function} next
  */
-exports.addTeacher = function(userId, centerId, next) {
-    _addStaff(userId, centerId, 'teacher', next);
+exports.addTeacher = function(userId, center, next) {
+    _addStaff(userId, center, 'teacher', next);
 };
 
 /**
@@ -84,7 +84,7 @@ exports.sendConfirmationAllTeachers = function(users, centerId, next) {
                         email: user.email,
                         subject: 'El centro ' + center.name + ' te invita como profesor de Bitbloq',
                         center: center.name,
-                        addTeacherUrl: config.client_domain + '/#/center-mode/add-teacher/' + token
+                        addTeacherUrl: config.client_domain + '/#/confirm-teacher/' + token
                     };
                     mailer.sendOne('addTeacher', locals, function(err) {
                         if (err) {
@@ -409,7 +409,7 @@ exports.userIsStudent = function(memberId, centerId, next) {
         user: memberId,
         role: 'student'
     };
-    if(centerId) {
+    if (centerId) {
         query.center = centerId;
     }
     Member.findOne(query, function(err, member) {
@@ -421,23 +421,24 @@ exports.userIsStudent = function(memberId, centerId, next) {
  *** Private functions
  **********************************/
 
-function _addStaff(userId, centerId, type, next) {
+function _addStaff(userId, center, type, next) {
     async.waterfall([
         Member.findOne.bind(Member, {
             user: userId,
-            center: centerId,
+            center: center._id,
             role: type
         }),
         function(member, callback) {
             if (member) {
                 next({
                     code: 409,
-                    message: 'Conflict. User exists as teacher in this center'
+                    message: 'Conflict. User exists as teacher in this center',
+                    center: center.name
                 });
             } else {
                 var newMember = new Member({
                     user: userId,
-                    center: centerId,
+                    center: center._id,
                     role: type
                 });
                 newMember.save(callback);

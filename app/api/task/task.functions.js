@@ -253,30 +253,6 @@ exports.getExercisesCount = function(centerId, teacherId, next) {
 };
 
 /**
- * Get exercises with specific group
- * @param {String} groupId
- * @param {Function} next
- * @return {Array} tasks
- */
-exports.getExercisesByGroup = function(groupId, next) {
-    Task.find({
-            group: groupId
-        })
-        .select('exercise group creator teacher initDate endDate')
-        .exec(function(err, tasks) {
-            var taskList = [];
-            tasks.forEach(function(task) {
-                var taskObject = task.toObject();
-                delete taskObject._id;
-                if (!_.some(taskList, taskObject)) {
-                    taskList.push(taskObject);
-                }
-            });
-            next(err, taskList);
-        });
-};
-
-/**
  * Remove task with specific exercise and group
  * @param {Array} groupIdArray
  * @param {String} exerciseId

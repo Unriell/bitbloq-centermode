@@ -5,6 +5,7 @@ var Task = require('./task.model.js'),
     ProjectFunction = require('../project/project.functions.js'),
     TaskFunction = require('./task.functions.js'),
     GroupFunction = require('../group/group.functions.js'),
+    AssignmentFunction = require('../assignment/assignment.functions.js'),
     async = require('async'),
     _ = require('lodash');
 
@@ -108,6 +109,7 @@ exports.get = function(req, res) {
                 select: 'name activatedRobots -_id'
             }
         })
+        .populate('student', 'firstName lastName username')
         .exec(function(err, task) {
             if (err) {
                 console.log(err);
@@ -116,7 +118,7 @@ exports.get = function(req, res) {
             } else if (!task) {
                 res.sendStatus(404);
             } else {
-                if (String(task.creator) === String(req.user._id) || String(task.student) === String(req.user._id) || String(task.teacher) === String(req.user._id)) {
+                if (String(task.creator) === String(req.user._id) || String(task.student._id) === String(req.user._id) || String(task.teacher) === String(req.user._id)) {
                     var taskId = task._id,
                         taskObject = task.toObject();
                     _.extend(taskObject, taskObject.exercise);
@@ -137,70 +139,39 @@ exports.get = function(req, res) {
  */
 exports.getMyTasksInGroup = function(req, res) {
     var userId = req.user._id,
-        now = Date.now(),
         groupId = req.params.groupId,
         page = req.query.page - 1 || 0,
         perPage = (req.query.pageSize && (req.query.pageSize <= maxPerPage)) ? req.query.pageSize : maxPerPage;
 
-    Task.find({
-            student: userId,
-            group: groupId
-        })
-        .or([{
-            initDate: {
-                $lt: now
-            }
-        }, {
-            initDate: now
-        }, {
-            initDate: null
-        }])
-        .populate('exercise', 'name')
-        .limit(parseInt(perPage))
-        .skip(parseInt(perPage * page))
-        .exec(function(err, tasks) {
-            if (err) {
-                console.log(err);
-                err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
-                res.status(err.code).send(err);
-            } else {
-                res.status(200).send(tasks);
-            }
-        });
-};
-
-/**
- * Get my tasks count
- * @param req
- * @param res
- */
-exports.getMyTasksInGroupCount = function(req, res) {
-    var userId = req.user._id,
-        groupId = req.params.groupId,
-        now = Date.now();
-    Task.count({
-        student: userId,
-        group: groupId,
-        $or: [{
-            initDate: {
-                $lt: now
-            }
-        }, {
-            initDate: now
-        }, {
-            initDate: null
-        }]
-    }, function(err, counter) {
+    async.parallel([
+        function(next) {
+            Task.find({
+                    student: userId,
+                    group: groupId
+                })
+                .populate('exercise', 'name')
+                .limit(parseInt(perPage))
+                .skip(parseInt(perPage * page))
+                .exec(next);
+        },
+        function(next) {
+            Task.count({
+                student: userId,
+                group: groupId
+            }, next);
+        }
+    ], function(err, response) {
         if (err) {
             console.log(err);
             err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
-            res.status(200).json({
-                'count': counter
+            res.status(200).send({
+                'tasks': response[0],
+                'count': response[1]
             });
         }
-    });
+    })
 };
 
 /**
@@ -221,7 +192,7 @@ exports.getTasksByExercise = function(req, res) {
                 teacher: userId
             }]
         })
-        .select('exercise student group mark status initDate endDate')
+        .select('exercise student group mark status')
         .populate('exercise', 'name createdAt')
         .populate('student', 'firstName lastName username')
         .populate('group', 'name')
@@ -269,7 +240,7 @@ exports.getTasksByExerciseAndGroup = function(req, res) {
     }
 
     Task.find(query)
-        .select('exercise student group mark status initDate endDate')
+        .select('exercise student group mark status')
         .populate('exercise', 'name createdAt')
         .populate('student', 'firstName lastName username')
         .populate('group', 'name')
@@ -277,6 +248,7 @@ exports.getTasksByExerciseAndGroup = function(req, res) {
         .skip(parseInt(perPage * page))
         .sort(sortParams)
         .exec(function(err, tasks) {
+            console.log(tasks);
             if (err) {
                 console.log(err);
                 err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
@@ -361,17 +333,21 @@ exports.getTasksByExerciseAndGroupCount = function(req, res) {
  * @param res
  */
 exports.getTasksByStudent = function(req, res) {
-    var userId = req.user._id,
-        groupId = req.params.groupId,
-        studentId = req.params.studentId;
+    var groupId = req.params.groupId,
+        studentId = req.params.studentId,
+        page = req.query.page - 1 || 0,
+        perPage = (req.query.pageSize && (req.query.pageSize <= maxPerPage)) ? req.query.pageSize : maxPerPage;
+
     Task.find({
             student: studentId,
             group: groupId
         })
-        .select('exercise student group mark status initDate endDate')
+        .select('exercise student group mark status')
         .populate('exercise', 'name createdAt')
         .populate('student', 'firstName lastName username')
         .populate('group', 'name')
+        .limit(parseInt(perPage))
+        .skip(parseInt(perPage * page))
         .exec(function(err, tasks) {
             if (err) {
                 console.log(err);
@@ -389,11 +365,21 @@ exports.getTasksByStudent = function(req, res) {
                         taskObject._id = taskId;
                         taskList.push(taskObject);
                     });
-                    res.status(200).json({
-                        tasks: taskList,
-                        group: tasks[0].group,
-                        student: student
+                    getTasksByStudentCount(studentId, groupId, function(err, count) {
+                        if (err) {
+                            console.log(err);
+                            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+                            res.status(err.code).send(err);
+                        } else {
+                            res.status(200).json({
+                                tasks: taskList,
+                                group: tasks[0].group,
+                                student: student,
+                                count: count
+                            });
+                        }
                     });
+
                 } else {
                     async.parallel([
                         GroupFunction.get.bind(GroupFunction, groupId),
@@ -407,7 +393,8 @@ exports.getTasksByStudent = function(req, res) {
                             res.status(200).json({
                                 tasks: tasks,
                                 group: result[0],
-                                student: result[1]
+                                student: result[1],
+                                count: 0
                             });
                         }
                     });
@@ -415,6 +402,13 @@ exports.getTasksByStudent = function(req, res) {
             }
         });
 };
+
+function getTasksByStudentCount(studentId, groupId, next) {
+    Task.count({
+        student: studentId,
+        group: groupId
+    }, next);
+}
 
 /**
  * Get tasks by group
@@ -484,9 +478,56 @@ exports.mark = function(req, res) {
             };
             if (markData.mark) {
                 updateTask.mark = markData.mark;
-                updateTask.status = 'corrected';
             }
             task.update(updateTask, next);
+        }
+    ], function(err, result) {
+        if (err) {
+            console.log(err);
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+            res.status(err.code).send(err);
+        } else {
+            res.status(200).send(result);
+        }
+    });
+};
+
+/**
+ * Mark a task
+ * @param req
+ * @param res
+ */
+exports.senMark = function(req, res) {
+    var userId = req.user._id,
+        taskId = req.params.taskId;
+    async.waterfall([
+        function(next) {
+            Task.findById(taskId)
+                .populate('group', 'center')
+                .exec(next);
+        },
+        function(task, next) {
+            //  ==  it's correct because I want check only the content, I don't want check the type
+            // If you change == to === this request will be rejected when user is teacher
+            if (String(task.owner) == userId || String(task.teacher) == userId) {
+                next(null, task);
+            } else {
+                MemberFunctions.userIsHeadmaster(userId, task.group.center, function(err, isHeadmaster) {
+                    if (!isHeadmaster) {
+                        next({
+                            code: 403,
+                            message: 'Forbidden'
+                        });
+                    } else {
+                        next(err, task);
+                    }
+                });
+            }
+        },
+        function(task, next) {
+            task.update({
+                status: 'corrected'
+            }, next);
         }
     ], function(err, result) {
         if (err) {
@@ -507,10 +548,22 @@ exports.mark = function(req, res) {
 exports.sendTask = function(req, res) {
     var userId = req.user._id,
         taskId = req.params.taskId;
-    Task.findOne({
-        _id: taskId,
-        student: userId
-    }, function(err, task) {
+    async.waterfall([
+        Task.findOne.bind(Task, {
+            _id: taskId,
+            student: userId
+        }),
+        function(task, next) {
+            AssignmentFunction.getDateByGroupAndExercise(task.group, task.exercise, function(err, date) {
+                var taskObject = task.toObject();
+                if (!err) {
+                    taskObject.initDate = date.initDate;
+                    taskObject.endDate = date.endDate;
+                }
+                next(err, taskObject)
+            });
+        }
+    ], function(err, task) {
         if (err) {
             console.log(err);
             err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
@@ -518,13 +571,16 @@ exports.sendTask = function(req, res) {
         } else if (!task) {
             res.sendStatus(404);
         } else {
-            //task exist
             var now = new Date();
             if (!task.initDate || now - task.initDate.getTime() > 0) {
                 if (!task.endDate || now - task.endDate.getTime() <= 0) {
                     //can deliver
-                    task.update({
-                        status: 'delivered'
+                    Task.update({
+                        _id: task._id
+                    }, {
+                        $set: {
+                            status: 'delivered'
+                        }
                     }, function(err, response) {
                         if (err) {
                             console.log(err);

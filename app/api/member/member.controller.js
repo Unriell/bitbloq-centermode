@@ -63,16 +63,43 @@ exports.confirmTeacher = function(req, res) {
         async.waterfall([
             ConfirmationTokenFunctions.getInfo.bind(ConfirmationTokenFunctions, req.body.token),
             function(token, next) {
-                if (token && userId == token.teacherId) {
-                    MemberFunctions.addTeacher(token.teacherId, token.centerId, function(err) {
-                        next(err, token);
-                    });
-                } else {
-                    next({
-                        code: 403,
-                        message: 'Forbidden'
-                    });
-                }
+                CenterFunctions.getCenterById(token.centerId, function(err, center) {
+                    next(err, token, center);
+                });
+            },
+            function(token, center, next) {
+                CenterFunctions.getNotConfirmedTeacher(token.centerId, function(err, noConfirmedTeacher) {
+                    if (err) {
+                        next(err);
+                    } else if (token && userId == token.teacherId) {
+                        var invitedTeacher = false;
+                        _.forEach(noConfirmedTeacher, function(teacher){
+                            if(String(teacher._id) === token.teacherId){
+                                invitedTeacher = true;
+                            }
+                        });
+                        if (invitedTeacher) {
+                            next(null, token, center);
+                        } else {
+                            next({
+                                code: 404,
+                                message: 'Not Found',
+                                center: center.name
+                            });
+                        }
+                    } else {
+                        next({
+                            code: 403,
+                            message: 'Forbidden',
+                            center: center.name
+                        });
+                    }
+                });
+            },
+            function(token, center, next) {
+                MemberFunctions.addTeacher(token.teacherId, center, function(err) {
+                    next(err, token);
+                });
             },
             function(token, next) {
                 CenterFunctions.deleteNotConfirmedTeacher(token.centerId, token.teacherId, next);
@@ -362,8 +389,25 @@ exports.getTeacher = function(req, res) {
 exports.getTeachers = function(req, res) {
     var userId = req.user._id,
         centerId = req.params.centerId;
-
     async.waterfall([
+        function(next) {
+            if (!centerId || centerId === 'undefined') {
+                MemberFunctions.getCenterIdByHeadmaster(userId, function(err, newCenterId) {
+                    if(!newCenterId){
+                        next({
+                            code: '404',
+                            message: 'Not Found'
+                        });
+                    } else {
+                        centerId = newCenterId;
+                        next(err);
+                    }
+
+                });
+            } else {
+                next();
+            }
+        },
         MemberFunctions.userIsHeadmaster.bind(MemberFunctions, userId, centerId),
         function(isHeadmaster, next) {
             if (!isHeadmaster) {

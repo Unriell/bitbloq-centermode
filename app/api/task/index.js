@@ -18,7 +18,6 @@ router.get('/exercise/:exerciseId/group/:groupId', auth.isAuthenticated(), contr
 router.get('/exercise/:exerciseId', auth.isAuthenticated(), controller.getTasksByExercise);
 router.get('/:id', auth.isAuthenticated(), controller.get);
 //cambiarlo y meterlo en group groupId pasándole el rol
-router.get('/student/group/:groupId/count', auth.isAuthenticated(), controller.getMyTasksInGroupCount);
 router.get('/student/group/:groupId', auth.isAuthenticated(), controller.getMyTasksInGroup);
 
 //POST
@@ -26,6 +25,7 @@ router.post('/cloneToProject', auth.isAuthenticated(), controller.cloneToProject
 
 // PUT
 router.put('/:id', auth.isAuthenticated(), controller.update);
+router.put('/:taskId/send-mark', auth.isAuthenticated(), controller.senMark);
 router.put('/:taskId/send', auth.isAuthenticated(), controller.sendTask);
 router.put('/:taskId/mark', auth.isAuthenticated(), controller.mark);
 

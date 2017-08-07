@@ -66,28 +66,6 @@ exports.getGroup = function(req, res) {
                     });
                 }
             }
-        },
-        function(group, next) {
-            MemberFunctions.getStudentsByGroup(group._id, function(err, users) {
-                next(err, group, users);
-            });
-        },
-        function(group, users, next) {
-            async.map(users, function(student, next) {
-                TaskFunctions.getAverageMark(group._id, student, next);
-            }, function(err, students) {
-                var groupObject = group.toObject();
-                groupObject.students = students;
-                next(err, groupObject);
-            });
-        },
-        function(group, next) {
-            AssignmentFunctions.getExercisesByGroup(group._id, function(err, exercises) {
-                if (exercises) {
-                    group.exercises = exercises;
-                }
-                next(err, group);
-            });
         }
     ], function(err, group) {
         if (err) {
@@ -100,6 +78,68 @@ exports.getGroup = function(req, res) {
     });
 };
 
+/**
+ * Get students from group with ID groupId
+ * @param req
+ * @param res
+ */
+
+exports.getGroupStudents = function(req, res) {
+    var groupId = req.params.id;
+    async.waterfall([
+        function(next) {
+            MemberFunctions.getStudentsByGroup(groupId, function(err, users) {
+                next(err, users);
+            });
+        },
+        function(users, next) {
+            async.map(users, function(student, next) {
+                TaskFunctions.getAverageMark(groupId, student, next);
+            }, function(err, students) {
+                next(err, students);
+            });
+        },
+    ], function(err, students) {
+        if (err) {
+            console.log(err);
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+            res.status(err.code).send(err);
+        } else {
+            res.status(200).send(students);
+        }
+    });
+}
+
+/**
+ * Get exercises from group with ID groupId
+ * @param req
+ * @param res
+ */
+
+exports.getGroupExercises = function(req, res) {
+    var groupId = req.params.id,
+        page = req.query.page - 1 || 0;
+    async.parallel([
+            function(next) {
+                AssignmentFunctions.getExercisesByGroup(groupId, page, next);
+            },
+            function(next) {
+                AssignmentFunctions.getExercisesByGroupCount(groupId, next);
+            }
+        ],
+        function(err, result) {
+            if (err) {
+                console.log(err);
+                err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+                res.status(err.code).send(err);
+            } else {
+                res.status(200).send({
+                    'exercises': result[0],
+                    'count': result[1]
+                });
+            }
+        });
+}
 /**
  * Get group as student or as teacher
  * @param req
