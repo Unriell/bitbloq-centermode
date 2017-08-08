@@ -150,6 +150,7 @@ exports.getMyTasksInGroup = function(req, res) {
                     group: groupId
                 })
                 .populate('exercise', 'name')
+                .lean()
                 .limit(parseInt(perPage))
                 .skip(parseInt(perPage * page))
                 .exec(next);
@@ -166,9 +167,19 @@ exports.getMyTasksInGroup = function(req, res) {
             err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
-            res.status(200).send({
-                'tasks': response[0],
-                'count': response[1]
+            AssignmentFunction.getDateByGroupAndExercises(groupId, _.map(response[0], 'exercise._id'), function(err, exerciseDates) {
+                if (exerciseDates) {
+                    _.forEach(response[0], function(task) {
+                        if (exerciseDates[task.exercise._id]) {
+                            task.initDate = exerciseDates[task.exercise._id].initDate;
+                            task.endDate = exerciseDates[task.exercise._id].endDate;
+                        }
+                    });
+                }
+                res.status(200).send({
+                    'tasks': response[0],
+                    'count': response[1]
+                });
             });
         }
     })

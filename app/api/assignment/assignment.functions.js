@@ -11,6 +11,7 @@ var Assignment = require('./assignment.model.js'),
 /**
  * Get exercises by a group
  * @param {String} exerciseIds
+ * @param {String} groupId
  * @param {Function} next
  */
 exports.getAssigmentByExercises = function(exerciseIds, groupId, next) {
@@ -90,7 +91,7 @@ exports.getExercisesByGroupCount = function(groupId, next) {
             group: groupId
         })
         .exec(next);
-}
+};
 /**
  * Get exercises with specific center and teacher
  * @param {String} centerId
@@ -139,6 +140,32 @@ exports.getDateByGroupAndExercise = function(groupId, exerciseId, next) {
                 initDate: assignment.initDate,
                 endDate: assignment.endDate
             });
+        });
+};
+
+
+/**
+ * Get assignment date
+ * @param {String} groupId
+ * @param {Array} exerciseIds
+ * @param {Function} next
+ * @return {Array} date
+ */
+exports.getDateByGroupAndExercises = function(groupId, exerciseIds, next) {
+    Assignment.find({
+            group: groupId
+        })
+        .where('exercise').in(exerciseIds)
+        .select('exercise initDate endDate')
+        .exec(function(err, assignments) {
+            var result = {};
+            _.forEach(assignments, function(assignment) {
+                result[assignment.exercise] = {
+                    initDate: assignment.initDate,
+                    endDate: assignment.endDate
+                };
+            });
+            next(err, result);
         });
 };
 
@@ -272,27 +299,27 @@ exports.removeByGroup = function(groupId, next) {
 
 exports.getExercisesCountInGroup = function(groupId, next) {
     Assignment.aggregate([{
-            $match: {
-                'group': ObjectId(groupId),
-                'deleted': {
-                    $ne: true
-                }
+        $match: {
+            'group': ObjectId(groupId),
+            'deleted': {
+                $ne: true
             }
-        }, {
-            $group: {
-                '_id': '$exercise',
-                'exercise': {
-                    '$first': '$exercise'
-                }
+        }
+    }, {
+        $group: {
+            '_id': '$exercise',
+            'exercise': {
+                '$first': '$exercise'
             }
-        }, {
-            $lookup: {
-                'from': 'centermode-exercises',
-                'localField': 'exercise',
-                'foreignField': '_id',
-                'as': 'exercise'
-            }
-        },
+        }
+    }, {
+        $lookup: {
+            'from': 'centermode-exercises',
+            'localField': 'exercise',
+            'foreignField': '_id',
+            'as': 'exercise'
+        }
+    },
         {
             $count: 'count'
         }
