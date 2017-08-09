@@ -290,12 +290,10 @@ function createAssignment(assignment, userId, next) {
                 assignment.endDate = assignment.endDate || undefined;
                 assignment.initDate = assignment.initDate || undefined;
                 if (result && result.length > 0) {
-                    Assignment.update({
+                    Assignment.findOneAndUpdate({
                         group: assignment.group,
                         exercise: assignment.exercise
-                    }, assignment, {
-                        upsert: true
-                    }, next);
+                    }, assignment, next);
                 } else {
                     var newAssignment = new Assignment(assignment);
                     newAssignment.save(next);
