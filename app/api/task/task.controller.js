@@ -259,7 +259,6 @@ exports.getTasksByExerciseAndGroup = function(req, res) {
         .skip(parseInt(perPage * page))
         .sort(sortParams)
         .exec(function(err, tasks) {
-            console.log(tasks);
             if (err) {
                 console.log(err);
                 err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;

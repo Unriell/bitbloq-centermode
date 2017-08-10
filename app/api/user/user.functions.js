@@ -31,7 +31,6 @@ exports.getUserByEmail = function(email, next) {
         } else if (user) {
             next(err, user.owner);
         } else {
-            console.log(email + ' no está como user');
             next(err, {
                 'email': email
             });
