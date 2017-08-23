@@ -150,6 +150,7 @@ exports.getMyTasksInGroup = function(req, res) {
                     group: groupId
                 })
                 .populate('exercise', 'name')
+                .lean()
                 .limit(parseInt(perPage))
                 .skip(parseInt(perPage * page))
                 .exec(next);
@@ -166,9 +167,19 @@ exports.getMyTasksInGroup = function(req, res) {
             err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
-            res.status(200).send({
-                'tasks': response[0],
-                'count': response[1]
+            AssignmentFunction.getDateByGroupAndExercises(groupId, _.map(response[0], 'exercise._id'), function(err, exerciseDates) {
+                if (exerciseDates) {
+                    _.forEach(response[0], function(task) {
+                        if (exerciseDates[task.exercise._id]) {
+                            task.initDate = exerciseDates[task.exercise._id].initDate;
+                            task.endDate = exerciseDates[task.exercise._id].endDate;
+                        }
+                    });
+                }
+                res.status(200).send({
+                    'tasks': response[0],
+                    'count': response[1]
+                });
             });
         }
     })
@@ -248,7 +259,6 @@ exports.getTasksByExerciseAndGroup = function(req, res) {
         .skip(parseInt(perPage * page))
         .sort(sortParams)
         .exec(function(err, tasks) {
-            console.log(tasks);
             if (err) {
                 console.log(err);
                 err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
@@ -358,28 +368,33 @@ exports.getTasksByStudent = function(req, res) {
                     var taskList = [],
                         student = tasks[0].student.toObject();
                     student.average = TaskFunction.calculateAverageMark(tasks);
-                    tasks.forEach(function(task) {
-                        var taskObject = task.toObject(),
-                            taskId = task._id;
-                        _.extend(taskObject, taskObject.exercise);
-                        taskObject._id = taskId;
-                        taskList.push(taskObject);
+                    AssignmentFunction.getDateByGroupAndExercises(groupId, _.map(tasks, 'exercise._id'), function(err, exerciseDates) {
+                        tasks.forEach(function(task) {
+                            var taskObject = task.toObject(),
+                                taskId = task._id;
+                            _.extend(taskObject, taskObject.exercise);
+                            taskObject._id = taskId;
+                            if (exerciseDates && exerciseDates[task.exercise._id]) {
+                                taskObject.initDate = exerciseDates[task.exercise._id].initDate;
+                                taskObject.endDate = exerciseDates[task.exercise._id].endDate;
+                            }
+                            taskList.push(taskObject);
+                        });
+                        getTasksByStudentCount(studentId, groupId, function(err, count) {
+                            if (err) {
+                                console.log(err);
+                                err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+                                res.status(err.code).send(err);
+                            } else {
+                                res.status(200).json({
+                                    tasks: taskList,
+                                    group: tasks[0].group,
+                                    student: student,
+                                    count: count
+                                });
+                            }
+                        });
                     });
-                    getTasksByStudentCount(studentId, groupId, function(err, count) {
-                        if (err) {
-                            console.log(err);
-                            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
-                            res.status(err.code).send(err);
-                        } else {
-                            res.status(200).json({
-                                tasks: taskList,
-                                group: tasks[0].group,
-                                student: student,
-                                count: count
-                            });
-                        }
-                    });
-
                 } else {
                     async.parallel([
                         GroupFunction.get.bind(GroupFunction, groupId),

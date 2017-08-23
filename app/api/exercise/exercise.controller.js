@@ -168,7 +168,7 @@ exports.getAll = function(req, res) {
             var exercisesArray = exercises;
             if (req.query.search) {
                 exercisesArray = _.filter(exercisesArray, function(exercise) {
-                    return exercise.name.toLowerCasfgetExercisesCounte().indexOf(JSON.parse(req.query.search).$regex) >= 0;
+                    return exercise.name.toLowerCase().indexOf(JSON.parse(req.query.search).$regex) >= 0;
                 });
             }
             exercisesOrdered = AssignmentFunctions.getExercisesOrdered(exercisesArray, query);

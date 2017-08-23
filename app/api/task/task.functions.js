@@ -26,50 +26,50 @@ exports.checkAndCreateTask = function(taskData, studentId, groupName, next) {
                 select: 'name activatedRobots -_id'
             }
         }).exec(function(err, task) {
-            if (task) {
-                //already a task
-                var taskObject = task.toObject();
-                taskObject.initDate = taskData.initDate;
-                taskObject.endDate = taskData.endDate;
-                task.update(taskObject, function(err) {
-                    if (!err) {
+        if (task) {
+            //already a task
+            var taskObject = task.toObject();
+            taskObject.initDate = taskData.initDate;
+            taskObject.endDate = taskData.endDate;
+            task.update(taskObject, function(err) {
+                if (!err) {
+                    var groupTask = {
+                        '_id': task.group._id,
+                        'initDate': taskObject.initDate,
+                        'endDate': taskObject.endDate,
+                        'name': task.group.name,
+                        'center': {
+                            'activatedRobots': task.group.activatedRobots
+                        }
+                    };
+                    next(err, groupTask);
+                } else {
+                    next(err, {});
+                }
+            });
+        } else {
+            taskData.student = studentId;
+            var newTask = new Task(taskData);
+            newTask.save(function(err, taskSaved) {
+                if (err) {
+                    next(err);
+                } else {
+                    GroupFunction.get(taskSaved.group, function(err, group) {
                         var groupTask = {
-                            '_id': task.group._id,
-                            'initDate': taskObject.initDate,
-                            'endDate': taskObject.endDate,
-                            'name': task.group.name,
+                            '_id': group._id,
+                            'initDate': taskSaved.initDate,
+                            'endDate': taskSaved.endDate,
+                            'name': group.name,
                             'center': {
-                                'activatedRobots': task.group.activatedRobots
+                                'activatedRobots': group.center.activatedRobots
                             }
                         };
                         next(err, groupTask);
-                    } else {
-                        next(err, {});
-                    }
-                });
-            } else {
-                taskData.student = studentId;
-                var newTask = new Task(taskData);
-                newTask.save(function(err, taskSaved) {
-                    if (err) {
-                        next(err);
-                    } else {
-                        GroupFunction.get(taskSaved.group, function(err, group) {
-                            var groupTask = {
-                                '_id': group._id,
-                                'initDate': taskSaved.initDate,
-                                'endDate': taskSaved.endDate,
-                                'name': group.name,
-                                'center': {
-                                    'activatedRobots': group.center.activatedRobots
-                                }
-                            };
-                            next(err, groupTask);
-                        });
-                    }
-                });
-            }
-        });
+                    });
+                }
+            });
+        }
+    });
 };
 
 /**
@@ -112,6 +112,30 @@ exports.deleteByExercise = function(exerciseId, next) {
             next(err);
         }
     });
+};
+
+/**
+ * Remove task with specific exercise and group
+ * @param {Array} groupIdArray
+ * @param {String} exerciseId
+ * @param {Function} next
+ */
+exports.deleteByGroupAndEx = function(groupIdArray, exerciseId, next) {
+    Task.find({
+            exercise: exerciseId
+        })
+        .where('group').in(groupIdArray)
+        .exec(function(err, tasks) {
+            if (err) {
+                next(err);
+            } else {
+                async.map(tasks, function(task, callBack) {
+                    task.delete(callBack);
+                }, function(err) {
+                    next(err, tasks);
+                });
+            }
+        });
 };
 
 /**
@@ -249,29 +273,5 @@ exports.getExercisesCount = function(centerId, teacherId, next) {
         .where('group.center').equals(mongoose.Schema.Types.ObjectId(centerId))
         .exec(function(err, count) {
             next(err, count);
-        });
-};
-
-/**
- * Remove task with specific exercise and group
- * @param {Array} groupIdArray
- * @param {String} exerciseId
- * @param {Function} next
- */
-exports.removeTasksByGroupAndEx = function(groupIdArray, exerciseId, next) {
-    Task.find({
-            exercise: exerciseId
-        })
-        .where('group').in(groupIdArray)
-        .exec(function(err, tasks) {
-            if (err) {
-                next(err);
-            } else {
-                async.map(tasks, function(task, callBack) {
-                    task.delete(callBack);
-                }, function(err) {
-                    next(err, tasks);
-                });
-            }
         });
 };

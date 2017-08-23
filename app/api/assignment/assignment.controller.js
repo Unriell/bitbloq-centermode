@@ -26,7 +26,7 @@ exports.assign = function(req, res) {
         groupsToRemove = req.body.remove;
     async.parallel([
         function(next) {
-            TaskFunctions.removeTasksByGroupAndEx(groupsToRemove.groupIds, groupsToRemove.exerciseId, next);
+            TaskFunctions.deleteByGroupAndEx(groupsToRemove.groupIds, groupsToRemove.exerciseId, next);
         },
         function(next) {
             Assignment.find({
@@ -212,8 +212,7 @@ exports.getByGroup = function(req, res) {
 exports.unassign = function(req, res) {
     var userId = req.user._id,
         exerciseId = req.params.exerciseId,
-        groupId = req.params.groupId,
-        assignment;
+        groupId = req.params.groupId;
     async.waterfall([
             function(next) {
                 Assignment.findOne({
@@ -223,24 +222,25 @@ exports.unassign = function(req, res) {
                     .populate('group')
                     .exec(next)
             },
-            function(found, next) {
-                if (found) {
-                    assignment = found;
-                }
-                MemberFunctions.userIsHeadmaster(userId, assignment.group.center, next);
-            },
-            function(isHeadmaster, next) {
+            function(assignment, next) {
                 if (assignment && assignment.creator.equals(userId)) {
-                    assignment.delete(next);
+                    next(null, assignment);
                 } else {
-                    if (isHeadmaster) {
-                        assignment.delete(next);
-                    } else {
-                        next({
-                            code: 403
-                        })
-                    }
+                    MemberFunctions.userIsHeadmaster(userId, assignment.group.center, function(err, isHeadmaster) {
+                        if (isHeadmaster) {
+                            next(err, assignment);
+                        } else {
+                            next({
+                                code: 403
+                            });
+                        }
+                    });
                 }
+            },
+            function(assignment, next) {
+                TaskFunctions.deleteByGroupAndEx([assignment.group._id], assignment.exercise, function(err) {
+                    assignment.delete(next);
+                });
             }
         ],
         function(err, result) {
@@ -290,12 +290,10 @@ function createAssignment(assignment, userId, next) {
                 assignment.endDate = assignment.endDate || undefined;
                 assignment.initDate = assignment.initDate || undefined;
                 if (result && result.length > 0) {
-                    Assignment.update({
+                    Assignment.findOneAndUpdate({
                         group: assignment.group,
                         exercise: assignment.exercise
-                    }, assignment, {
-                        upsert: true
-                    }, next);
+                    }, assignment, next);
                 } else {
                     var newAssignment = new Assignment(assignment);
                     newAssignment.save(next);
