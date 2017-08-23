@@ -13,7 +13,7 @@ var Code = require('./robotsActivationCode.model.js'),
  * @param res
  */
 
-exports.generateCodes = function(req, res) {
+exports.generateCodes = function (req, res) {
     var number = parseInt(req.body.number) || 1,
         robots = req.body.robots,
         reason,
@@ -32,7 +32,7 @@ exports.generateCodes = function(req, res) {
     } else {
         reporter = '';
     }
-    _.forEach(robots, function(robot) {
+    _.forEach(robots, function (robot) {
         for (var i = 0; i < number; i++) {
             codes.push({
                 'robot': robot,
@@ -44,7 +44,7 @@ exports.generateCodes = function(req, res) {
         }
     });
 
-    Code.create(codes, function(err, codesGenerated) {
+    Code.create(codes, function (err, codesGenerated) {
         if (err) {
             console.log(err);
             err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
@@ -56,11 +56,11 @@ exports.generateCodes = function(req, res) {
 
 };
 
-exports.getCodesByRobot = function(req, res) {
+exports.getCodesByRobot = function (req, res) {
     var robot = req.params.robot;
     Code.find({
         'robot': robot
-    }, ['robot', 'code', 'used'], function(err, codes) {
+    }, ['robot', 'code', 'used'], function (err, codes) {
         if (err) {
             console.log(err);
             err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
@@ -71,12 +71,12 @@ exports.getCodesByRobot = function(req, res) {
     });
 };
 
-exports.getUnusedCodesByRobot = function(req, res) {
+exports.getUnusedCodesByRobot = function (req, res) {
     var robot = req.params.robot;
     Code.find({
         'robot': robot,
         'used': null
-    }, ['-_id', 'robot', 'code', 'used', 'type', 'reason', 'reporter'],  function(err, codes) {
+    }, ['-_id', 'robot', 'code', 'used', 'type', 'reason', 'reporter'], function (err, codes) {
         if (err) {
             console.log(err);
             err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
@@ -87,14 +87,14 @@ exports.getUnusedCodesByRobot = function(req, res) {
     })
 };
 
-exports.getUsedCodesByRobot = function(req, res) {
+exports.getUsedCodesByRobot = function (req, res) {
     var robot = req.params.robot;
     Code.find({
         'robot': robot,
         'used': {
             $ne: null
         }
-    }, ['robot', 'code', 'type', 'used'], function(err, codes) {
+    }, ['robot', 'code', 'type', 'used'], function (err, codes) {
         if (err) {
             console.log(err);
             err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
@@ -105,7 +105,7 @@ exports.getUsedCodesByRobot = function(req, res) {
     })
 };
 
-exports.activateRobot = function(req, res) {
+exports.activateRobot = function (req, res) {
     var code = req.body.code,
         robot = req.body.robot,
         userId = req.user._id,
@@ -125,7 +125,7 @@ exports.activateRobot = function(req, res) {
     if (type && type === 'center') {
         query.type = type;
     }
-    Code.findOne(query, function(err, codeResult) {
+    Code.findOne(query, function (err, codeResult) {
         if (err) {
             console.log(err);
             err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
@@ -135,45 +135,48 @@ exports.activateRobot = function(req, res) {
                 if (codeResult && (codeResult.used.user || codeResult.used.center)) {
                     res.sendStatus(409);
                 } else {
-                    async.parallel([
-                        function(next) {
-                            var infoUsed = {};
-                            if (centerId) {
-                                infoUsed = {
-                                    center: centerId,
-                                    date: new Date()
-                                };
-                            } else {
-                                infoUsed = {
-                                    user: userId,
-                                    date: new Date()
-                                };
-                            }
-                            codeResult.update({
-                                used: infoUsed
-                            }, next);
-                        },
-                        function(next) {
-                            if (centerId) {
-                                CenterFunctions.addCenterRobot(centerId, robot, next);
-                            } else {
-                                UserRobotsFunctions.addUserRobot(userId, robot, next);
-                            }
-                        },
-                        function(next) {
-                            if (centerId) {
-                                CenterFunctions.getCenterById(centerId, next);
-                            } else {
-                                UserRobotsFunctions.getUserRobots(userId, next);
-                            }
+                    async.parallel([function (next) {
+                        var infoUsed = {};
+                        if (centerId) {
+                            infoUsed = {
+                                center: centerId,
+                                date: new Date()
+                            };
+                        } else {
+                            infoUsed = {
+                                user: userId,
+                                date: new Date()
+                            };
                         }
-                    ], function(err, result) {
+                        codeResult.update({
+                            used: infoUsed
+                        }, next);
+                    },
+
+                    function (next) {
+                        async.waterfall([
+                            function (next2) {
+                                if (centerId) {
+                                    CenterFunctions.addCenterRobot(centerId, robot, next2);
+                                } else {
+                                    UserRobotsFunctions.addUserRobot(userId, robot, next2);
+                                }
+                            },
+                            function (response, next2) {
+                                if (centerId) {
+                                    CenterFunctions.getCenterById(centerId, next2);
+                                } else {
+                                    UserRobotsFunctions.getUserRobots(userId, next2);
+                                }
+                            }
+                        ], next);
+                    }], function (err, result) {
                         if (err) {
                             console.log(err);
                             err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                             res.status(err.code).send(err);
                         } else {
-                            res.status(200).json(result[2]);
+                            res.status(200).json(result[1]);
                         }
                     });
                 }
