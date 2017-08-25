@@ -124,7 +124,11 @@ exports.activateRobot = function (req, res) {
 
     if (type && type === 'center') {
         query.type = type;
+    } else {
+        query.type = { $in: [null, 'personal'] };
     }
+
+    console.log('query', query);
     Code.findOne(query, function (err, codeResult) {
         if (err) {
             console.log(err);
@@ -136,7 +140,6 @@ exports.activateRobot = function (req, res) {
                     res.sendStatus(409);
                 } else {
                     async.parallel([
-
                         function (next) {
                             var infoUsed = {};
                             if (centerId) {
