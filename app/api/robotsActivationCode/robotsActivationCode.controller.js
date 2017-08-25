@@ -135,50 +135,52 @@ exports.activateRobot = function (req, res) {
                 if (codeResult && (codeResult.used.user || codeResult.used.center)) {
                     res.sendStatus(409);
                 } else {
-                    async.parallel([function (next) {
-                        var infoUsed = {};
-                        if (centerId) {
-                            infoUsed = {
-                                center: centerId,
-                                date: new Date()
-                            };
-                        } else {
-                            infoUsed = {
-                                user: userId,
-                                date: new Date()
-                            };
-                        }
-                        codeResult.update({
-                            used: infoUsed
-                        }, next);
-                    },
+                    async.parallel([
 
-                    function (next) {
-                        async.waterfall([
-                            function (next2) {
-                                if (centerId) {
-                                    CenterFunctions.addCenterRobot(centerId, robot, next2);
-                                } else {
-                                    UserRobotsFunctions.addUserRobot(userId, robot, next2);
-                                }
-                            },
-                            function (response, next2) {
-                                if (centerId) {
-                                    CenterFunctions.getCenterById(centerId, next2);
-                                } else {
-                                    UserRobotsFunctions.getUserRobots(userId, next2);
-                                }
+                        function (next) {
+                            var infoUsed = {};
+                            if (centerId) {
+                                infoUsed = {
+                                    center: centerId,
+                                    date: new Date()
+                                };
+                            } else {
+                                infoUsed = {
+                                    user: userId,
+                                    date: new Date()
+                                };
                             }
-                        ], next);
-                    }], function (err, result) {
-                        if (err) {
-                            console.log(err);
-                            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
-                            res.status(err.code).send(err);
-                        } else {
-                            res.status(200).json(result[1]);
-                        }
-                    });
+                            codeResult.update({
+                                used: infoUsed
+                            }, next);
+                        },
+
+                        function (next) {
+                            async.waterfall([
+                                function (cb) {
+                                    if (centerId) {
+                                        CenterFunctions.addCenterRobot(centerId, robot, cb);
+                                    } else {
+                                        UserRobotsFunctions.addUserRobot(userId, robot, cb);
+                                    }
+                                },
+                                function (cb) {
+                                    if (centerId) {
+                                        CenterFunctions.getCenterById(centerId, cb);
+                                    } else {
+                                        UserRobotsFunctions.getUserRobots(userId, cb);
+                                    }
+                                }
+                            ], next);
+                        }], function (err, result) {
+                            if (err) {
+                                console.log(err);
+                                err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+                                res.status(err.code).send(err);
+                            } else {
+                                res.status(200).json(result[1]);
+                            }
+                        });
                 }
             } else {
                 res.sendStatus(404);

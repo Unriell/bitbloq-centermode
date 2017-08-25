@@ -11,11 +11,11 @@ var MemberFunctions = require('../member/member.functions.js'),
  * @param {Function} next
  * @return {Object} teacher
  */
-exports.getStats = function(teacher, centerId, next) {
+exports.getStats = function (teacher, centerId, next) {
     async.parallel([
         MemberFunctions.getStudentsCounter.bind(MemberFunctions, teacher._id, centerId),
         GroupFunctions.getCounter.bind(GroupFunctions, teacher._id, centerId, {})
-    ], function(err, result) {
+    ], function (err, result) {
         if (!err) {
             teacher.students = result[0];
             teacher.groups = result[1];
@@ -30,30 +30,32 @@ exports.getStats = function(teacher, centerId, next) {
  * @param {Function} next
  * @return {Object} center
  */
-exports.getCentersInArray = function(centerIds, next) {
+exports.getCentersInArray = function (centerIds, next) {
     Center.find()
         .where('_id').in(centerIds)
         .exec(next);
 };
 
-exports.getCenterById = function(centerId, next) {
+exports.getCenterById = function (centerId, next) {
     Center.findById(centerId, next);
 };
 
-exports.addCenterRobot = function(centerId, robot, next) {
+exports.addCenterRobot = function (centerId, robot, next) {
     Center.update({
-            _id: centerId
-        }, {
+        _id: centerId
+    }, {
             $addToSet: {
                 activatedRobots: robot.split('-')[0]
             }
         },
-        next
+        function (err) {
+            next(err);
+        }
     );
 };
 
-exports.addNotConfirmedTeacher = function(centerId, teacherId, next) {
-    Center.findById(centerId, function(err, center) {
+exports.addNotConfirmedTeacher = function (centerId, teacherId, next) {
+    Center.findById(centerId, function (err, center) {
         if (err) {
             next(err);
         } else {
@@ -67,12 +69,12 @@ exports.addNotConfirmedTeacher = function(centerId, teacherId, next) {
     });
 };
 
-exports.getNotConfirmedTeacher = function(centerId, next) {
+exports.getNotConfirmedTeacher = function (centerId, next) {
     Center.findById(centerId)
         .select('notConfirmedTeacher')
         .populate('notConfirmedTeacher', '_id username firstName lastName email')
         .lean()
-        .exec(function(err, center) {
+        .exec(function (err, center) {
             if (center) {
                 next(err, center.notConfirmedTeacher);
             } else {
@@ -81,10 +83,10 @@ exports.getNotConfirmedTeacher = function(centerId, next) {
         });
 };
 
-exports.isNotConfirmedTeacher = function(centerId, teacherId, next) {
+exports.isNotConfirmedTeacher = function (centerId, teacherId, next) {
     Center.findById(centerId)
         .select('notConfirmedTeacher')
-        .exec(function(err, center) {
+        .exec(function (err, center) {
             if (center) {
                 if (center.notConfirmedTeacher && center.notConfirmedTeacher.indexOf(teacherId) > -1) {
                     next(err, true);
@@ -97,8 +99,8 @@ exports.isNotConfirmedTeacher = function(centerId, teacherId, next) {
         });
 };
 
-exports.deleteNotConfirmedTeacher = function(centerId, teacherId, next) {
-    Center.findById(centerId, function(err, center) {
+exports.deleteNotConfirmedTeacher = function (centerId, teacherId, next) {
+    Center.findById(centerId, function (err, center) {
         if (err) {
             next(err);
         } else {
