@@ -73,18 +73,37 @@ exports.confirmTeacher = function(req, res) {
                         next(err);
                     } else if (token && userId == token.teacherId) {
                         var invitedTeacher = false;
-                        _.forEach(noConfirmedTeacher, function(teacher){
-                            if(String(teacher._id) === token.teacherId){
+                        _.forEach(noConfirmedTeacher, function(teacher) {
+                            if (String(teacher._id) === token.teacherId) {
                                 invitedTeacher = true;
                             }
                         });
                         if (invitedTeacher) {
                             next(null, token, center);
                         } else {
-                            next({
-                                code: 404,
-                                message: 'Not Found',
-                                center: center.name
+                            MemberFunctions.getAllTeachers(center._id, function(err, teachers) {
+                                if (teachers) {
+                                    var teacherIds = _.map(teachers, '_id');
+                                    if (teacherIds.indexOf(token.teacherId)) {
+                                        next({
+                                            code: 409,
+                                            message: 'Teacher exists',
+                                            center: center.name
+                                        });
+                                    } else {
+                                        next({
+                                            code: 404,
+                                            message: 'Not Found',
+                                            center: center.name
+                                        });
+                                    }
+                                } else {
+                                    next({
+                                        code: 404,
+                                        message: 'Not Found',
+                                        center: center.name
+                                    });
+                                }
                             });
                         }
                     } else {
@@ -393,7 +412,7 @@ exports.getTeachers = function(req, res) {
         function(next) {
             if (!centerId || centerId === 'undefined') {
                 MemberFunctions.getCenterIdByHeadmaster(userId, function(err, newCenterId) {
-                    if(!newCenterId){
+                    if (!newCenterId) {
                         next({
                             code: '404',
                             message: 'Not Found'
