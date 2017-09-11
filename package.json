@@ -43,7 +43,7 @@
         "express": "^4.13.4",
         "http": "0.0.0",
         "lodash": "^4.17.4",
-        "mongoose": "4.8.2",
+        "mongoose": "4.11.0",
         "morgan": "^1.7.0",
         "path": "^0.12.7",
         "request": "^2.72.0",
@@ -52,7 +52,12 @@
         "express-jwt": "^3.3.0",
         "composable-middleware": "^0.3.0",
         "gcloud": "^0.36.0",
-        "node-uuid": "1.4.7"
+        "node-uuid": "1.4.7",
+        "dot": "^1.0.3",
+        "node-sass": "^3.6.0",
+        "email-templates": "^2.2.0",
+        "nodemailer": "^2.3.0",
+        "nodemailer-smtp-transport": "^2.4.1"
     },
     "devDependencies": {
         "jshint": "^2.9.1",

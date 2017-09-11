@@ -14,8 +14,17 @@ var robotsActivationCodeSchema = new mongoose.Schema({
         trim: true,
         required: true
     },
+    type: { // personal / center
+        type: String,
+        trim: true,
+        default: 'personal'
+    },
     used: {
         user: {
+            type: String,
+            trim: true
+        },
+        center: {
             type: String,
             trim: true
         },

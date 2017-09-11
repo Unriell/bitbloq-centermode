@@ -47,7 +47,7 @@ exports.clone = function(req, res) {
     ], function(err, newExercise) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).send(newExercise._id);
@@ -68,7 +68,7 @@ exports.create = function(req, res) {
     newExercise.save(function(err, exercise) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).json(exercise._id);
@@ -88,7 +88,7 @@ exports.get = function(req, res) {
         .exec(function(err, exercise) {
             if (err) {
                 console.log(err);
-                err.code = parseInt(err.code) || 500;
+                err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                 res.status(err.code).send(err);
             } else if (!exercise) {
                 res.sendStatus(404);
@@ -110,13 +110,16 @@ exports.get = function(req, res) {
 exports.getAll = function(req, res) {
     var page = req.query.page - 1 || 0,
         perPage = (req.query.pageSize && (req.query.pageSize <= maxPerPage)) ? req.query.pageSize : maxPerPage,
-        search = req.query,
-        queryParams = {};
+        query = req.query,
+        queryParams = {},
+        exercisesOrdered = [],
+        count,
+        exercisesPage = [];
 
-    if (search.searchParams && (JSON.parse(search.searchParams)).name) {
+    if (query && query.search && (JSON.parse(query.search)).$regex) {
         queryParams = {
             name: {
-                $regex: (JSON.parse(search.searchParams)).name,
+                $regex: (JSON.parse(query.search)).$regex,
                 $options: 'i'
             },
             teacher: req.user._id
@@ -130,15 +133,13 @@ exports.getAll = function(req, res) {
     async.waterfall([
         function(next) {
             Exercise.find(queryParams)
-                .limit(parseInt(perPage))
-                .skip(parseInt(perPage * page))
                 .exec(next);
         },
         function(exercises, next) {
             var newExercises = [];
             if (exercises.length > 0) {
                 var exercisesId = _.map(exercises, '_id');
-                AssignmentFunctions.getAssigmentByExercises(exercisesId, function(err, exercisesDates) {
+                AssignmentFunctions.getAssigmentByExercises(exercisesId, null, function(err, exercisesDates) {
                     if (exercisesDates) {
                         exercises.forEach(function(exercise) {
                             var exerciseObject = exercise.toObject();
@@ -161,45 +162,21 @@ exports.getAll = function(req, res) {
     ], function(err, exercises) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
-            res.status(200).send(exercises);
-        }
-    });
-};
-
-/**
- * Get count of my exercises
- * @param req
- * @param res
- */
-
-exports.getAllCount = function(req, res) {
-    var search = req.query,
-        queryParams = {};
-
-    if (search.name) {
-        queryParams = {
-            name: {
-                $regex: search.name,
-                $options: 'i'
-            },
-            teacher: req.user._id
-        };
-    } else {
-        queryParams = {
-            teacher: req.user._id
-        };
-    }
-    Exercise.count(queryParams, function(err, counter) {
-        if (err) {
-            console.log(err);
-            err.code = parseInt(err.code) || 500;
-            res.status(err.code).send(err);
-        } else {
-            res.status(200).json({
-                'count': counter
+            var exercisesArray = exercises;
+            if (req.query.search) {
+                exercisesArray = _.filter(exercisesArray, function(exercise) {
+                    return exercise.name.toLowerCase().indexOf(JSON.parse(req.query.search).$regex) >= 0;
+                });
+            }
+            exercisesOrdered = AssignmentFunctions.getExercisesOrdered(exercisesArray, query);
+            count = exercisesOrdered.length;
+            exercisesPage = exercisesOrdered.slice(page * perPage, (page * perPage) + perPage - 1);
+            res.status(200).send({
+                'exercises': exercisesPage,
+                'count': count
             });
         }
     });
@@ -240,7 +217,7 @@ exports.getCountByTeacher = function(req, res) {
     ], function(err, counter) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).json({
@@ -256,10 +233,11 @@ exports.getCountByTeacher = function(req, res) {
  * @param res
  */
 exports.getByTeacher = function(req, res) {
-    var page = req.query.page - 1 || 0,
-        perPage = (req.query.pageSize && (req.query.pageSize <= maxPerPage)) ? req.query.pageSize : maxPerPage,
-        userId = req.user._id,
+    var userId = req.user._id,
         teacherId = req.params.teacherId;
+    //page = req.query.page - 1 || 0,
+    //perPage = (req.query.pageSize && (req.query.pageSize <= maxPerPage)) ? req.query.pageSize : maxPerPage,
+
     async.waterfall([
         MemberFunctions.getCenterIdByHeadmaster.bind(UserFunctions, userId),
         function(centerId, next) {
@@ -282,12 +260,12 @@ exports.getByTeacher = function(req, res) {
             }
         },
         function(teacher, centerId, next) {
-            TaskFunctions.getExercises(centerId, teacher._id, page, perPage, next);
+            AssignmentFunctions.getExercisesByCenterTeacher(centerId, teacher._id, next);
         }
     ], function(err, exercises) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).send(exercises);
@@ -304,7 +282,7 @@ exports.update = function(req, res) {
     Exercise.findById(req.params.id, function(err, exercise) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             if (exercise.isOwner(req.user._id)) {
@@ -313,7 +291,7 @@ exports.update = function(req, res) {
                 exercise.save(function(err) {
                     if (err) {
                         console.log(err);
-                        err.code = parseInt(err.code) || 500;
+                        err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                         res.status(err.code).send(err);
                     } else {
                         res.sendStatus(200);
@@ -337,7 +315,7 @@ exports.userIsOwner = function(req, res) {
     Exercise.findById(exerciseId, function(err, exercise) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             if (exercise) {
@@ -392,7 +370,7 @@ exports.delete = function(req, res) {
     ], function(err) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(204).end();

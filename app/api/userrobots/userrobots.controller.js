@@ -14,7 +14,7 @@ exports.getUserRobots = function(req, res) {
     UserRobotsFunctions.getUserRobots(userId, function(err, robots) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).send(robots);

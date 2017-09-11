@@ -1,18 +1,22 @@
 'use strict';
 var Member = require('./member.model.js'),
     GroupFunctions = require('../group/group.functions'),
+    CenterFunctions = require('../center/center.functions'),
+    ConfirmationTokenFunctions = require('../teacherConfirmation/token.functions'),
     async = require('async'),
     mongoose = require('mongoose'),
+    mailer = require('../../components/mailer'),
+    config = require('../../res/config.js'),
     _ = require('lodash');
 
 /**
  * Add an member in a center like head master
  * @param {String} userId
- * @param {String} centerId
+ * @param {Object} center
  * @param {Function} next
  */
-exports.addHeadmaster = function(userId, centerId, next) {
-    _addStaff(userId, centerId, 'headmaster', next);
+exports.addHeadmaster = function(userId, center, next) {
+    _addStaff(userId, center, 'headmaster', next);
 };
 
 /**
@@ -46,25 +50,56 @@ exports.addStudent = function(userId, groupId, next) {
 /**
  * Add an member in a center like teacher
  * @param {String} userId
- * @param {String} centerId
+ * @param {Object} center
  * @param {Function} next
  */
-exports.addTeacher = function(userId, centerId, next) {
-    _addStaff(userId, centerId, 'teacher', next);
+exports.addTeacher = function(userId, center, next) {
+    _addStaff(userId, center, 'teacher', next);
 };
 
 /**
- * Add members in a center like teachers
- * @param {String} users
+ * Send confirmation email to teachers
+ * @param {Array} users
  * @param {String} centerId
  * @param {Function} next
  */
-exports.addAllTeachers = function(users, centerId, next) {
+exports.sendConfirmationAllTeachers = function(users, centerId, next) {
     var userDontExist = [];
     async.map(users, function(user, next) {
         if (user && user._id) {
-            exports.addTeacher(user._id, centerId, function(err) {
-                next(err, user);
+            async.parallel([
+                CenterFunctions.getCenterById.bind(CenterFunctions, centerId),
+                function(callback) {
+                    ConfirmationTokenFunctions.createToken(user._id, centerId, callback);
+                },
+                function(callback) {
+                    _getTeacherInCenter(user._id, centerId, callback);
+                }
+            ], function(err, result) {
+                var center = result[0],
+                    token = result[1],
+                    teacher = result[2];
+                if (!teacher) {
+                    var locals = {
+                        email: user.email,
+                        subject: 'El centro ' + center.name + ' te invita como profesor de Bitbloq',
+                        center: center.name,
+                        addTeacherUrl: config.client_domain + '/#/confirm-teacher/' + token
+                    };
+                    mailer.sendOne('addTeacher', locals, function(err) {
+                        if (err) {
+                            userDontExist.push(user.email);
+                            next(err);
+                        } else {
+                            CenterFunctions.addNotConfirmedTeacher(centerId, user._id, function(err, center) {
+                                var result = center ? user : undefined;
+                                next(err, result);
+                            });
+                        }
+                    });
+                } else {
+                    next();
+                }
             });
         } else {
             userDontExist.push(user.email);
@@ -72,8 +107,8 @@ exports.addAllTeachers = function(users, centerId, next) {
         }
     }, function(err, completedMembers) {
         next(err, {
-            teachersAdded: _.without(completedMembers, undefined),
-            teachersNotAdded: !_.isEmpty(userDontExist) ? userDontExist : undefined
+            teachersWaitingConfirmation: _.without(completedMembers, undefined),
+            teachersWithError: !_.isEmpty(userDontExist) ? userDontExist : undefined
         });
     });
 };
@@ -94,8 +129,6 @@ exports.deleteStudent = function(studentId, groupId, next) {
         function(member, next) {
             if (member) {
                 member.delete(function(err) {
-                    console.log('next');
-                    console.log(next);
                     next(err);
                 });
             } else {
@@ -140,6 +173,7 @@ exports.getAllTeachers = function(centerId, next) {
             role: 'teacher'
         })
         .populate('user', '_id username firstName lastName email')
+        .lean()
         .sort({
             createdAt: 'desc'
         })
@@ -200,7 +234,13 @@ exports.getGroups = function(userId, next) {
                 $exists: true
             }
         })
-        .populate('group')
+        .populate({
+            path: 'group',
+            populate: {
+                path: 'center',
+                select: 'name activatedRobots -_id'
+            }
+        })
         .exec(function(err, members) {
             if (members.length > 0) {
                 var groups = _.map(members, 'group');
@@ -355,7 +395,7 @@ exports.userIsHeadmaster = function(userId, centerId, next) {
         center: centerId,
         role: 'headmaster'
     }, function(err, members) {
-        next(err, members.length > 0);
+        next(err, members ? members.length > 0 : false);
     });
 };
 
@@ -364,11 +404,15 @@ exports.userIsHeadmaster = function(userId, centerId, next) {
  * @param {String} memberId
  * @param {Function} next
  */
-exports.userIsStudent = function(memberId, next) {
-    Member.findOne({
+exports.userIsStudent = function(memberId, centerId, next) {
+    var query = {
         user: memberId,
         role: 'student'
-    }, function(err, member) {
+    };
+    if (centerId) {
+        query.center = centerId;
+    }
+    Member.findOne(query, function(err, member) {
         next(err, !!member);
     });
 };
@@ -377,27 +421,46 @@ exports.userIsStudent = function(memberId, next) {
  *** Private functions
  **********************************/
 
-function _addStaff(userId, centerId, type, next) {
+function _addStaff(userId, center, type, next) {
     async.waterfall([
         Member.findOne.bind(Member, {
             user: userId,
-            center: centerId,
+            center: center._id,
             role: type
         }),
         function(member, callback) {
             if (member) {
                 next({
                     code: 409,
-                    message: 'Conflict. User exists as teacher in this center'
+                    message: 'Conflict. User exists as teacher in this center',
+                    center: center.name
                 });
             } else {
                 var newMember = new Member({
                     user: userId,
-                    center: centerId,
+                    center: center._id,
                     role: type
                 });
                 newMember.save(callback);
             }
         }
     ], next);
+}
+
+/**
+ * Get a teacher in a center
+ * @param {String} teacherId
+ * @param {String} centerId
+ * @param {Function} next
+ * @return {Array} members
+ */
+function _getTeacherInCenter(teacherId, centerId, next) {
+    Member.findOne({
+            user: teacherId,
+            center: centerId,
+            role: 'teacher'
+        })
+        .populate('user', '_id username firstName lastName email')
+        .lean()
+        .exec(next);
 }

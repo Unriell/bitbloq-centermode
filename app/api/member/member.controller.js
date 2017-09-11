@@ -7,6 +7,7 @@ var Member = require('./member.model.js'),
     GroupFunctions = require('../group/group.functions.js'),
     TaskFunctions = require('../task/task.functions.js'),
     AssignmentFunction = require('../assignment/assignment.functions.js'),
+    ConfirmationTokenFunctions = require('../teacherConfirmation/token.functions'),
     async = require('async'),
     _ = require('lodash');
 
@@ -27,7 +28,7 @@ exports.addTeacher = function(req, res) {
     ], function(err, result) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else if (!result) {
             res.sendStatus(304);
@@ -35,10 +36,10 @@ exports.addTeacher = function(req, res) {
             if (!result[0]) {
                 res.sendStatus(403);
             } else {
-                MemberFunctions.addAllTeachers(result[1], centerId, function(err, teachers) {
+                MemberFunctions.sendConfirmationAllTeachers(result[1], centerId, function(err, teachers) {
                     if (err) {
                         console.log(err);
-                        err.code = parseInt(err.code) || 500;
+                        err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                         res.status(err.code).send(err);
                     } else {
                         res.status(200).send(teachers);
@@ -47,6 +48,117 @@ exports.addTeacher = function(req, res) {
             }
         }
     });
+};
+
+/**
+ * A teacher confirm his integration with a center
+ * @param req
+ * @param req.user
+ * @param req.body.token
+ * @param res
+ */
+exports.confirmTeacher = function(req, res) {
+    var userId = req.user._id;
+    if (req.body.token) {
+        async.waterfall([
+            ConfirmationTokenFunctions.getInfo.bind(ConfirmationTokenFunctions, req.body.token),
+            function(token, next) {
+                CenterFunctions.getCenterById(token.centerId, function(err, center) {
+                    next(err, token, center);
+                });
+            },
+            function(token, center, next) {
+                CenterFunctions.getNotConfirmedTeacher(token.centerId, function(err, noConfirmedTeacher) {
+                    if (err) {
+                        next(err);
+                    } else if (token && userId == token.teacherId) {
+                        var invitedTeacher = false;
+                        _.forEach(noConfirmedTeacher, function(teacher){
+                            if(String(teacher._id) === token.teacherId){
+                                invitedTeacher = true;
+                            }
+                        });
+                        if (invitedTeacher) {
+                            next(null, token, center);
+                        } else {
+                            next({
+                                code: 404,
+                                message: 'Not Found',
+                                center: center.name
+                            });
+                        }
+                    } else {
+                        next({
+                            code: 403,
+                            message: 'Forbidden',
+                            center: center.name
+                        });
+                    }
+                });
+            },
+            function(token, center, next) {
+                MemberFunctions.addTeacher(token.teacherId, center, function(err) {
+                    next(err, token);
+                });
+            },
+            function(token, next) {
+                CenterFunctions.deleteNotConfirmedTeacher(token.centerId, token.teacherId, next);
+            }
+        ], function(err, center) {
+            if (err) {
+                console.log(err);
+                err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+                res.status(err.code).send(err);
+            } else {
+                res.status(200).send(center.name);
+            }
+        });
+    } else {
+        res.sendStatus(400);
+    }
+};
+
+/**
+ * An invitation is resent
+ * @param req
+ * @param req.user
+ * @param req.body.teacherId
+ * @param req.body.centerId
+ * @param res
+ */
+exports.sendInvitation = function(req, res) {
+    var teacherId = req.body.teacherId,
+        centerId = req.body.centerId;
+    if (teacherId && centerId) {
+        async.waterfall([
+            function(next) {
+                CenterFunctions.isNotConfirmedTeacher(centerId, teacherId, next);
+            },
+            function(isNotConfirmedTeacher, next) {
+                if (isNotConfirmedTeacher) {
+                    UserFunctions.getUserById(teacherId, next);
+                } else {
+                    next({
+                        code: 404,
+                        message: 'Not Found'
+                    });
+                }
+            },
+            function(teacher, next) {
+                MemberFunctions.sendConfirmationAllTeachers([teacher], centerId, next);
+            }
+        ], function(err, teachers) {
+            if (err) {
+                console.log(err);
+                err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+                res.status(err.code).send(err);
+            } else {
+                res.status(200).send(teachers);
+            }
+        });
+    } else {
+        res.sendStatus(400);
+    }
 };
 
 /**
@@ -64,7 +176,43 @@ exports.activateStudentMode = function(req, res) {
     newStudent.save(function(err) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+            res.status(err.code).send(err);
+        } else {
+            res.sendStatus(200);
+        }
+    });
+};
+
+/**
+ * Delete a teacher invitation if user is head master
+ * @param req
+ * @param req.params.teacherId
+ * @param req.params.centerId
+ * @param res
+ */
+exports.deleteInvitation = function(req, res) {
+    var userId = req.user._id,
+        teacherId = req.params.teacherId,
+        centerId = req.params.centerId;
+    async.waterfall([
+        function(next) {
+            MemberFunctions.userIsHeadmaster(userId, centerId, next);
+        },
+        function(isHeadmaster, next) {
+            if (isHeadmaster) {
+                CenterFunctions.deleteNotConfirmedTeacher(centerId, teacherId, next);
+            } else {
+                next({
+                    code: 403,
+                    message: 'Forbidden'
+                });
+            }
+        }
+    ], function(err) {
+        if (err) {
+            console.log(err);
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.sendStatus(200);
@@ -89,7 +237,7 @@ exports.deleteStudent = function(req, res) {
     ], function(err) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.sendStatus(200);
@@ -110,7 +258,7 @@ exports.deleteTeacher = function(req, res) {
         MemberFunctions.userIsHeadmaster(userId, centerId, function(err, isHeadmaster) {
             if (err) {
                 console.log(err);
-                err.code = parseInt(err.code) || 500;
+                err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                 res.status(err.code).send(err);
             } else if (isHeadmaster) {
                 async.waterfall([
@@ -122,7 +270,7 @@ exports.deleteTeacher = function(req, res) {
                 ], function(err, result) {
                     if (err) {
                         console.log(err);
-                        err.code = parseInt(err.code) || 500;
+                        err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                         res.status(err.code).send(err);
                     } else if (!result) {
                         res.sendStatus(304);
@@ -152,7 +300,7 @@ exports.isHeadmaster = function(req, res) {
     }, function(err, members) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else if (members.length > 0) {
             res.status(200).json({
@@ -178,7 +326,7 @@ exports.getMyRole = function(req, res) {
     }, function(err, members) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else if (members.length > 0) {
             var roles = _.map(members, 'role'),
@@ -223,7 +371,7 @@ exports.getTeacher = function(req, res) {
     ], function(err, teacher) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else if (!teacher) {
             res.sendStatus(404);
@@ -242,6 +390,24 @@ exports.getTeachers = function(req, res) {
     var userId = req.user._id,
         centerId = req.params.centerId;
     async.waterfall([
+        function(next) {
+            if (!centerId || centerId === 'undefined') {
+                MemberFunctions.getCenterIdByHeadmaster(userId, function(err, newCenterId) {
+                    if(!newCenterId){
+                        next({
+                            code: '404',
+                            message: 'Not Found'
+                        });
+                    } else {
+                        centerId = newCenterId;
+                        next(err);
+                    }
+
+                });
+            } else {
+                next();
+            }
+        },
         MemberFunctions.userIsHeadmaster.bind(MemberFunctions, userId, centerId),
         function(isHeadmaster, next) {
             if (!isHeadmaster) {
@@ -250,12 +416,26 @@ exports.getTeachers = function(req, res) {
                     message: 'Forbidden'
                 });
             } else {
-                MemberFunctions.getAllTeachers(centerId, function(err, members) {
-                    next(err, members, centerId);
-                });
+                CenterFunctions.getNotConfirmedTeacher(centerId, next);
             }
         },
-        function(members, centerId, next) {
+        function(notConfirmedTeachers, next) {
+            var users = [];
+            _.forEach(notConfirmedTeachers, function(teacher) {
+                teacher.notConfirmed = true;
+                users.push({
+                    user: teacher
+                });
+            });
+            MemberFunctions.getAllTeachers(centerId, function(err, members) {
+
+                if (members) {
+                    users = _.concat(members, users);
+                }
+                next(err, users);
+            });
+        },
+        function(members, next) {
             async.map(members, function(member, next) {
                 CenterFunctions.getStats(member.user, centerId, next);
             }, next);
@@ -263,7 +443,7 @@ exports.getTeachers = function(req, res) {
     ], function(err, teachers) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else if (!teachers) {
             res.sendStatus(304);
@@ -303,7 +483,7 @@ exports.registerInGroup = function(req, res) {
     ], function(err) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.sendStatus(200);

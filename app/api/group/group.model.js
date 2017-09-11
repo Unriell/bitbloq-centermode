@@ -36,11 +36,11 @@ var GroupSchema = new mongoose.Schema({
         trim: false,
         required: true
     },
+    color: String,
     deleted: Boolean
 }, {
     timestamps: true
 });
-
 
 /**
  * Pre hook
@@ -55,7 +55,6 @@ GroupSchema.pre('find', findNotDeletedMiddleware);
 GroupSchema.pre('findOne', findNotDeletedMiddleware);
 GroupSchema.pre('findOneAndUpdate', findNotDeletedMiddleware);
 GroupSchema.pre('count', findNotDeletedMiddleware);
-
 
 /**
  * Methods
@@ -79,7 +78,6 @@ GroupSchema.methods = {
         }
     },
 
-
     /**
      * delete - change deleted attribute to true
      *
@@ -88,8 +86,10 @@ GroupSchema.methods = {
      */
     delete: function(next) {
         var groupId = this._id;
-        this.update({deleted: true}, function(err){
-            if(!err) {
+        this.update({
+            deleted: true
+        }, function(err) {
+            if (!err) {
                 AssignmentFunctions.removeByGroup(groupId, next);
             } else {
                 next(err);
@@ -105,9 +105,14 @@ GroupSchema
     .pre('save', function(next) {
         var group = this;
         //accessKey seleccionar solo
-        this.constructor.aggregate([
-            { $sort : { createdAt : -1 } },
-            {$limit: 1}
+        this.constructor.aggregate([{
+                $sort: {
+                    createdAt: -1
+                }
+            },
+            {
+                $limit: 1
+            }
         ], function(err, lastGroups) {
             var lastAccessId;
             if (lastGroups.length === 0) {

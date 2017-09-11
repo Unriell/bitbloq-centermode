@@ -14,10 +14,18 @@ var Task = require('./task.model.js'),
  */
 exports.checkAndCreateTask = function(taskData, studentId, groupName, next) {
     Task.findOne({
-        exercise: taskData.exercise,
-        group: taskData.group,
-        student: studentId
-    }).populate('group', 'name center').exec(function(err, task) {
+            exercise: taskData.exercise,
+            group: taskData.group,
+            student: studentId
+        })
+        .populate('group', 'name center')
+        .populate({
+            path: 'group',
+            populate: {
+                path: 'center',
+                select: 'name activatedRobots -_id'
+            }
+        }).exec(function(err, task) {
         if (task) {
             //already a task
             var taskObject = task.toObject();
@@ -29,7 +37,10 @@ exports.checkAndCreateTask = function(taskData, studentId, groupName, next) {
                         '_id': task.group._id,
                         'initDate': taskObject.initDate,
                         'endDate': taskObject.endDate,
-                        'name': task.group.name
+                        'name': task.group.name,
+                        'center': {
+                            'activatedRobots': task.group.activatedRobots
+                        }
                     };
                     next(err, groupTask);
                 } else {
@@ -43,24 +54,18 @@ exports.checkAndCreateTask = function(taskData, studentId, groupName, next) {
                 if (err) {
                     next(err);
                 } else {
-                    if (groupName) {
-                        next(err, {
-                            '_id': taskSaved.group,
+                    GroupFunction.get(taskSaved.group, function(err, group) {
+                        var groupTask = {
+                            '_id': group._id,
                             'initDate': taskSaved.initDate,
                             'endDate': taskSaved.endDate,
-                            'name': groupName
-                        });
-                    } else {
-                        GroupFunction.get(taskSaved.group, function(err, group) {
-                            var groupTask = {
-                                '_id': group._id,
-                                'initDate': taskSaved.initDate,
-                                'endDate': taskSaved.endDate,
-                                'name': group.name
-                            };
-                            next(err, groupTask);
-                        });
-                    }
+                            'name': group.name,
+                            'center': {
+                                'activatedRobots': group.center.activatedRobots
+                            }
+                        };
+                        next(err, groupTask);
+                    });
                 }
             });
         }
@@ -107,6 +112,30 @@ exports.deleteByExercise = function(exerciseId, next) {
             next(err);
         }
     });
+};
+
+/**
+ * Remove task with specific exercise and group
+ * @param {Array} groupIdArray
+ * @param {String} exerciseId
+ * @param {Function} next
+ */
+exports.deleteByGroupAndEx = function(groupIdArray, exerciseId, next) {
+    Task.find({
+            exercise: exerciseId
+        })
+        .where('group').in(groupIdArray)
+        .exec(function(err, tasks) {
+            if (err) {
+                next(err);
+            } else {
+                async.map(tasks, function(task, callBack) {
+                    task.delete(callBack);
+                }, function(err) {
+                    next(err, tasks);
+                });
+            }
+        });
 };
 
 /**
@@ -244,53 +273,5 @@ exports.getExercisesCount = function(centerId, teacherId, next) {
         .where('group.center').equals(mongoose.Schema.Types.ObjectId(centerId))
         .exec(function(err, count) {
             next(err, count);
-        });
-};
-
-/**
- * Get exercises with specific group
- * @param {String} groupId
- * @param {Function} next
- * @return {Array} tasks
- */
-exports.getExercisesByGroup = function(groupId, next) {
-    Task.find({
-            group: groupId
-        })
-        .select('exercise group creator teacher initDate endDate')
-        .exec(function(err, tasks) {
-            var taskList = [];
-            tasks.forEach(function(task) {
-                var taskObject = task.toObject();
-                delete taskObject._id;
-                if (!_.some(taskList, taskObject)) {
-                    taskList.push(taskObject);
-                }
-            });
-            next(err, taskList);
-        });
-};
-
-/**
- * Remove task with specific exercise and group
- * @param {Array} groupIdArray
- * @param {String} exerciseId
- * @param {Function} next
- */
-exports.removeTasksByGroupAndEx = function(groupIdArray, exerciseId, next) {
-    Task.find({
-            exercise: exerciseId
-        })
-        .where('group').in(groupIdArray)
-        .exec(function(err, tasks) {
-            if (err) {
-                next(err);
-            } else {
-                async.map(tasks, function(task, callBack) {
-                    task.delete(callBack);
-                }, function(err) {
-                    next(err, tasks);
-                });
-            }
         });
 };

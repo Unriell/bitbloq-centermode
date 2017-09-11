@@ -19,14 +19,14 @@ exports.createCenter = function(req, res) {
             newCenter.save.bind(newCenter, center),
             function(savedCenter, updated, next) {
                 async.parallel([
-                    MemberFunctions.addHeadmaster.bind(MemberFunctions, userId, savedCenter._id),
-                    MemberFunctions.addTeacher.bind(MemberFunctions, userId, savedCenter._id)
+                    MemberFunctions.addHeadmaster.bind(MemberFunctions, userId, savedCenter),
+                    MemberFunctions.addTeacher.bind(MemberFunctions, userId, savedCenter)
                 ], next);
             }
         ], function(err, result) {
             if (err) {
                 console.log(err);
-                err.code = parseInt(err.code) || 500;
+                err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
                 res.status(err.code).send(err);
             } else if (result) {
                 res.sendStatus(200);
@@ -62,7 +62,7 @@ exports.getMyCenter = function(req, res) {
     MemberFunctions.getCenterInfoByHeadmaster(userId, function(err, center) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             if (center) {
@@ -84,10 +84,40 @@ exports.getMyCenters = function(req, res) {
     MemberFunctions.getMyCentersAsTeacher(userId, function(err, centers) {
         if (err) {
             console.log(err);
-            err.code = parseInt(err.code) || 500;
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
             res.status(200).send(centers);
+        }
+    });
+};
+
+/**
+ * Update a center
+ * @param req
+ * @param res
+ */
+exports.updateCenter = function(req, res) {
+    var centerId = req.body._id;
+    Center.findById(centerId, function(err, center) {
+        if (err) {
+            console.log(err);
+            err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+            res.status(err.code).send(err);
+        } else {
+            if (center.isOwner(req.user._id)) {
+                center.update(req.body, function(err) {
+                    if (err) {
+                        console.log(err);
+                        err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
+                        res.status(err.code).send(err);
+                    } else {
+                        res.sendStatus(200);
+                    }
+                });
+            } else {
+                res.sendStatus(401);
+            }
         }
     });
 };

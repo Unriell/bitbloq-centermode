@@ -4,7 +4,6 @@ var Group = require('./group.model.js'),
     _ = require('lodash'),
     async = require('async');
 
-
 /**
  * Delete all groups of teacher in a center
  * @param {String} teacherId
@@ -67,7 +66,6 @@ exports.getGroups = function(teacherId, centerId, next) {
     }, next);
 };
 
-
 /**
  * Get group ids by teacher in a center
  * @param {String} teacherId
@@ -78,7 +76,7 @@ exports.getGroupIdsByTeacherAndCenter = function(teacherId, centerId, next) {
     Group.find({
         teacher: teacherId,
         center: centerId
-    }, function(err, groups){
+    }, function(err, groups) {
         next(err, _.map(groups, '_id'));
     });
 };
@@ -89,11 +87,17 @@ exports.getGroupIdsByTeacherAndCenter = function(teacherId, centerId, next) {
  * @param {String} centerId
  * @param {Function} next
  */
-exports.getCounter = function(teacherId, centerId, next) {
-    Group.find({
+exports.getCounter = function(teacherId, centerId, query, next) {
+    var counterQuery = {
         teacher: teacherId,
         center: centerId
-    }).count(next);
+    };
+
+    if (query) {
+        counterQuery = _.extend(counterQuery, query);
+    }
+
+    Group.find(counterQuery).count(next);
 };
 
 /**
@@ -130,7 +134,6 @@ exports.getStudents = function(groupId, userId, next) {
     });
 };
 
-
 /**
  * Get group name
  * @param {String} groupId
@@ -139,6 +142,12 @@ exports.getStudents = function(groupId, userId, next) {
  */
 exports.get = function(groupId, next) {
     Group.findById(groupId)
-        .select('name')
+        .select('name center')
+        .populate('center', 'activatedRobots')
         .exec(next);
 };
+
+exports.getRandomColor = function() {
+    var randomGroupColors = ['#82ad3a', '#3b91ad', '#ad3867', '#6e37b8', '#c03838', '#3d9980'];
+    return randomGroupColors[Math.floor(Math.random() * randomGroupColors.length)];
+}
