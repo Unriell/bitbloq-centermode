@@ -69,6 +69,7 @@ exports.assign = function(req, res) {
  * @param res
  */
 exports.getByExercise = function(req, res) {
+  console.log('peti');
     var userId = req.user._id,
         exerciseId = req.params.exerciseId;
     async.waterfall([
@@ -95,6 +96,7 @@ exports.getByExercise = function(req, res) {
             var groups = [];
             assignments.forEach(function(assignment) {
                 var newGroup = assignment.toObject();
+                console.log(newGroup);
                 groups.push(_.extend(newGroup, newGroup.group));
                 delete newGroup.group;
             });
@@ -289,7 +291,9 @@ function createAssignment(assignment, userId, next) {
                 assignment.creator = userId;
                 assignment.endDate = assignment.endDate || undefined;
                 assignment.initDate = assignment.initDate || undefined;
+                assignment.hideUntilDate = assignment.hideUntilDate || undefined;
                 if (result && result.length > 0) {
+                  console.log(assignment);
                     Assignment.findOneAndUpdate({
                         group: assignment.group,
                         exercise: assignment.exercise
