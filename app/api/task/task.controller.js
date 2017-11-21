@@ -477,9 +477,8 @@ exports.mark = function(req, res) {
                 .exec(next);
         },
         function(task, next) {
-            //  ==  it's correct because I want check only the content, I don't want check the type
-            // If you change == to === this request will be rejected when user is teacher
-            if (String(task.owner) == userId || String(task.teacher) == userId) {
+            if ((task.owner && userId && String(task.owner) === userId) ||
+                (task.teacher && userId && String(task.teacher) === userId)) {
                 next(null, task);
             } else {
                 MemberFunctions.userIsHeadmaster(userId, task.group.center, function(err, isHeadmaster) {
@@ -530,9 +529,8 @@ exports.senMark = function(req, res) {
                 .exec(next);
         },
         function(task, next) {
-            //  ==  it's correct because I want check only the content, I don't want check the type
-            // If you change == to === this request will be rejected when user is teacher
-            if (String(task.owner) == userId || String(task.teacher) == userId) {
+            if ((task.owner && userId && String(task.owner) === userId) ||
+                (task.teacher && userId && String(task.teacher) === userId)) {
                 next(null, task);
             } else {
                 MemberFunctions.userIsHeadmaster(userId, task.group.center, function(err, isHeadmaster) {
