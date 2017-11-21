@@ -10,6 +10,7 @@ var Task = require('./task.model.js'),
     _ = require('lodash');
 
 var maxPerPage = 10;
+var now = new Date();
 
 function getResultTask(exercise) {
     var resultTask = {
@@ -170,9 +171,16 @@ exports.getMyTasksInGroup = function(req, res) {
             AssignmentFunction.getDateByGroupAndExercises(groupId, _.map(response[0], 'exercise._id'), function(err, exerciseDates) {
                 if (exerciseDates) {
                     _.forEach(response[0], function(task) {
-                        if (exerciseDates[task.exercise._id]) {
-                            task.initDate = exerciseDates[task.exercise._id].initDate;
-                            task.endDate = exerciseDates[task.exercise._id].endDate;
+                        var item = exerciseDates[task.exercise._id]
+                        if (item) {
+                          if (item.hide && item.initDate > now) {
+                            response[0] = response[0].filter( function(r) {
+                              return r !== task
+                            });
+                          }else {
+                            task.initDate = item.initDate;
+                            task.endDate = item.endDate;
+                          }
                         }
                     });
                 }
