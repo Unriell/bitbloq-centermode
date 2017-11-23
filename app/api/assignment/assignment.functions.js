@@ -156,13 +156,14 @@ exports.getDateByGroupAndExercises = function(groupId, exerciseIds, next) {
             group: groupId
         })
         .where('exercise').in(exerciseIds)
-        .select('exercise initDate endDate')
+        .select('exercise initDate endDate hideUntilDate')
         .exec(function(err, assignments) {
             var result = {};
             _.forEach(assignments, function(assignment) {
                 result[assignment.exercise] = {
                     initDate: assignment.initDate,
-                    endDate: assignment.endDate
+                    endDate: assignment.endDate,
+                    hide: assignment.hideUntilDate
                 };
             });
             next(err, result);
