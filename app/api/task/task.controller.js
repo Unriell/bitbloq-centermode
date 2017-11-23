@@ -10,7 +10,6 @@ var Task = require('./task.model.js'),
     _ = require('lodash');
 
 var maxPerPage = 10;
-var now = new Date();
 
 function getResultTask(exercise) {
     var resultTask = {
@@ -170,6 +169,7 @@ exports.getMyTasksInGroup = function(req, res) {
         } else {
             AssignmentFunction.getDateByGroupAndExercises(groupId, _.map(response[0], 'exercise._id'), function(err, exerciseDates) {
                 if (exerciseDates) {
+                    var now = new Date();
                     _.forEach(response[0], function(task) {
                         var item = exerciseDates[task.exercise._id]
                         if (item) {
