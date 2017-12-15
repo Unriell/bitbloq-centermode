@@ -167,6 +167,7 @@ exports.getMyTasksInGroup = function(req, res) {
             err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
+          console.log(response);
             AssignmentFunction.getDateByGroupAndExercises(groupId, _.map(response[0], 'exercise._id'), function(err, exerciseDates) {
                 if (exerciseDates) {
                     var now = new Date();
@@ -500,6 +501,8 @@ exports.mark = function(req, res) {
             };
             if (markData.mark) {
                 updateTask.mark = markData.mark;
+            } else {
+                updateTask.mark = 0;
             }
             task.update(updateTask, next);
         }
