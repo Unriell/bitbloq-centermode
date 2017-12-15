@@ -495,7 +495,9 @@ exports.mark = function(req, res) {
             }
         },
         function(task, next) {
+            console.log('MARK:', markData.mark, typeof markData.mark);
             markData.mark = markData.mark ? parseFloat(markData.mark) : markData.mark;
+            console.log('MARK POST-PARSE:', markData.mark, typeof markData.mark);
             var updateTask = {
                 remark: markData.remark
             };
