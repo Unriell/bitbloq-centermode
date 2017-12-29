@@ -1,71 +1,72 @@
 {
-    "name": "Bitbloq-centermode",
-    "version": "v1.0.0",
-    "description": "School management on Bitbloq",
-    "main": "index.js",
-    "scripts": {
-        "start": "supervisor index.js",
-        "monitor": "nodemon app/${SCRIPT:-app.js}",
-        "lint": "jshint --exclude-path=../.gitignore .",
-        "mocha": "mocha test/index.js -t 30000",
-        "test": "npm run lint && npm run mocha"
+  "name": "Bitbloq-centermode",
+  "version": "v1.0.0",
+  "description": "School management on Bitbloq",
+  "main": "index.js",
+  "scripts": {
+    "start": "supervisor index.js",
+    "monitor": "nodemon --inspect=38500  app/${SCRIPT:-app.js}",
+    "lint": "jshint --exclude-path=../.gitignore .",
+    "mocha": "mocha test/index.js -t 30000",
+    "test": "npm run lint && npm run mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bq/bitbloq-centermode"
+  },
+  "keywords": [
+    "Backend",
+    "Server",
+    "Center"
+  ],
+  "contributors": [
+    {
+      "name": "Laura del Río",
+      "email": "laura.delrio@bq.com"
     },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/bq/bitbloq-centermode"
-    },
-    "keywords": [
-        "Backend",
-        "Server",
-        "Center"
-    ],
-    "contributors": [
-        {
-            "name": "Laura del Río",
-            "email": "laura.delrio@bq.com"
-        },
-        {
-            "name": "Álvaro Sánchez",
-            "email": "alvaro.sanchez@bq.com"
-        }
-    ],
-    "license": "GPL-3.0",
-    "bugs": {
-        "url": "https://github.com/bq/botbloq-its/issues"
-    },
-    "homepage": "https://github.com/bq/botbloq-its/#readme",
-    "dependencies": {
-        "async": "^1.5.2",
-        "body-parser": "^1.15.0",
-        "connect-mongo": "^1.1.0",
-        "cors": "^2.7.1",
-        "errorhandler": "^1.4.3",
-        "express": "^4.13.4",
-        "http": "0.0.0",
-        "lodash": "^4.17.4",
-        "mongoose": "4.11.0",
-        "morgan": "^1.7.0",
-        "path": "^0.12.7",
-        "request": "^2.72.0",
-        "supervisor": "^0.10.0",
-        "jsonwebtoken": "^5.7.0",
-        "express-jwt": "^3.3.0",
-        "composable-middleware": "^0.3.0",
-        "gcloud": "^0.36.0",
-        "node-uuid": "1.4.7",
-        "dot": "^1.0.3",
-        "node-sass": "^3.6.0",
-        "email-templates": "^2.2.0",
-        "nodemailer": "^2.3.0",
-        "nodemailer-smtp-transport": "^2.4.1"
-    },
-    "devDependencies": {
-        "jshint": "^2.9.1",
-        "mocha": "^2.4.5",
-        "sinon": "^1.17.3",
-        "supertest": "^1.1.0"
-    },
-    "engines": {
-        "node": ">=0.12.7"
+    {
+      "name": "Álvaro Sánchez",
+      "email": "alvaro.sanchez@bq.com"
     }
+  ],
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/bq/botbloq-its/issues"
+  },
+  "homepage": "https://github.com/bq/botbloq-its/#readme",
+  "dependencies": {
+    "async": "^1.5.2",
+    "body-parser": "^1.15.0",
+    "composable-middleware": "^0.3.0",
+    "compression": "^1.7.1",
+    "connect-mongo": "^1.1.0",
+    "cors": "^2.7.1",
+    "dot": "^1.0.3",
+    "email-templates": "^2.2.0",
+    "errorhandler": "^1.4.3",
+    "express": "^4.13.4",
+    "express-jwt": "^3.3.0",
+    "gcloud": "^0.36.0",
+    "http": "0.0.0",
+    "jsonwebtoken": "^5.7.0",
+    "lodash": "^4.17.4",
+    "mongoose": "4.11.0",
+    "morgan": "^1.7.0",
+    "node-sass": "^3.6.0",
+    "node-uuid": "1.4.7",
+    "nodemailer": "^2.3.0",
+    "nodemailer-smtp-transport": "^2.4.1",
+    "path": "^0.12.7",
+    "request": "^2.72.0",
+    "supervisor": "^0.10.0"
+  },
+  "devDependencies": {
+    "jshint": "^2.9.1",
+    "mocha": "^2.4.5",
+    "sinon": "^1.17.3",
+    "supertest": "^1.1.0"
+  },
+  "engines": {
+    "node": ">=0.12.7"
+  }
 }
