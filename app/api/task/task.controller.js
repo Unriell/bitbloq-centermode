@@ -167,12 +167,21 @@ exports.getMyTasksInGroup = function(req, res) {
             err.code = (err.code && String(err.code).match(/[1-5][0-5][0-9]/g)) ? parseInt(err.code) : 500;
             res.status(err.code).send(err);
         } else {
+          console.log(response);
             AssignmentFunction.getDateByGroupAndExercises(groupId, _.map(response[0], 'exercise._id'), function(err, exerciseDates) {
                 if (exerciseDates) {
+                    var now = new Date();
                     _.forEach(response[0], function(task) {
-                        if (exerciseDates[task.exercise._id]) {
-                            task.initDate = exerciseDates[task.exercise._id].initDate;
-                            task.endDate = exerciseDates[task.exercise._id].endDate;
+                        var item = exerciseDates[task.exercise._id]
+                        if (item) {
+                          if (item.hide && item.initDate > now) {
+                            response[0] = response[0].filter( function(r) {
+                              return r !== task
+                            });
+                          }else {
+                            task.initDate = item.initDate;
+                            task.endDate = item.endDate;
+                          }
                         }
                     });
                 }
@@ -469,9 +478,8 @@ exports.mark = function(req, res) {
                 .exec(next);
         },
         function(task, next) {
-            //  ==  it's correct because I want check only the content, I don't want check the type
-            // If you change == to === this request will be rejected when user is teacher
-            if (String(task.owner) == userId || String(task.teacher) == userId) {
+            if ((task.owner && userId && String(task.owner) === userId) ||
+                (task.teacher && userId && String(task.teacher) === userId)) {
                 next(null, task);
             } else {
                 MemberFunctions.userIsHeadmaster(userId, task.group.center, function(err, isHeadmaster) {
@@ -493,6 +501,8 @@ exports.mark = function(req, res) {
             };
             if (markData.mark) {
                 updateTask.mark = markData.mark;
+            } else {
+                updateTask.mark = 0;
             }
             task.update(updateTask, next);
         }
@@ -522,9 +532,8 @@ exports.senMark = function(req, res) {
                 .exec(next);
         },
         function(task, next) {
-            //  ==  it's correct because I want check only the content, I don't want check the type
-            // If you change == to === this request will be rejected when user is teacher
-            if (String(task.owner) == userId || String(task.teacher) == userId) {
+            if ((task.owner && userId && String(task.owner) === userId) ||
+                (task.teacher && userId && String(task.teacher) === userId)) {
                 next(null, task);
             } else {
                 MemberFunctions.userIsHeadmaster(userId, task.group.center, function(err, isHeadmaster) {

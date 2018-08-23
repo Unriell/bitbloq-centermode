@@ -289,6 +289,7 @@ function createAssignment(assignment, userId, next) {
                 assignment.creator = userId;
                 assignment.endDate = assignment.endDate || undefined;
                 assignment.initDate = assignment.initDate || undefined;
+                assignment.hideUntilDate = assignment.hideUntilDate || undefined;
                 if (result && result.length > 0) {
                     Assignment.findOneAndUpdate({
                         group: assignment.group,

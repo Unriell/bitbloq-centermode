@@ -23,7 +23,8 @@ var AssignmentSchema = new mongoose.Schema({
     },
     initDate: Date,
     endDate: Date,
-    deleted: Boolean
+    deleted: Boolean,
+    hideUntilDate: Boolean
 }, {
     timestamps: true
 });
